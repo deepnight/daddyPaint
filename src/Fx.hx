@@ -19,20 +19,20 @@ class Fx extends dn.Process {
 		pool = new ParticlePool(Assets.tiles.tile, 2048, Const.FPS);
 
 		bgAddSb = new h2d.SpriteBatch(Assets.tiles.tile);
-		game.scroller.add(bgAddSb, Const.DP_FX_BG);
+		game.root.add(bgAddSb, Const.DP_FX_BG);
 		bgAddSb.blendMode = Add;
 		bgAddSb.hasRotationScale = true;
 
 		bgNormalSb = new h2d.SpriteBatch(Assets.tiles.tile);
-		game.scroller.add(bgNormalSb, Const.DP_FX_BG);
+		game.root.add(bgNormalSb, Const.DP_FX_BG);
 		bgNormalSb.hasRotationScale = true;
 
 		topNormalSb = new h2d.SpriteBatch(Assets.tiles.tile);
-		game.scroller.add(topNormalSb, Const.DP_FX_FRONT);
+		game.root.add(topNormalSb, Const.DP_FX_FRONT);
 		topNormalSb.hasRotationScale = true;
 
 		topAddSb = new h2d.SpriteBatch(Assets.tiles.tile);
-		game.scroller.add(topAddSb, Const.DP_FX_FRONT);
+		game.root.add(topAddSb, Const.DP_FX_FRONT);
 		topAddSb.blendMode = Add;
 		topAddSb.hasRotationScale = true;
 	}
@@ -73,15 +73,6 @@ class Fx extends dn.Process {
 
 	public function killAll() {
 		pool.killAll();
-	}
-
-	public function markerEntity(e:Entity, ?c=0xFF00FF, ?short=false) {
-		#if debug
-		if( e==null )
-			return;
-
-		markerCase(e.cx, e.cy, short?0.03:3, c);
-		#end
 	}
 
 	public function markerCase(cx:Int, cy:Int, ?sec=3.0, ?c=0xFF00FF) {
