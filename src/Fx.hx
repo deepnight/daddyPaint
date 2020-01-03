@@ -11,28 +11,28 @@ class Fx extends dn.Process {
 	public var topAddSb       : h2d.SpriteBatch;
 	public var topNormalSb    : h2d.SpriteBatch;
 
-	var game(get,never) : Game; inline function get_game() return Game.ME;
+	var client(get,never) : Client; inline function get_client() return Client.ME;
 
 	public function new() {
-		super(Game.ME);
+		super(Client.ME);
 
 		pool = new ParticlePool(Assets.tiles.tile, 2048, Const.FPS);
 
 		bgAddSb = new h2d.SpriteBatch(Assets.tiles.tile);
-		game.root.add(bgAddSb, Const.DP_FX_BG);
+		client.root.add(bgAddSb, Const.DP_FX_BG);
 		bgAddSb.blendMode = Add;
 		bgAddSb.hasRotationScale = true;
 
 		bgNormalSb = new h2d.SpriteBatch(Assets.tiles.tile);
-		game.root.add(bgNormalSb, Const.DP_FX_BG);
+		client.root.add(bgNormalSb, Const.DP_FX_BG);
 		bgNormalSb.hasRotationScale = true;
 
 		topNormalSb = new h2d.SpriteBatch(Assets.tiles.tile);
-		game.root.add(topNormalSb, Const.DP_FX_FRONT);
+		client.root.add(topNormalSb, Const.DP_FX_FRONT);
 		topNormalSb.hasRotationScale = true;
 
 		topAddSb = new h2d.SpriteBatch(Assets.tiles.tile);
-		game.root.add(topAddSb, Const.DP_FX_FRONT);
+		client.root.add(topAddSb, Const.DP_FX_FRONT);
 		topAddSb.blendMode = Add;
 		topAddSb.hasRotationScale = true;
 	}
@@ -119,11 +119,11 @@ class Fx extends dn.Process {
 
 	public function flashBangS(c:UInt, a:Float, ?t=0.1) {
 		var e = new h2d.Bitmap(h2d.Tile.fromColor(c,1,1,a));
-		game.root.add(e, Const.DP_FX_FRONT);
-		e.scaleX = game.w();
-		e.scaleY = game.h();
+		client.root.add(e, Const.DP_FX_FRONT);
+		e.scaleX = client.w();
+		e.scaleY = client.h();
 		e.blendMode = Add;
-		game.tw.createS(e.alpha, 0, t).end( function() {
+		client.tw.createS(e.alpha, 0, t).end( function() {
 			e.remove();
 		});
 	}
@@ -131,6 +131,6 @@ class Fx extends dn.Process {
 	override function update() {
 		super.update();
 
-		pool.update(game.tmod);
+		pool.update(client.tmod);
 	}
 }

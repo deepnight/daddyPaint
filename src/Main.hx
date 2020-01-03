@@ -35,8 +35,8 @@ class Main extends dn.Process {
 
             delayer.addS("cdb", function() {
             	Data.load( hxd.Res.data.entry.getBytes().toString() );
-            	if( Game.ME!=null )
-                    Game.ME.onCdbReload();
+            	if( Client.ME!=null )
+                    Client.ME.onCdbReload();
             }, 0.2);
         });
 		#end
@@ -62,18 +62,18 @@ class Main extends dn.Process {
 
 		// Start
 		new dn.heaps.GameFocusHelper(Boot.ME.s2d, Assets.fontMedium);
-		delayer.addF( startGame, 1 );
+		delayer.addF( startClient, 1 );
 	}
 
-	public function startGame() {
-		if( Game.ME!=null ) {
-			Game.ME.destroy();
+	public function startClient() {
+		if( Client.ME!=null ) {
+			Client.ME.destroy();
 			delayer.addF(function() {
-				new Game();
+				new Client();
 			}, 1);
 		}
 		else
-			new Game();
+			new Client();
 	}
 
 	override public function onResize() {

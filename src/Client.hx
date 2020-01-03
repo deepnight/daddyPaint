@@ -1,8 +1,8 @@
 import dn.Process;
 import hxd.Key;
 
-class Game extends Process {
-	public static var ME : Game;
+class Client extends Process {
+	public static var ME : Client;
 
 	public var ca : dn.heaps.Controller.ControllerAccess;
 	public var fx : Fx;
@@ -11,7 +11,7 @@ class Game extends Process {
 	public function new() {
 		super(Main.ME);
 		ME = this;
-		ca = Main.ME.controller.createAccess("game");
+		ca = Main.ME.controller.createAccess("client");
 		ca.setLeftDeadZone(0.2);
 		ca.setRightDeadZone(0.2);
 		createRootInLayers(Main.ME.root, Const.DP_BG);
@@ -52,7 +52,7 @@ class Game extends Process {
 
 			// Restart
 			if( ca.selectPressed() )
-				Main.ME.startGame();
+				Main.ME.startClient();
 		}
 	}
 }
