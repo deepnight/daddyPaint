@@ -86,6 +86,53 @@ class Client extends Process {
 
 	function stopDrawing() {
 		drawing = false;
+		flushLineBuffer(true);
+	}
+
+	function flushLineBuffer(all:Bool) {
+		var curveDist = 0.4;
+
+		// Render while easing corners
+		canvas.lineStyle(brushSize, color);
+		while( bufferLines.length>=2 ) {
+			var from = bufferLines.shift();
+			var to = bufferLines[0];
+			canvas.moveTo(
+				from.fx+Math.cos(from.angle)*from.length*curveDist,
+				from.fy+Math.sin(from.angle)*from.length*curveDist
+			);
+			canvas.lineTo(
+				from.fx+Math.cos(from.angle)*from.length*(1-curveDist),
+				from.fy+Math.sin(from.angle)*from.length*(1-curveDist)
+			);
+			canvas.curveTo(
+				from.tx,
+				from.ty,
+				to.fx+Math.cos(to.angle)*to.length*curveDist,
+				to.fy+Math.sin(to.angle)*to.length*curveDist
+			);
+
+			bufferCanvas.clear();
+			bufferCanvas.lineStyle(brushSize, 0x00ff00);
+			bufferCanvas.moveTo(
+				to.fx+Math.cos(to.angle)*to.length*(1-curveDist),
+				to.fy+Math.sin(to.angle)*to.length*(1-curveDist)
+			);
+			bufferCanvas.lineTo(to.tx, to.ty);
+		}
+
+		// Final segment
+		if( all && bufferLines.length>0 ) {
+			var last = bufferLines[0];
+			canvas.lineStyle(brushSize, color);
+			canvas.moveTo(
+				last.fx+Math.cos(last.angle)*last.length*curveDist,
+				last.fy+Math.sin(last.angle)*last.length*curveDist
+			);
+			canvas.lineTo(last.tx, last.ty);
+			bufferCanvas.clear();
+			bufferLines = [];
+		}
 	}
 
 	public function onCdbReload() {
@@ -111,7 +158,7 @@ class Client extends Process {
 		gc();
 	}
 
-	var skipFrames = 0.06;
+	var skipFrames = 0.0;
 	override function update() {
 		super.update();
 
@@ -121,40 +168,10 @@ class Client extends Process {
 			if( mx!=lastMouse.x || my!=lastMouse.y ) {
 				var radius = brushSize*0.5;
 
-				// var step = brushSize;
-				// var i = 0;
-				// var pts = dn.Bresenham.getThinLine( Std.int(lastMouse.x), Std.int(lastMouse.y), mx, my, true );
-				// for( pt in pts ) {
-				// 	if( i%step==0 ) {
-				// 		canvas.beginFill(color);
-				// 		canvas.drawCircle(pt.x, pt.y, radius);
-				// 	}
-				// 	i++;
-				// }
-
-				// Render line
-				// var minSteps = radius*0.2;
-				// var steps = 0.;
-				// var prevX = -1;
-				// var prevY = -1;
-				// var pts = dn.Bresenham.getThinLine( Std.int(lastMouse.x), Std.int(lastMouse.y), mx, my, true );
-				// for( pt in pts ) {
-				// 	steps--;
-				// 	if( steps<=0 ) {
-				// 		canvas.beginFill(color);
-				// 		canvas.drawCircle(pt.x, pt.y, radius * ( 0.2 + 0.8 * (0.5+Math.cos(elapsedDist/200)/2) ));
-				// 		steps = minSteps;
-				// 	}
-				// 	if( prevX>0 )
-				// 		elapsedDist += M.dist(prevX, prevY, pt.x, pt.y);
-				// 	prevX = pt.x;
-				// 	prevY = pt.y;
-				// }
-
 				// Buffer render
-				bufferCanvas.lineStyle(brushSize*0.5, 0x0000ff);
-				bufferCanvas.moveTo(lastMouse.x, lastMouse.y);
-				bufferCanvas.lineTo(mx, my);
+				// bufferCanvas.lineStyle(brushSize*0.5, 0x0000ff);
+				// bufferCanvas.moveTo(lastMouse.x, lastMouse.y);
+				// bufferCanvas.lineTo(mx, my);
 
 				// Debug render
 				#if debug
@@ -163,32 +180,12 @@ class Client extends Process {
 				debugCanvas.lineTo(mx, my);
 				#end
 
-				// Store history
+				// Smoothing
 				var l = new data.Line(lastMouse.x, lastMouse.y, mx, my, color);
 				bufferLines.push(l);
-
-				// Flush buffer
-				canvas.lineStyle(brushSize, color);
-				var ratio = 0.66;
-				while( bufferLines.length>=2 ) {
-					var from = bufferLines.shift();
-					var to = bufferLines[0];
-					canvas.moveTo(
-						from.fx+Math.cos(from.angle)*from.length*(1-ratio),
-						from.fy+Math.sin(from.angle)*from.length*(1-ratio)
-					);
-					canvas.lineTo(
-						from.fx+Math.cos(from.angle)*from.length*ratio,
-						from.fy+Math.sin(from.angle)*from.length*ratio
-					);
-					canvas.curveTo(
-						from.tx,
-						from.ty,
-						to.fx+Math.cos(to.angle)*to.length*(1-ratio),
-						to.fy+Math.sin(to.angle)*to.length*(1-ratio)
-					);
-				}
 				lines.push(l);
+				flushLineBuffer(false);
+
 				lastMouse.set(mx,my);
 			}
 		}
