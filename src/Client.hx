@@ -64,29 +64,7 @@ class Client extends Process {
 		touchCatcher.onReleaseOutside = function(_) stopDrawing();
 		touchCatcher.onOut = function(_) stopDrawing();
 		touchCatcher.onMove = onMouseMove;
-
-		// Boot.ME.s2d.addEventListener( onEvent );
 	}
-
-	// function onEvent(e:hxd.Event) {
-	// 	switch e.kind {
-	// 		case EPush:
-	// 			startDrawing();
-
-	// 		case ERelease, EReleaseOutside, EFocusLost:
-	// 			stopDrawing();
-
-	// 		case EMove:
-	// 		case EOver:
-	// 		case EOut:
-	// 		case EWheel:
-	// 		case EFocus:
-	// 		case EKeyDown:
-	// 		case EKeyUp:
-	// 		case ETextInput:
-	// 		case ECheck:
-	// 	}
-	// }
 
 	function onMouseMove(e:hxd.Event) {
 		mouse.set(e.relX, e.relY);
@@ -116,8 +94,6 @@ class Client extends Process {
 
 	inline function getGlobalMouseX() return mouse.x;
 	inline function getGlobalMouseY() return mouse.y;
-	// inline function getGlobalMouseX() return Boot.ME.s2d.mouseX;
-	// inline function getGlobalMouseY() return Boot.ME.s2d.mouseY;
 
 	inline function getClientMouseX() return Std.int( getGlobalMouseX() / Const.SCALE );
 	inline function getClientMouseY() return Std.int( getGlobalMouseY() / Const.SCALE );
