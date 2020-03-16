@@ -25,19 +25,15 @@ class CPoint {
 		this.yr = yr;
 	}
 
-	public inline function distCase(?e:Entity, ?pt:CPoint, ?cx=0, ?cy=0, ?xr=0.5, ?yr=0.5) {
-		if( e!=null )
-			return M.dist(cx+xr, cy+yr, e.cx+e.xr, e.cy+e.yr);
-		else if( pt!=null )
+	public inline function distCase(?pt:CPoint, ?cx=0, ?cy=0, ?xr=0.5, ?yr=0.5) {
+		if( pt!=null )
 			return M.dist(cx+xr, cy+yr, pt.cx+pt.xr, pt.cy+pt.yr);
 		else
 			return M.dist(this.cx+this.xr, this.cy+this.yr, cx+xr, cy+yr);
 	}
 
-	public inline function distPx(?e:Entity, ?pt:CPoint, ?x=0., ?y=0.) {
-		if( e!=null )
-			return M.dist(footX, footY, e.footX, e.footY);
-		else if( pt!=null )
+	public inline function distPx(?pt:CPoint, ?x=0., ?y=0.) {
+		if( pt!=null )
 			return M.dist(footX, footY, pt.footX, pt.footY);
 		else
 			return M.dist(footX, footY, x, y);

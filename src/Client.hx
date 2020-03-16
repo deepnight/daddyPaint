@@ -34,11 +34,17 @@ class Client extends Process {
 		gc();
 	}
 
+	override function preUpdate() {
+		super.preUpdate();
+	}
+
+	override function postUpdate() {
+		super.postUpdate();
+		gc();
+	}
+
 	override function update() {
 		super.update();
-
-		// Updates
-		gc();
 
 		if( !ui.Console.ME.isActive() && !ui.Modal.hasAny() ) {
 			#if hl
