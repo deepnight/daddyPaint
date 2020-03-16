@@ -107,7 +107,6 @@ class Client extends Process {
 					if( steps<=0 ) {
 						canvas.beginFill(color);
 						canvas.drawCircle(pt.x, pt.y, radius * ( 0.2 + 0.8 * (0.5+Math.cos(elapsedDist/200)/2) ));
-						// canvas.drawCircle(pt.x, pt.y, M.fmin(1,elapsedDist/200)*radius);
 						steps = minSteps;
 					}
 					if( prevX>0 )
@@ -115,9 +114,6 @@ class Client extends Process {
 					prevX = pt.x;
 					prevY = pt.y;
 				}
-				// canvas.lineStyle(8,color);
-				// canvas.moveTo(lastMouse.x, lastMouse.y);
-				// canvas.lineTo(mx,my);
 
 				lines.push( new data.Line(lastMouse.x, lastMouse.y, mx, my, color) );
 				lastMouse.set(mx,my);
