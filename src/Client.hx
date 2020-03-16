@@ -10,9 +10,9 @@ class Client extends Process {
 
 	var drawing = false;
 	var color : UInt = 0xffffff;
-	// public var canvas : hxd.Pixels;
 	var lines : Array<Line> = [];
-	var lastPoint : h2d.col.Point;
+	var lastMouse : h2d.col.Point;
+	var elapsedDist = 0.;
 	var canvas : h2d.Graphics;
 
 	public function new() {
@@ -25,7 +25,7 @@ class Client extends Process {
 
 		fx = new Fx();
 		hud = new ui.Hud();
-		lastPoint = new h2d.col.Point();
+		lastMouse = new h2d.col.Point();
 		canvas = new h2d.Graphics(root);
 
 		Boot.ME.s2d.addEventListener( onEvent );
@@ -59,7 +59,8 @@ class Client extends Process {
 
 	function startDrawing() {
 		drawing = true;
-		lastPoint.set( getClientMouseX(), getClientMouseY() );
+		lastMouse.set( getClientMouseX(), getClientMouseY() );
+		elapsedDist = 0;
 	}
 	function stopDrawing() {
 		drawing = false;
@@ -94,13 +95,32 @@ class Client extends Process {
 		if( drawing ) {
 			var mx = getClientMouseX();
 			var my = getClientMouseY();
-			if( mx!=lastPoint.x || my!=lastPoint.y ) {
-				canvas.lineStyle(8,color);
-				canvas.moveTo(lastPoint.x, lastPoint.y);
-				canvas.lineTo(mx,my);
+			if( mx!=lastMouse.x || my!=lastMouse.y ) {
+				var radius = 30;
+				var minSteps = radius*0.2;
+				var steps = 0.;
+				var prevX = -1;
+				var prevY = -1;
+				var pts = dn.Bresenham.getThinLine( Std.int(lastMouse.x), Std.int(lastMouse.y), mx, my, true );
+				for(pt in pts) {
+					steps--;
+					if( steps<=0 ) {
+						canvas.beginFill(color);
+						canvas.drawCircle(pt.x, pt.y, radius * ( 0.2 + 0.8 * (0.5+Math.cos(elapsedDist/200)/2) ));
+						// canvas.drawCircle(pt.x, pt.y, M.fmin(1,elapsedDist/200)*radius);
+						steps = minSteps;
+					}
+					if( prevX>0 )
+						elapsedDist += M.dist(prevX, prevY, pt.x, pt.y);
+					prevX = pt.x;
+					prevY = pt.y;
+				}
+				// canvas.lineStyle(8,color);
+				// canvas.moveTo(lastMouse.x, lastMouse.y);
+				// canvas.lineTo(mx,my);
 
-				lines.push( new data.Line(lastPoint.x, lastPoint.y, mx, my, color) );
-				lastPoint.set(mx,my);
+				lines.push( new data.Line(lastMouse.x, lastMouse.y, mx, my, color) );
+				lastMouse.set(mx,my);
 			}
 		}
 
