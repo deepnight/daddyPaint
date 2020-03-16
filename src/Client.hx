@@ -7,8 +7,10 @@ class Client extends Process {
 	public var ca : dn.heaps.Controller.ControllerAccess;
 	public var fx : Fx;
 	public var hud : ui.Hud;
+	var touchCatcher : h2d.Interactive;
 
 	var drawing = false;
+	var firstStroke = false;
 	var color : UInt = 0xffffff;
 	var brushSize = 10;
 
@@ -21,6 +23,7 @@ class Client extends Process {
 
 	var bufferCanvas : h2d.Graphics;
 	var bufferLines : Array<Line> = [];
+	var skipFrames = 0.1;
 
 	public function new() {
 		super(Main.ME);
@@ -29,6 +32,16 @@ class Client extends Process {
 		ca.setLeftDeadZone(0.2);
 		ca.setRightDeadZone(0.2);
 		createRootInLayers(Main.ME.root, Const.DP_BG);
+
+		touchCatcher = new h2d.Interactive(100,100, root);
+		touchCatcher.propagateEvents = true;
+		touchCatcher.onPush = function(e:hxd.Event) {
+			startDrawing();
+		}
+		touchCatcher.onRelease = function(_) stopDrawing();
+		touchCatcher.onReleaseOutside = function(_) stopDrawing();
+		touchCatcher.onOut = function(_) stopDrawing();
+		touchCatcher.onMove = onMouseMove;
 
 		fx = new Fx();
 		hud = new ui.Hud();
@@ -63,6 +76,31 @@ class Client extends Process {
 		}
 	}
 
+	function onMouseMove(e:hxd.Event) {
+		if( drawing #if debug && !cd.hasSetS("skipFrame",skipFrames) #end ) {
+			var mx = getClientMouseX();
+			var my = getClientMouseY();
+			if( mx!=lastMouse.x || my!=lastMouse.y ) {
+				var radius = brushSize*0.5;
+
+				// Debug render
+				#if debug
+				debugCanvas.lineStyle(3, 0xff0000);
+				debugCanvas.moveTo(lastMouse.x, lastMouse.y);
+				debugCanvas.lineTo(mx, my);
+				#end
+
+				// Smoothing
+				var l = new data.Line(lastMouse.x, lastMouse.y, mx, my, color);
+				bufferLines.push(l);
+				lines.push(l);
+				flushLineBuffer(false);
+
+				lastMouse.set(mx,my);
+			}
+		}
+	}
+
 	inline function getGlobalMouseX() return Boot.ME.s2d.mouseX;
 	inline function getGlobalMouseY() return Boot.ME.s2d.mouseY;
 
@@ -79,21 +117,38 @@ class Client extends Process {
 	}
 
 	function startDrawing() {
+		#if debug
+		debugCanvas.beginFill(0x0);
+		debugCanvas.lineStyle(3,0xff0000);
+		debugCanvas.drawCircle(getClientMouseX(), getClientMouseY(), 15);
+		debugCanvas.beginFill(0xff0000);
+		debugCanvas.drawCircle(getClientMouseX(), getClientMouseY(), 5);
+		#end
+
 		drawing = true;
+		firstStroke = true;
 		lastMouse.set( getClientMouseX(), getClientMouseY() );
 		elapsedDist = 0;
 	}
 
 	function stopDrawing() {
 		drawing = false;
+		firstStroke = false;
 		flushLineBuffer(true);
 	}
 
 	function flushLineBuffer(all:Bool) {
 		var curveDist = 0.4;
+		canvas.lineStyle(brushSize, color);
+
+		if( firstStroke && bufferLines.length>0 ) {
+			var l = bufferLines[0];
+			canvas.moveTo(l.fx, l.fy);
+			canvas.lineTo(l.getSubX(1-curveDist), l.getSubY(1-curveDist));
+			firstStroke = false;
+		}
 
 		// Render while easing corners
-		canvas.lineStyle(brushSize, color);
 		while( bufferLines.length>=2 ) {
 			var from = bufferLines.shift();
 			var to = bufferLines[0];
@@ -135,6 +190,12 @@ class Client extends Process {
 		}
 	}
 
+	override function onResize() {
+		super.onResize();
+		touchCatcher.width = w();
+		touchCatcher.height = h();
+	}
+
 	public function onCdbReload() {
 	}
 
@@ -158,49 +219,23 @@ class Client extends Process {
 		gc();
 	}
 
-	var skipFrames = 0.0;
 	override function update() {
 		super.update();
 
-		if( drawing && !cd.hasSetS("skipFrame",skipFrames) ) {
-			var mx = getClientMouseX();
-			var my = getClientMouseY();
-			if( mx!=lastMouse.x || my!=lastMouse.y ) {
-				var radius = brushSize*0.5;
-
-				// Buffer render
-				// bufferCanvas.lineStyle(brushSize*0.5, 0x0000ff);
-				// bufferCanvas.moveTo(lastMouse.x, lastMouse.y);
-				// bufferCanvas.lineTo(mx, my);
-
-				// Debug render
-				#if debug
-				debugCanvas.lineStyle(3, 0xff0000);
-				debugCanvas.moveTo(lastMouse.x, lastMouse.y);
-				debugCanvas.lineTo(mx, my);
-				#end
-
-				// Smoothing
-				var l = new data.Line(lastMouse.x, lastMouse.y, mx, my, color);
-				bufferLines.push(l);
-				lines.push(l);
-				flushLineBuffer(false);
-
-				lastMouse.set(mx,my);
-			}
-		}
-
-		if( hxd.Key.isPressed(Key.C) )
-			clear();
-
-		#if debug
-		if( hxd.Key.isPressed(Key.D) ) {
-			debugCanvas.visible = !debugCanvas.visible;
-			canvas.alpha = debugCanvas.visible ? 0.5 : 1;
-		}
-		#end
-
 		if( !ui.Console.ME.isActive() && !ui.Modal.hasAny() ) {
+			// Clear canvas
+			if( hxd.Key.isPressed(Key.C) )
+				clear();
+
+			// Show debug lines
+			#if debug
+			if( hxd.Key.isPressed(Key.D) ) {
+				debugCanvas.visible = !debugCanvas.visible;
+				canvas.alpha = debugCanvas.visible ? 0.5 : 1;
+				touchCatcher.backgroundColor = debugCanvas.visible ? Color.addAlphaF(0xff00ff,0.3) : 0x0;
+			}
+			#end
+
 			#if hl
 			// Exit
 			if( ca.isKeyboardPressed(Key.ESCAPE) )
