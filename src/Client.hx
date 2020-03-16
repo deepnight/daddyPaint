@@ -13,6 +13,7 @@ class Client extends Process {
 	public var hud : ui.Hud;
 	var touchCatcher : h2d.Interactive;
 	var mouse : h2d.col.Point;
+	var debugTf : h2d.Text;
 
 	var drawing = false;
 	var firstStroke = false;
@@ -57,17 +58,20 @@ class Client extends Process {
 		touchCatcher = new h2d.Interactive(100,100, root);
 		touchCatcher.propagateEvents = true;
 		touchCatcher.onPush = function(e:hxd.Event) {
-			mouse.set(e.relX, e.relY);
+			mouse.set(e.relX*Const.SCALE, e.relY*Const.SCALE);
 			startDrawing();
 		}
 		touchCatcher.onRelease = function(_) stopDrawing();
 		touchCatcher.onReleaseOutside = function(_) stopDrawing();
 		touchCatcher.onOut = function(_) stopDrawing();
 		touchCatcher.onMove = onMouseMove;
+
+		debugTf = new h2d.Text(Assets.fontSmall, root);
+		debugTf.setScale(2);
 	}
 
 	function onMouseMove(e:hxd.Event) {
-		mouse.set(e.relX, e.relY);
+		mouse.set(e.relX*Const.SCALE, e.relY*Const.SCALE);
 		if( drawing #if debug && !cd.hasSetS("skipFrame",skipFrames) #end ) {
 			var mx = getClientMouseX();
 			var my = getClientMouseY();
@@ -149,27 +153,18 @@ class Client extends Process {
 		while( bufferLines.length>=2 ) {
 			var from = bufferLines.shift();
 			var to = bufferLines[0];
-			canvas.moveTo(
-				from.fx+Math.cos(from.angle)*from.length*curveDist,
-				from.fy+Math.sin(from.angle)*from.length*curveDist
-			);
-			canvas.lineTo(
-				from.fx+Math.cos(from.angle)*from.length*(1-curveDist),
-				from.fy+Math.sin(from.angle)*from.length*(1-curveDist)
-			);
+			canvas.moveTo( from.getSubX(curveDist), from.getSubY(curveDist) );
+			canvas.lineTo( from.getSubX(1-curveDist+0.1), from.getSubY(1-curveDist+0.1) );
 			canvas.curveTo(
 				from.tx,
 				from.ty,
-				to.fx+Math.cos(to.angle)*to.length*curveDist,
-				to.fy+Math.sin(to.angle)*to.length*curveDist
+				to.getSubX(curveDist),
+				to.getSubY(curveDist)
 			);
 
 			bufferCanvas.clear();
 			bufferCanvas.lineStyle(brushSize, 0x00ff00);
-			bufferCanvas.moveTo(
-				to.fx+Math.cos(to.angle)*to.length*(1-curveDist),
-				to.fy+Math.sin(to.angle)*to.length*(1-curveDist)
-			);
+			bufferCanvas.moveTo( to.getSubX(1-curveDist), to.getSubY(1-curveDist) );
 			bufferCanvas.lineTo(to.tx, to.ty);
 		}
 
@@ -242,6 +237,10 @@ class Client extends Process {
 			if( ca.selectPressed() )
 				Main.ME.startClient();
 		}
+
+		#if debug
+		debugTf.text = Std.string( M.round(hxd.Timer.fps()) );
+		#end
 	}
 }
 
