@@ -19,4 +19,12 @@ class Line {
 
 		this.color = c;
 	}
+
+	public inline function getSubX(ratio:Float) {
+		return fx + Math.cos(angle) * length * ratio;
+	}
+
+	public inline function getSubY(ratio:Float) {
+		return fy + Math.sin(angle) * length * ratio;
+	}
 }
