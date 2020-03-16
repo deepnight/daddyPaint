@@ -124,12 +124,24 @@ class Client extends Process {
 		firstStroke = true;
 		lastMouse.set( getClientMouseX(), getClientMouseY() );
 		elapsedDist = 0;
+
+		// Line rounded start
+		canvas.lineStyle();
+		canvas.beginFill(color);
+		canvas.drawCircle(getClientMouseX(), getClientMouseY(), brushSize*0.4);
+		canvas.endFill();
 	}
 
 	function stopDrawing() {
 		drawing = false;
 		firstStroke = false;
 		flushLineBuffer(true);
+
+		// Line rounded end
+		canvas.lineStyle();
+		canvas.beginFill(color);
+		canvas.drawCircle(getClientMouseX(), getClientMouseY(), brushSize*0.4);
+		canvas.endFill();
 
 		// HACK: fix Graphics cropped render bug
 		canvas.beginFill(0x0,0);
