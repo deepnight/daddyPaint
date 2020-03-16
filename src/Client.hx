@@ -8,6 +8,7 @@ class Client extends Process {
 	public var fx : Fx;
 	public var hud : ui.Hud;
 	var touchCatcher : h2d.Interactive;
+	var mouse : h2d.col.Point;
 
 	var drawing = false;
 	var firstStroke = false;
@@ -23,7 +24,7 @@ class Client extends Process {
 
 	var bufferCanvas : h2d.Graphics;
 	var bufferLines : Array<Line> = [];
-	var skipFrames = 0.1;
+	var skipFrames = 0.;
 
 	public function new() {
 		super(Main.ME);
@@ -32,10 +33,18 @@ class Client extends Process {
 		ca.setLeftDeadZone(0.2);
 		ca.setRightDeadZone(0.2);
 		createRootInLayers(Main.ME.root, Const.DP_BG);
+		mouse = new h2d.col.Point();
 
+		// Init misc classes
+		fx = new Fx();
+		hud = new ui.Hud();
+
+		// Init touch interactive
+		lastMouse = new h2d.col.Point();
 		touchCatcher = new h2d.Interactive(100,100, root);
 		touchCatcher.propagateEvents = true;
 		touchCatcher.onPush = function(e:hxd.Event) {
+			mouse.set(e.relX, e.relY);
 			startDrawing();
 		}
 		touchCatcher.onRelease = function(_) stopDrawing();
@@ -43,40 +52,37 @@ class Client extends Process {
 		touchCatcher.onOut = function(_) stopDrawing();
 		touchCatcher.onMove = onMouseMove;
 
-		fx = new Fx();
-		hud = new ui.Hud();
-		lastMouse = new h2d.col.Point();
-
-		bufferCanvas = new h2d.Graphics(root);
+		// Init canvas
 		canvas = new h2d.Graphics(root);
-
+		bufferCanvas = new h2d.Graphics(root);
 		debugCanvas = new h2d.Graphics(root);
 		debugCanvas.visible = false;
 
-		Boot.ME.s2d.addEventListener( onEvent );
+		// Boot.ME.s2d.addEventListener( onEvent );
 	}
 
-	function onEvent(e:hxd.Event) {
-		switch e.kind {
-			case EPush:
-				startDrawing();
+	// function onEvent(e:hxd.Event) {
+	// 	switch e.kind {
+	// 		case EPush:
+	// 			startDrawing();
 
-			case ERelease, EReleaseOutside, EFocusLost:
-				stopDrawing();
+	// 		case ERelease, EReleaseOutside, EFocusLost:
+	// 			stopDrawing();
 
-			case EMove:
-			case EOver:
-			case EOut:
-			case EWheel:
-			case EFocus:
-			case EKeyDown:
-			case EKeyUp:
-			case ETextInput:
-			case ECheck:
-		}
-	}
+	// 		case EMove:
+	// 		case EOver:
+	// 		case EOut:
+	// 		case EWheel:
+	// 		case EFocus:
+	// 		case EKeyDown:
+	// 		case EKeyUp:
+	// 		case ETextInput:
+	// 		case ECheck:
+	// 	}
+	// }
 
 	function onMouseMove(e:hxd.Event) {
+		mouse.set(e.relX, e.relY);
 		if( drawing #if debug && !cd.hasSetS("skipFrame",skipFrames) #end ) {
 			var mx = getClientMouseX();
 			var my = getClientMouseY();
@@ -101,8 +107,10 @@ class Client extends Process {
 		}
 	}
 
-	inline function getGlobalMouseX() return Boot.ME.s2d.mouseX;
-	inline function getGlobalMouseY() return Boot.ME.s2d.mouseY;
+	inline function getGlobalMouseX() return mouse.x;
+	inline function getGlobalMouseY() return mouse.y;
+	// inline function getGlobalMouseX() return Boot.ME.s2d.mouseX;
+	// inline function getGlobalMouseY() return Boot.ME.s2d.mouseY;
 
 	inline function getClientMouseX() return Std.int( getGlobalMouseX() / Const.SCALE );
 	inline function getClientMouseY() return Std.int( getGlobalMouseY() / Const.SCALE );
@@ -231,8 +239,8 @@ class Client extends Process {
 			#if debug
 			if( hxd.Key.isPressed(Key.D) ) {
 				debugCanvas.visible = !debugCanvas.visible;
-				canvas.alpha = debugCanvas.visible ? 0.5 : 1;
-				touchCatcher.backgroundColor = debugCanvas.visible ? Color.addAlphaF(0xff00ff,0.3) : 0x0;
+				canvas.alpha = debugCanvas.visible ? 0.3 : 1;
+				touchCatcher.backgroundColor = debugCanvas.visible ? Color.addAlphaF(0x00ff00,0.2) : 0x0;
 			}
 			#end
 
