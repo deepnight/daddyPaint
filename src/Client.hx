@@ -10,10 +10,13 @@ class Client extends Process {
 
 	var drawing = false;
 	var color : UInt = 0xffffff;
+	var brushSize = 50;
+
 	var lines : Array<Line> = [];
 	var lastMouse : h2d.col.Point;
 	var elapsedDist = 0.;
 	var canvas : h2d.Graphics;
+	var debugCanvas : h2d.Graphics;
 
 	public function new() {
 		super(Main.ME);
@@ -26,7 +29,11 @@ class Client extends Process {
 		fx = new Fx();
 		hud = new ui.Hud();
 		lastMouse = new h2d.col.Point();
+
 		canvas = new h2d.Graphics(root);
+
+		debugCanvas = new h2d.Graphics(root);
+		debugCanvas.visible = false;
 
 		Boot.ME.s2d.addEventListener( onEvent );
 	}
@@ -89,14 +96,16 @@ class Client extends Process {
 		gc();
 	}
 
+	var skipFrames = 0.06;
 	override function update() {
 		super.update();
 
-		if( drawing ) {
+		if( drawing && !cd.hasSetS("skipFrame",skipFrames) ) {
 			var mx = getClientMouseX();
 			var my = getClientMouseY();
 			if( mx!=lastMouse.x || my!=lastMouse.y ) {
-				var radius = 30;
+				// Render line
+				var radius = brushSize*0.5;
 				var minSteps = radius*0.2;
 				var steps = 0.;
 				var prevX = -1;
@@ -115,10 +124,25 @@ class Client extends Process {
 					prevY = pt.y;
 				}
 
+				// Debug render
+				#if debug
+				debugCanvas.lineStyle(3, 0xff0000);
+				debugCanvas.moveTo(lastMouse.x, lastMouse.y);
+				debugCanvas.lineTo(mx, my);
+				#end
+
+				// Store history
 				lines.push( new data.Line(lastMouse.x, lastMouse.y, mx, my, color) );
 				lastMouse.set(mx,my);
 			}
 		}
+
+		#if debug
+		if( hxd.Key.isPressed(Key.D) ) {
+			debugCanvas.visible = !debugCanvas.visible;
+			canvas.alpha = debugCanvas.visible ? 0.5 : 1;
+		}
+		#end
 
 		if( !ui.Console.ME.isActive() && !ui.Modal.hasAny() ) {
 			#if hl
