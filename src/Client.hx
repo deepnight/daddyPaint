@@ -143,6 +143,12 @@ class Client extends Process {
 		drawing = false;
 		firstStroke = false;
 		flushLineBuffer(true);
+
+		// HACK: fix Graphics cropped render bug
+		canvas.beginFill(0x0,0);
+		canvas.drawRect(-1,-1,1,1);
+		canvas.drawRect(w(),h(),1,1);
+		canvas.endFill();
 	}
 
 	function flushLineBuffer(all:Bool) {
