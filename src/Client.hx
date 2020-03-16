@@ -19,10 +19,11 @@ class Client extends Process {
 	var lastMouse : h2d.col.Point;
 	var elapsedDist = 0.;
 
+	var bg : h2d.Graphics;
 	var canvas : h2d.Graphics;
 	var debugCanvas : h2d.Graphics;
-
 	var bufferCanvas : h2d.Graphics;
+
 	var bufferLines : Array<Line> = [];
 	var skipFrames = 0.;
 
@@ -39,6 +40,13 @@ class Client extends Process {
 		fx = new Fx();
 		hud = new ui.Hud();
 
+		// Init canvas
+		bg = new h2d.Graphics(root);
+		canvas = new h2d.Graphics(root);
+		bufferCanvas = new h2d.Graphics(root);
+		debugCanvas = new h2d.Graphics(root);
+		debugCanvas.visible = false;
+
 		// Init touch interactive
 		lastMouse = new h2d.col.Point();
 		touchCatcher = new h2d.Interactive(100,100, root);
@@ -51,12 +59,6 @@ class Client extends Process {
 		touchCatcher.onReleaseOutside = function(_) stopDrawing();
 		touchCatcher.onOut = function(_) stopDrawing();
 		touchCatcher.onMove = onMouseMove;
-
-		// Init canvas
-		canvas = new h2d.Graphics(root);
-		bufferCanvas = new h2d.Graphics(root);
-		debugCanvas = new h2d.Graphics(root);
-		debugCanvas.visible = false;
 
 		// Boot.ME.s2d.addEventListener( onEvent );
 	}
@@ -206,6 +208,11 @@ class Client extends Process {
 
 	override function onResize() {
 		super.onResize();
+
+		bg.clear();
+		bg.beginFill(Color.hexToInt("#151c2d"));
+		bg.drawRect(0,0,w(),h());
+
 		touchCatcher.width = w();
 		touchCatcher.height = h();
 	}
