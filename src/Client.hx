@@ -3,6 +3,10 @@ import hxd.Key;
 
 class Client extends Process {
 	public static var ME : Client;
+	public static var BG_COLOR = Color.hexToInt("#151c2d");
+	public static var ALL_COLORS = [
+		Color.hexToInt("#ffcc00"),
+	];
 
 	public var ca : dn.heaps.Controller.ControllerAccess;
 	public var fx : Fx;
@@ -12,7 +16,7 @@ class Client extends Process {
 
 	var drawing = false;
 	var firstStroke = false;
-	var color : UInt = 0xffffff;
+	var color : UInt;
 	var brushSize = 10;
 
 	var lines : Array<Line> = [];
@@ -35,6 +39,7 @@ class Client extends Process {
 		ca.setRightDeadZone(0.2);
 		createRootInLayers(Main.ME.root, Const.DP_BG);
 		mouse = new h2d.col.Point();
+		color = ALL_COLORS[0];
 
 		// Init misc classes
 		fx = new Fx();
@@ -210,7 +215,7 @@ class Client extends Process {
 		super.onResize();
 
 		bg.clear();
-		bg.beginFill(Color.hexToInt("#151c2d"));
+		bg.beginFill(BG_COLOR);
 		bg.drawRect(0,0,w(),h());
 
 		touchCatcher.width = w();
