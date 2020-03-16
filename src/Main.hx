@@ -69,10 +69,13 @@ class Main extends dn.Process {
 			Client.ME.destroy();
 			delayer.addF(function() {
 				new Client();
+				dn.Process.resizeAll();
 			}, 1);
 		}
-		else
+		else {
 			new Client();
+			dn.Process.resizeAll();
+		}
 	}
 
 	override public function onResize() {
