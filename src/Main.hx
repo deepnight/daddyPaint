@@ -1,4 +1,3 @@
-import Data;
 import hxd.Key;
 
 class Main extends dn.Process {
@@ -27,24 +26,9 @@ class Main extends dn.Process {
         hxd.Res.initEmbed();
         #end
 
-        // Hot reloading
-		#if debug
-        hxd.res.Resource.LIVE_UPDATE = true;
-        hxd.Res.data.watch(function() {
-            delayer.cancelById("cdb");
-
-            delayer.addS("cdb", function() {
-            	Data.load( hxd.Res.data.entry.getBytes().toString() );
-            	if( Client.ME!=null )
-                    Client.ME.onCdbReload();
-            }, 0.2);
-        });
-		#end
-
 		// Assets & data init
 		Lang.init("en");
 		Assets.init();
-		Data.load( hxd.Res.data.entry.getText() );
 
 		// Console
 		new ui.Console(Assets.fontTiny, s);

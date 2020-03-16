@@ -222,18 +222,10 @@ class Client extends Process {
 		touchCatcher.height = h();
 	}
 
-	public function onCdbReload() {
-	}
-
-
-	function gc() {
-	}
-
 	override function onDispose() {
 		super.onDispose();
 
 		fx.destroy();
-		gc();
 	}
 
 	override function preUpdate() {
@@ -242,7 +234,6 @@ class Client extends Process {
 
 	override function postUpdate() {
 		super.postUpdate();
-		gc();
 	}
 
 	override function update() {
