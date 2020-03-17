@@ -177,7 +177,7 @@ class Client extends Process {
 			);
 
 			bufferCanvas.clear();
-			bufferCanvas.lineStyle(brushSize, 0x00ff00);
+			bufferCanvas.lineStyle(brushSize, 0xffffff);
 			bufferCanvas.moveTo( to.getSubX(1-curveDist), to.getSubY(1-curveDist) );
 			bufferCanvas.lineTo(to.tx, to.ty);
 		}
