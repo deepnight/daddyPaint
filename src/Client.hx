@@ -112,6 +112,7 @@ class Client extends Process {
 	}
 
 	function startDrawing() {
+		// Debug: start mark
 		#if debug
 		debugCanvas.beginFill(0x0);
 		debugCanvas.lineStyle(3,0xff0000);
@@ -179,6 +180,13 @@ class Client extends Process {
 			bufferCanvas.moveTo( to.getSubX(1-curveDist), to.getSubY(1-curveDist) );
 			bufferCanvas.lineTo(to.tx, to.ty);
 		}
+
+		// Debug: segment end
+		#if debug
+		debugCanvas.lineStyle();
+		debugCanvas.beginFill(0xff0000);
+		debugCanvas.drawCircle(getClientMouseX(), getClientMouseY(), 5);
+		#end
 
 		// Final segment
 		if( all && bufferLines.length>0 ) {
