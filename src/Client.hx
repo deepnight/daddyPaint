@@ -113,22 +113,23 @@ class Client extends Process {
 		if( touchDrawingData.exists(e.touchId) )
 			return;
 
-		// Debug: start mark
-		#if debug
-		debugCanvas.beginFill(0x0);
-		debugCanvas.lineStyle(3,0xff0000);
-		debugCanvas.drawCircle(getClientMouseX(), getClientMouseY(), 15);
-		debugCanvas.beginFill(0xff0000);
-		debugCanvas.drawCircle(getClientMouseX(), getClientMouseY(), 5);
-		#end
 
 		var tdata = new TouchDrawingData(e);
 		touchDrawingData.set(tdata.touchId, tdata);
 
+		// Debug: start mark
+		#if debug
+		debugCanvas.beginFill(0x0);
+		debugCanvas.lineStyle(3,0xff0000);
+		debugCanvas.drawCircle(tdata.mouseX, tdata.mouseY, 15);
+		debugCanvas.beginFill(0xff0000);
+		debugCanvas.drawCircle(tdata.mouseX, tdata.mouseY, 5);
+		#end
+
 		// Line rounded start
 		canvas.lineStyle();
 		canvas.beginFill(color);
-		canvas.drawCircle(getClientMouseX(), getClientMouseY(), brushSize*0.4);
+		canvas.drawCircle(tdata.mouseX, tdata.mouseY, brushSize*0.4);
 		canvas.endFill();
 	}
 
@@ -142,7 +143,7 @@ class Client extends Process {
 		// Line rounded end
 		canvas.lineStyle();
 		canvas.beginFill(color);
-		canvas.drawCircle(getClientMouseX(), getClientMouseY(), brushSize*0.4);
+		canvas.drawCircle(tdata.mouseX, tdata.mouseY, brushSize*0.4);
 		canvas.endFill();
 
 		// HACK: fix cropped h2d.Graphics render bug
@@ -194,7 +195,7 @@ class Client extends Process {
 		#if debug
 		debugCanvas.lineStyle();
 		debugCanvas.beginFill(0xff0000);
-		debugCanvas.drawCircle(getClientMouseX(), getClientMouseY(), 5);
+		debugCanvas.drawCircle(tdata.mouseX, tdata.mouseY, 5);
 		#end
 
 		// Final segment
