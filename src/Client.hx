@@ -67,7 +67,7 @@ class Client extends Process {
 		var tdata = touchDrawingData.get(e.touchId);
 
 		#if debug
-		if( cd.hasSetS("skipFrame",skipFrames) )
+		if( skipFrames>0 && cd.hasSetS("skipFrame",skipFrames) )
 			return;
 		#end
 
