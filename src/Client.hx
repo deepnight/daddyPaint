@@ -112,7 +112,6 @@ class Client extends Process {
 
 		var tdata = new TouchDrawingData(e);
 		touchDrawingData.set(tdata.touchId, tdata);
-		// fx.smokeTap(tdata.mouseX, tdata.mouseY, color);
 
 		// Debug: start mark
 		#if debug
@@ -248,10 +247,9 @@ class Client extends Process {
 	override function update() {
 		super.update();
 
-		for(data in touchDrawingData) {
-			if( data.checkTap(false) )
-				fx.smokeTap(data.originX, data.originY, color);
-		}
+		// for(data in touchDrawingData)
+		// 	if( data.checkTap(false) )
+		// 		fx.smokeTap(data.originX, data.originY, color);
 
 
 		if( !ui.Console.ME.isActive() && !ui.Modal.hasAny() ) {
@@ -290,7 +288,9 @@ class Client extends Process {
 		var t = "";
 		for(d in touchDrawingData)
 			t += "#"+d.touchId+"(avg="+Std.int(d.avgDist)+") ";
-		debugTf.text = M.round(hxd.Timer.fps()) + " touches="+t;
+		debugTf.text = M.round(hxd.Timer.fps()) + "fps"
+			+" fx="+fx.pool.count()
+			+" touches="+t;
 		#end
 	}
 }

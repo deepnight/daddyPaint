@@ -148,6 +148,8 @@ class Fx extends dn.Process {
 	public function segment(fx:Float,fy:Float, tx:Float, ty:Float, c:UInt) {
 		var dist = M.dist(fx,fy,tx,ty);
 		var ang = Math.atan2(ty-fy, tx-fx);
+
+		// Spikes
 		var n = M.ceil( dist/5 );
 		var step = dist/n;
 		for(i in 0...n ) {
@@ -157,16 +159,37 @@ class Fx extends dn.Process {
 				fx+Math.cos(ang)*dist*r + rnd(0,10,true),
 				fy+Math.sin(ang)*dist*r + rnd(0,10,true)
 			);
-			p.setFadeS(rnd(0.4,0.7), rnd(0.1,0.3), rnd(2,2.5));
-			p.colorAnimS(c, Const.BG_COLOR, rnd(0.1,0.3));
-			p.setScale(rnd(2,3,true));
-			p.moveAng(ang, rnd(3,5));
+			p.setFadeS(rnd(0.7,1), rnd(0.1,0.3), rnd(2,2.5));
+			p.colorAnimS(c, Const.BG_COLOR, rnd(0.4,0.7));
+			p.moveAng(ang, rnd(2,3));
 			p.frict = rnd(0.96,0.97);
 			p.rotation = ang;
 			p.scaleX = step;
 			p.scaleY = rnd(2,3);
 			p.scaleXMul = rnd(0.97,0.98);
 			p.lifeS = rnd(0.4,0.7);
+		}
+
+		// Dust
+		var n = M.ceil( dist/2 );
+		var step = dist/n;
+		for(i in 0...n ) {
+			for(j in 0...2) {
+				var r = i/n;
+				var p = allocBgAdd(
+					getTile("fxSpark"),
+					fx+Math.cos(ang)*dist*r + rnd(4,8,true),
+					fy+Math.sin(ang)*dist*r + rnd(4,8,true)
+				);
+				p.setFadeS(rnd(0.1,0.2), rnd(0.1,0.3), rnd(1,1.5));
+				p.colorAnimS(c, Const.BG_COLOR, rnd(3,5));
+				p.setScale(rnd(0.3,0.5,true));
+				p.moveAng(ang, rnd(0.5,1.5));
+				p.frict = rnd(0.96,0.97);
+				p.rotation = rnd(0,6.28);
+				p.scaleMul = rnd(0.991,0.994);
+				p.lifeS = rnd(0.5,1);
+			}
 		}
 	}
 
