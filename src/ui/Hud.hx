@@ -41,11 +41,12 @@ class Hud extends dn.Process {
 
 			if( c==client.color ) {
 				active = i;
+				i.width+=7;
 				i.filter = new h2d.filter.Glow(0x0, 1, 64, true);
 				i.backgroundColor = C.addAlphaF(c);
 			}
 			else
-				i.backgroundColor = C.addAlphaF( C.toBlack(c,0.5) );
+				i.backgroundColor = C.addAlphaF( C.toBlack(c,0.1) );
 
 			i.onClick = function(_) {
 				// Select color
