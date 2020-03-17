@@ -16,6 +16,7 @@ class Client extends Process {
 	var debugTf : h2d.Text;
 
 	var drawing = false;
+	var currentTouchId : Int;
 	var firstStroke = false;
 	var color : UInt;
 	var brushSize = 10;
@@ -57,13 +58,10 @@ class Client extends Process {
 		lastMouse = new h2d.col.Point();
 		touchCatcher = new h2d.Interactive(100,100, root);
 		touchCatcher.propagateEvents = true;
-		touchCatcher.onPush = function(e:hxd.Event) {
-			mouse.set(e.relX*Const.SCALE, e.relY*Const.SCALE);
-			startDrawing();
-		}
-		touchCatcher.onRelease = function(_) stopDrawing();
-		touchCatcher.onReleaseOutside = function(_) stopDrawing();
-		touchCatcher.onOut = function(_) stopDrawing();
+		touchCatcher.onPush = function(e) startDrawing(e);
+		touchCatcher.onRelease = function(e) stopDrawing(e);
+		touchCatcher.onReleaseOutside = function(e) stopDrawing(e);
+		touchCatcher.onOut = function(e) stopDrawing(e);
 		touchCatcher.onMove = onMouseMove;
 
 		debugTf = new h2d.Text(Assets.fontSmall, root);
@@ -71,6 +69,9 @@ class Client extends Process {
 	}
 
 	function onMouseMove(e:hxd.Event) {
+		if( drawing && e.touchId!=currentTouchId )
+			return;
+
 		mouse.set(e.relX*Const.SCALE, e.relY*Const.SCALE);
 		if( drawing #if debug && !cd.hasSetS("skipFrame",skipFrames) #end ) {
 			var mx = getClientMouseX();
@@ -111,7 +112,10 @@ class Client extends Process {
 		bufferLines = [];
 	}
 
-	function startDrawing() {
+	function startDrawing(e:hxd.Event) {
+		if( drawing )
+			return;
+
 		// Debug: start mark
 		#if debug
 		debugCanvas.beginFill(0x0);
@@ -121,6 +125,8 @@ class Client extends Process {
 		debugCanvas.drawCircle(getClientMouseX(), getClientMouseY(), 5);
 		#end
 
+		mouse.set(e.relX*Const.SCALE, e.relY*Const.SCALE);
+		currentTouchId = e.touchId;
 		drawing = true;
 		firstStroke = true;
 		lastMouse.set( getClientMouseX(), getClientMouseY() );
@@ -133,8 +139,8 @@ class Client extends Process {
 		canvas.endFill();
 	}
 
-	function stopDrawing() {
-		if( !drawing )
+	function stopDrawing(?e:hxd.Event) {
+		if( !drawing || e!=null && e.touchId!=currentTouchId )
 			return;
 
 		drawing = false;
