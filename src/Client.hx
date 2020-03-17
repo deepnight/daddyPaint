@@ -146,6 +146,7 @@ class Client extends Process {
 		canvas.endFill();
 
 		// HACK: fix cropped h2d.Graphics render bug
+		canvas.lineStyle();
 		canvas.beginFill(0x0,0);
 		canvas.drawRect(-1,-1,1,1);
 		canvas.drawRect(w(),h(),1,1);
