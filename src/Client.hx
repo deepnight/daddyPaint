@@ -15,23 +15,17 @@ class Client extends Process {
 	var mouse : h2d.col.Point;
 	var debugTf : h2d.Text;
 
-	var drawing = false;
-	var currentTouchId : Int;
-	var firstStroke = false;
+	var touchDrawingData : Map<Int, TouchDrawingData> = new Map();
 	var color : UInt;
 	var brushSize = 10;
 
 	var lines : Array<Line> = [];
-	var lastMouse : h2d.col.Point;
-	var avgDist = 0.;
 
 	var bg : h2d.Graphics;
 	var canvas : h2d.Graphics;
 	var debugCanvas : h2d.Graphics;
-	var bufferCanvas : h2d.Graphics;
 
-	var bufferLines : Array<Line> = [];
-	var skipFrames = 0.;
+	var skipFrames = 0.; // TODO
 
 	public function new() {
 		super(Main.ME);
@@ -50,12 +44,10 @@ class Client extends Process {
 		// Init canvas
 		bg = new h2d.Graphics(root);
 		canvas = new h2d.Graphics(root);
-		bufferCanvas = new h2d.Graphics(root);
 		debugCanvas = new h2d.Graphics(root);
 		debugCanvas.visible = false;
 
 		// Init touch interactive
-		lastMouse = new h2d.col.Point();
 		touchCatcher = new h2d.Interactive(100,100, root);
 		touchCatcher.propagateEvents = true;
 		touchCatcher.onPush = function(e) startDrawing(e);
@@ -69,32 +61,36 @@ class Client extends Process {
 	}
 
 	function onMouseMove(e:hxd.Event) {
-		if( drawing && e.touchId!=currentTouchId )
+		if( !touchDrawingData.exists(e.touchId) )
 			return;
 
-		mouse.set(e.relX*Const.SCALE, e.relY*Const.SCALE);
-		if( drawing #if debug && !cd.hasSetS("skipFrame",skipFrames) #end ) {
-			var mx = getClientMouseX();
-			var my = getClientMouseY();
-			if( mx!=lastMouse.x || my!=lastMouse.y ) {
-				var radius = brushSize*0.5;
+		var tdata = touchDrawingData.get(e.touchId);
 
-				// Debug render
-				#if debug
-				debugCanvas.lineStyle(3, 0xff0000);
-				debugCanvas.moveTo(lastMouse.x, lastMouse.y);
-				debugCanvas.lineTo(mx, my);
-				#end
+		#if debug
+		if( cd.hasSetS("skipFrame",skipFrames) )
+			return;
+		#end
 
-				// Smoothing
-				var l = new data.Line(lastMouse.x, lastMouse.y, mx, my, color);
-				bufferLines.push(l);
-				lines.push(l);
-				flushLineBuffer(false);
+		var mx = e.relX;
+		var my = e.relY;
+		if( mx!=tdata.mouseX || my!=tdata.mouseY ) {
+			var radius = brushSize*0.5;
 
-				lastMouse.set(mx,my);
-			}
+			// Debug render
+			#if debug
+			debugCanvas.lineStyle(3, 0xff0000);
+			debugCanvas.moveTo(tdata.mouseX, tdata.mouseY);
+			debugCanvas.lineTo(mx, my);
+			#end
+
+			// Smoothing
+			var l = new data.Line(tdata.mouseX, tdata.mouseY, mx, my, color);
+			tdata.bufferLines.push(l);
+			lines.push(l);
+			flushLineBuffer(e, false);
 		}
+
+		tdata.updateMouseCoords(e);
 	}
 
 	inline function getGlobalMouseX() return mouse.x;
@@ -104,16 +100,17 @@ class Client extends Process {
 	inline function getClientMouseY() return Std.int( getGlobalMouseY() / Const.SCALE );
 
 	function clear() {
-		stopDrawing();
+		for(d in touchDrawingData)
+			d.dispose();
+		touchDrawingData = new Map();
+
 		canvas.clear();
-		bufferCanvas.clear();
 		debugCanvas.clear();
 		lines = [];
-		bufferLines = [];
 	}
 
 	function startDrawing(e:hxd.Event) {
-		if( drawing )
+		if( touchDrawingData.exists(e.touchId) )
 			return;
 
 		// Debug: start mark
@@ -125,12 +122,8 @@ class Client extends Process {
 		debugCanvas.drawCircle(getClientMouseX(), getClientMouseY(), 5);
 		#end
 
-		mouse.set(e.relX*Const.SCALE, e.relY*Const.SCALE);
-		currentTouchId = e.touchId;
-		drawing = true;
-		firstStroke = true;
-		lastMouse.set( getClientMouseX(), getClientMouseY() );
-		avgDist = 0;
+		var tdata = new TouchDrawingData(e);
+		touchDrawingData.set(tdata.touchId, tdata);
 
 		// Line rounded start
 		canvas.lineStyle();
@@ -139,13 +132,12 @@ class Client extends Process {
 		canvas.endFill();
 	}
 
-	function stopDrawing(?e:hxd.Event) {
-		if( !drawing || e!=null && e.touchId!=currentTouchId )
+	function stopDrawing(e:hxd.Event) {
+		if( !touchDrawingData.exists(e.touchId) )
 			return;
 
-		drawing = false;
-		firstStroke = false;
-		flushLineBuffer(true);
+		var tdata = touchDrawingData.get(e.touchId);
+		flushLineBuffer(e, true);
 
 		// Line rounded end
 		canvas.lineStyle();
@@ -153,29 +145,34 @@ class Client extends Process {
 		canvas.drawCircle(getClientMouseX(), getClientMouseY(), brushSize*0.4);
 		canvas.endFill();
 
-		// HACK: fix Graphics cropped render bug
+		// HACK: fix cropped h2d.Graphics render bug
 		canvas.beginFill(0x0,0);
 		canvas.drawRect(-1,-1,1,1);
 		canvas.drawRect(w(),h(),1,1);
 		canvas.endFill();
+
+		touchDrawingData.remove(tdata.touchId);
+		tdata.dispose();
 	}
 
-	function flushLineBuffer(all:Bool) {
+	function flushLineBuffer(e:hxd.Event, isFinal:Bool) {
+		var tdata = touchDrawingData.get(e.touchId);
+
 		var curveDist = 0.4;
 		canvas.lineStyle(brushSize, color);
 
-		if( firstStroke && bufferLines.length>0 ) {
-			var l = bufferLines[0];
+		if( tdata.firstStroke && tdata.bufferLines.length>0 ) {
+			var l = tdata.bufferLines[0];
 			canvas.moveTo(l.fx, l.fy);
 			canvas.lineTo(l.getSubX(1-curveDist), l.getSubY(1-curveDist));
-			firstStroke = false;
+			tdata.firstStroke = false;
 		}
 
 		// Render while easing corners
-		while( bufferLines.length>=2 ) {
-			var from = bufferLines.shift();
-			var to = bufferLines[0];
-			avgDist = 0.9*avgDist + 0.1*(from.length + to.length);
+		while( tdata.bufferLines.length>=2 ) {
+			var from = tdata.bufferLines.shift();
+			var to = tdata.bufferLines[0];
+			tdata.avgDist = 0.9*tdata.avgDist + 0.1*(from.length + to.length);
 			canvas.moveTo( from.getSubX(curveDist), from.getSubY(curveDist) );
 			canvas.lineTo( from.getSubX(1-curveDist+0.1), from.getSubY(1-curveDist+0.1) );
 			canvas.curveTo(
@@ -185,10 +182,10 @@ class Client extends Process {
 				to.getSubY(curveDist)
 			);
 
-			bufferCanvas.clear();
-			bufferCanvas.lineStyle(brushSize, 0xffffff);
-			bufferCanvas.moveTo( to.getSubX(1-curveDist), to.getSubY(1-curveDist) );
-			bufferCanvas.lineTo(to.tx, to.ty);
+			tdata.bufferCanvas.clear();
+			tdata.bufferCanvas.lineStyle(brushSize, 0xffffff);
+			tdata.bufferCanvas.moveTo( to.getSubX(1-curveDist), to.getSubY(1-curveDist) );
+			tdata.bufferCanvas.lineTo(to.tx, to.ty);
 		}
 
 		// Debug: segment end
@@ -199,16 +196,16 @@ class Client extends Process {
 		#end
 
 		// Final segment
-		if( all && bufferLines.length>0 ) {
-			var last = bufferLines[0];
+		if( isFinal && tdata.bufferLines.length>0 ) {
+			var last = tdata.bufferLines[0];
 			canvas.lineStyle(brushSize, color);
 			canvas.moveTo(
 				last.fx+Math.cos(last.angle)*last.length*curveDist,
 				last.fy+Math.sin(last.angle)*last.length*curveDist
 			);
 			canvas.lineTo(last.tx, last.ty);
-			bufferCanvas.clear();
-			bufferLines = [];
+			tdata.bufferCanvas.clear();
+			tdata.bufferLines = [];
 		}
 	}
 
@@ -269,7 +266,10 @@ class Client extends Process {
 		}
 
 		#if debug
-		debugTf.text = Std.string( M.round(hxd.Timer.fps()) )+" avg="+M.pretty(avgDist,1);
+		var n = 0;
+		for(d in touchDrawingData)
+			n++;
+		debugTf.text = M.round(hxd.Timer.fps()) + " touches="+n;
 		#end
 	}
 }
