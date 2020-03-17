@@ -20,10 +20,12 @@ class Const {
 	public static var DP_FX_FRONT = _inc++;
 	public static var DP_TOP = _inc++;
 
-	public static var BG_COLOR = Color.hexToInt("#151c2d");
-	public static var ALL_COLORS = [
-		Color.hexToInt("#ffcc00"),
-		Color.hexToInt("#ff5e8a"),
-		Color.hexToInt("#6a87ff"),
+	public static var BG_COLOR = Color.hexToInt("#1a1c2c");
+	public static var ALL_COLORS = [ // sweetie 16
+		Color.hexToInt("#FFcc00"),
+		Color.hexToInt("#FF2674"),
+		Color.hexToInt("#4998D4"),
+		Color.hexToInt("#54E58E"),
+		Color.hexToInt("#B0EF44"),
 	];
 }
