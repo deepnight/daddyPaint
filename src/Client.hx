@@ -112,7 +112,7 @@ class Client extends Process {
 
 		var tdata = new TouchDrawingData(e);
 		touchDrawingData.set(tdata.touchId, tdata);
-		fx.smokeTap(tdata.mouseX, tdata.mouseY, color);
+		// fx.smokeTap(tdata.mouseX, tdata.mouseY, color);
 
 		// Debug: start mark
 		#if debug
@@ -136,6 +136,9 @@ class Client extends Process {
 
 		var tdata = touchDrawingData.get(e.touchId);
 		flushLineBuffer(e, true);
+
+		if( tdata.checkTap(true) )
+			fx.smokeTap(tdata.mouseX, tdata.mouseY, color);
 
 		// Line rounded end
 		canvas.lineStyle();
@@ -244,6 +247,12 @@ class Client extends Process {
 
 	override function update() {
 		super.update();
+
+		for(data in touchDrawingData) {
+			if( data.checkTap(false) )
+				fx.smokeTap(data.originX, data.originY, color);
+		}
+
 
 		if( !ui.Console.ME.isActive() && !ui.Modal.hasAny() ) {
 			// Clear canvas
