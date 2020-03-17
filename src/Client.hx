@@ -134,6 +134,9 @@ class Client extends Process {
 	}
 
 	function stopDrawing() {
+		if( !drawing )
+			return;
+
 		drawing = false;
 		firstStroke = false;
 		flushLineBuffer(true);
