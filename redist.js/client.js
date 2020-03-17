@@ -621,12 +621,9 @@ HxOverrides.iter = function(a) {
 	}};
 };
 var Client = function() {
-	this.bufferLines = [];
-	this.elapsedDist = 0.;
 	this.lines = [];
 	this.brushSize = 10;
-	this.firstStroke = false;
-	this.drawing = false;
+	this.touchDrawingData = new haxe_ds_IntMap();
 	var _gthis = this;
 	dn_Process.call(this,Main.ME);
 	Client.ME = this;
@@ -642,82 +639,78 @@ var Client = function() {
 	this.hud = new ui_Hud();
 	this.bg = new h2d_Graphics(this.root);
 	this.canvas = new h2d_Graphics(this.root);
-	this.bufferCanvas = new h2d_Graphics(this.root);
 	this.debugCanvas = new h2d_Graphics(this.root);
 	this.debugCanvas.set_visible(false);
-	this.lastMouse = new h2d_col_Point();
 	this.touchCatcher = new h2d_Interactive(100,100,this.root);
 	this.touchCatcher.propagateEvents = true;
 	this.touchCatcher.onPush = function(e) {
-		var _this2 = _gthis.mouse;
-		_this2.x = e.relX * Const.SCALE;
-		_this2.y = e.relY * Const.SCALE;
-		_gthis.startDrawing();
+		_gthis.startDrawing(e);
 	};
-	this.touchCatcher.onRelease = function(_) {
-		_gthis.stopDrawing();
+	this.touchCatcher.onRelease = function(e1) {
+		_gthis.stopDrawing(e1);
 	};
-	this.touchCatcher.onReleaseOutside = function(_1) {
-		_gthis.stopDrawing();
+	this.touchCatcher.onReleaseOutside = function(e2) {
+		_gthis.stopDrawing(e2);
 	};
-	this.touchCatcher.onOut = function(_2) {
-		_gthis.stopDrawing();
+	this.touchCatcher.onOut = function(e3) {
+		_gthis.stopDrawing(e3);
 	};
 	this.touchCatcher.onMove = $bind(this,this.onMouseMove);
 	this.debugTf = new h2d_Text(Assets.fontSmall,this.root);
-	var _this3 = this.debugTf;
-	_this3.posChanged = true;
-	_this3.scaleX = 2;
-	_this3.posChanged = true;
-	_this3.scaleY = 2;
+	var _this2 = this.debugTf;
+	_this2.posChanged = true;
+	_this2.scaleX = 2;
+	_this2.posChanged = true;
+	_this2.scaleY = 2;
 };
 $hxClasses["Client"] = Client;
 Client.__name__ = "Client";
 Client.__super__ = dn_Process;
 Client.prototype = $extend(dn_Process.prototype,{
 	onMouseMove: function(e) {
-		var _this = this.mouse;
-		_this.x = e.relX * Const.SCALE;
-		_this.y = e.relY * Const.SCALE;
-		if(this.drawing) {
-			var mx = this.mouse.x / Const.SCALE | 0;
-			var my = this.mouse.y / Const.SCALE | 0;
-			if(mx != this.lastMouse.x || my != this.lastMouse.y) {
-				var radius = this.brushSize * 0.5;
-				var l = new data_Line(this.lastMouse.x,this.lastMouse.y,mx,my,this.color);
-				this.bufferLines.push(l);
-				this.lines.push(l);
-				this.flushLineBuffer(false);
-				var _this1 = this.lastMouse;
-				_this1.x = mx;
-				_this1.y = my;
-			}
+		if(!this.touchDrawingData.h.hasOwnProperty(e.touchId)) {
+			return;
 		}
+		var tdata = this.touchDrawingData.h[e.touchId];
+		var mx = e.relX;
+		var my = e.relY;
+		if(mx != (tdata.lastKnownMouse.x / Const.SCALE | 0) || my != (tdata.lastKnownMouse.y / Const.SCALE | 0)) {
+			var radius = this.brushSize * 0.5;
+			var l = new data_Line(tdata.lastKnownMouse.x / Const.SCALE | 0,tdata.lastKnownMouse.y / Const.SCALE | 0,mx,my,this.color);
+			tdata.bufferLines.push(l);
+			this.lines.push(l);
+			this.flushLineBuffer(e,false);
+		}
+		tdata.updateMouseCoords(e);
 	}
 	,clear: function() {
-		this.stopDrawing();
+		var d = this.touchDrawingData.iterator();
+		while(d.hasNext()) {
+			var d1 = d.next();
+			d1.dispose();
+		}
+		this.touchDrawingData = new haxe_ds_IntMap();
 		this.canvas.clear();
-		this.bufferCanvas.clear();
 		this.debugCanvas.clear();
 		this.lines = [];
-		this.bufferLines = [];
 	}
-	,startDrawing: function() {
-		this.drawing = true;
-		this.firstStroke = true;
-		var _this = this.lastMouse;
-		_this.x = this.mouse.x / Const.SCALE | 0;
-		_this.y = this.mouse.y / Const.SCALE | 0;
-		this.elapsedDist = 0;
+	,startDrawing: function(e) {
+		if(this.touchDrawingData.h.hasOwnProperty(e.touchId)) {
+			return;
+		}
+		var tdata = new TouchDrawingData(e);
+		this.touchDrawingData.h[tdata.touchId] = tdata;
 		this.canvas.lineStyle();
 		this.canvas.beginFill(this.color);
 		this.canvas.drawCircle(this.mouse.x / Const.SCALE | 0,this.mouse.y / Const.SCALE | 0,this.brushSize * 0.4);
 		this.canvas.endFill();
 	}
-	,stopDrawing: function() {
-		this.drawing = false;
-		this.firstStroke = false;
-		this.flushLineBuffer(true);
+	,stopDrawing: function(e) {
+		if(!this.touchDrawingData.h.hasOwnProperty(e.touchId)) {
+			return;
+		}
+		var tdata = this.touchDrawingData.h[e.touchId];
+		this.flushLineBuffer(e,true);
 		this.canvas.lineStyle();
 		this.canvas.beginFill(this.color);
 		this.canvas.drawCircle(this.mouse.x / Const.SCALE | 0,this.mouse.y / Const.SCALE | 0,this.brushSize * 0.4);
@@ -726,12 +719,15 @@ Client.prototype = $extend(dn_Process.prototype,{
 		this.canvas.drawRect(-1,-1,1,1);
 		this.canvas.drawRect(dn_Process.CUSTOM_STAGE_WIDTH > 0 ? dn_Process.CUSTOM_STAGE_WIDTH : hxd_Window.getInstance().get_width(),dn_Process.CUSTOM_STAGE_HEIGHT > 0 ? dn_Process.CUSTOM_STAGE_HEIGHT : hxd_Window.getInstance().get_height(),1,1);
 		this.canvas.endFill();
+		this.touchDrawingData.remove(tdata.touchId);
+		tdata.dispose();
 	}
-	,flushLineBuffer: function(all) {
+	,flushLineBuffer: function(e,isFinal) {
+		var tdata = this.touchDrawingData.h[e.touchId];
 		var curveDist = 0.4;
 		this.canvas.lineStyle(this.brushSize,this.color);
-		if(this.firstStroke && this.bufferLines.length > 0) {
-			var l = this.bufferLines[0];
+		if(tdata.firstStroke && tdata.bufferLines.length > 0) {
+			var l = tdata.bufferLines[0];
 			var _this = this.canvas;
 			var x = l.fx;
 			var y = l.fy;
@@ -749,87 +745,92 @@ Client.prototype = $extend(dn_Process.prototype,{
 			var by1 = l.ty;
 			var y1 = l.fy + Math.sin(Math.atan2(l.ty - l.fy,l.tx - l.fx)) * Math.sqrt((ax1 - bx1) * (ax1 - bx1) + (ay1 - by1) * (ay1 - by1)) * (1 - curveDist);
 			_this1.addVertex(x1,y1,_this1.curR,_this1.curG,_this1.curB,_this1.curA,x1 * _this1.ma + y1 * _this1.mc + _this1.mx,x1 * _this1.mb + y1 * _this1.md + _this1.my);
-			this.firstStroke = false;
+			tdata.firstStroke = false;
 		}
-		while(this.bufferLines.length >= 2) {
-			var from = this.bufferLines.shift();
-			var to = this.bufferLines[0];
-			var _this2 = this.canvas;
+		while(tdata.bufferLines.length >= 2) {
+			var from = tdata.bufferLines.shift();
+			var to = tdata.bufferLines[0];
 			var ax2 = from.fx;
 			var ay2 = from.fy;
 			var bx2 = from.tx;
 			var by2 = from.ty;
-			var x2 = from.fx + Math.cos(Math.atan2(from.ty - from.fy,from.tx - from.fx)) * Math.sqrt((ax2 - bx2) * (ax2 - bx2) + (ay2 - by2) * (ay2 - by2)) * curveDist;
+			tdata.avgDist = 0.9 * tdata.avgDist + 0.1 * Math.sqrt((ax2 - bx2) * (ax2 - bx2) + (ay2 - by2) * (ay2 - by2));
+			var _this2 = this.canvas;
 			var ax3 = from.fx;
 			var ay3 = from.fy;
 			var bx3 = from.tx;
 			var by3 = from.ty;
-			var y2 = from.fy + Math.sin(Math.atan2(from.ty - from.fy,from.tx - from.fx)) * Math.sqrt((ax3 - bx3) * (ax3 - bx3) + (ay3 - by3) * (ay3 - by3)) * curveDist;
-			_this2.flush();
-			_this2.addVertex(x2,y2,_this2.curR,_this2.curG,_this2.curB,_this2.curA,x2 * _this2.ma + y2 * _this2.mc + _this2.mx,x2 * _this2.mb + y2 * _this2.md + _this2.my);
-			var _this3 = this.canvas;
+			var x2 = from.fx + Math.cos(Math.atan2(from.ty - from.fy,from.tx - from.fx)) * Math.sqrt((ax3 - bx3) * (ax3 - bx3) + (ay3 - by3) * (ay3 - by3)) * curveDist;
 			var ax4 = from.fx;
 			var ay4 = from.fy;
 			var bx4 = from.tx;
 			var by4 = from.ty;
-			var x3 = from.fx + Math.cos(Math.atan2(from.ty - from.fy,from.tx - from.fx)) * Math.sqrt((ax4 - bx4) * (ax4 - bx4) + (ay4 - by4) * (ay4 - by4)) * (1 - curveDist + 0.1);
+			var y2 = from.fy + Math.sin(Math.atan2(from.ty - from.fy,from.tx - from.fx)) * Math.sqrt((ax4 - bx4) * (ax4 - bx4) + (ay4 - by4) * (ay4 - by4)) * curveDist;
+			_this2.flush();
+			_this2.addVertex(x2,y2,_this2.curR,_this2.curG,_this2.curB,_this2.curA,x2 * _this2.ma + y2 * _this2.mc + _this2.mx,x2 * _this2.mb + y2 * _this2.md + _this2.my);
+			var _this3 = this.canvas;
 			var ax5 = from.fx;
 			var ay5 = from.fy;
 			var bx5 = from.tx;
 			var by5 = from.ty;
-			var y3 = from.fy + Math.sin(Math.atan2(from.ty - from.fy,from.tx - from.fx)) * Math.sqrt((ax5 - bx5) * (ax5 - bx5) + (ay5 - by5) * (ay5 - by5)) * (1 - curveDist + 0.1);
+			var x3 = from.fx + Math.cos(Math.atan2(from.ty - from.fy,from.tx - from.fx)) * Math.sqrt((ax5 - bx5) * (ax5 - bx5) + (ay5 - by5) * (ay5 - by5)) * (1 - curveDist + 0.1);
+			var ax6 = from.fx;
+			var ay6 = from.fy;
+			var bx6 = from.tx;
+			var by6 = from.ty;
+			var y3 = from.fy + Math.sin(Math.atan2(from.ty - from.fy,from.tx - from.fx)) * Math.sqrt((ax6 - bx6) * (ax6 - bx6) + (ay6 - by6) * (ay6 - by6)) * (1 - curveDist + 0.1);
 			_this3.addVertex(x3,y3,_this3.curR,_this3.curG,_this3.curB,_this3.curA,x3 * _this3.ma + y3 * _this3.mc + _this3.mx,x3 * _this3.mb + y3 * _this3.md + _this3.my);
-			var ax6 = to.fx;
-			var ay6 = to.fy;
-			var bx6 = to.tx;
-			var by6 = to.ty;
 			var ax7 = to.fx;
 			var ay7 = to.fy;
 			var bx7 = to.tx;
 			var by7 = to.ty;
-			this.canvas.curveTo(from.tx,from.ty,to.fx + Math.cos(Math.atan2(to.ty - to.fy,to.tx - to.fx)) * Math.sqrt((ax6 - bx6) * (ax6 - bx6) + (ay6 - by6) * (ay6 - by6)) * curveDist,to.fy + Math.sin(Math.atan2(to.ty - to.fy,to.tx - to.fx)) * Math.sqrt((ax7 - bx7) * (ax7 - bx7) + (ay7 - by7) * (ay7 - by7)) * curveDist);
-			this.bufferCanvas.clear();
-			this.bufferCanvas.lineStyle(this.brushSize,65280);
-			var _this4 = this.bufferCanvas;
 			var ax8 = to.fx;
 			var ay8 = to.fy;
 			var bx8 = to.tx;
 			var by8 = to.ty;
-			var x4 = to.fx + Math.cos(Math.atan2(to.ty - to.fy,to.tx - to.fx)) * Math.sqrt((ax8 - bx8) * (ax8 - bx8) + (ay8 - by8) * (ay8 - by8)) * (1 - curveDist);
+			this.canvas.curveTo(from.tx,from.ty,to.fx + Math.cos(Math.atan2(to.ty - to.fy,to.tx - to.fx)) * Math.sqrt((ax7 - bx7) * (ax7 - bx7) + (ay7 - by7) * (ay7 - by7)) * curveDist,to.fy + Math.sin(Math.atan2(to.ty - to.fy,to.tx - to.fx)) * Math.sqrt((ax8 - bx8) * (ax8 - bx8) + (ay8 - by8) * (ay8 - by8)) * curveDist);
+			tdata.bufferCanvas.clear();
+			tdata.bufferCanvas.lineStyle(this.brushSize,16777215);
+			var _this4 = tdata.bufferCanvas;
 			var ax9 = to.fx;
 			var ay9 = to.fy;
 			var bx9 = to.tx;
 			var by9 = to.ty;
-			var y4 = to.fy + Math.sin(Math.atan2(to.ty - to.fy,to.tx - to.fx)) * Math.sqrt((ax9 - bx9) * (ax9 - bx9) + (ay9 - by9) * (ay9 - by9)) * (1 - curveDist);
+			var x4 = to.fx + Math.cos(Math.atan2(to.ty - to.fy,to.tx - to.fx)) * Math.sqrt((ax9 - bx9) * (ax9 - bx9) + (ay9 - by9) * (ay9 - by9)) * (1 - curveDist);
+			var ax10 = to.fx;
+			var ay10 = to.fy;
+			var bx10 = to.tx;
+			var by10 = to.ty;
+			var y4 = to.fy + Math.sin(Math.atan2(to.ty - to.fy,to.tx - to.fx)) * Math.sqrt((ax10 - bx10) * (ax10 - bx10) + (ay10 - by10) * (ay10 - by10)) * (1 - curveDist);
 			_this4.flush();
 			_this4.addVertex(x4,y4,_this4.curR,_this4.curG,_this4.curB,_this4.curA,x4 * _this4.ma + y4 * _this4.mc + _this4.mx,x4 * _this4.mb + y4 * _this4.md + _this4.my);
-			var _this5 = this.bufferCanvas;
+			var _this5 = tdata.bufferCanvas;
 			var x5 = to.tx;
 			var y5 = to.ty;
 			_this5.addVertex(x5,y5,_this5.curR,_this5.curG,_this5.curB,_this5.curA,x5 * _this5.ma + y5 * _this5.mc + _this5.mx,x5 * _this5.mb + y5 * _this5.md + _this5.my);
 		}
-		if(all && this.bufferLines.length > 0) {
-			var last = this.bufferLines[0];
+		if(isFinal && tdata.bufferLines.length > 0) {
+			var last = tdata.bufferLines[0];
 			this.canvas.lineStyle(this.brushSize,this.color);
 			var _this6 = this.canvas;
-			var ax10 = last.fx;
-			var ay10 = last.fy;
-			var bx10 = last.tx;
-			var by10 = last.ty;
-			var x6 = last.fx + Math.cos(Math.atan2(last.ty - last.fy,last.tx - last.fx)) * Math.sqrt((ax10 - bx10) * (ax10 - bx10) + (ay10 - by10) * (ay10 - by10)) * curveDist;
 			var ax11 = last.fx;
 			var ay11 = last.fy;
 			var bx11 = last.tx;
 			var by11 = last.ty;
-			var y6 = last.fy + Math.sin(Math.atan2(last.ty - last.fy,last.tx - last.fx)) * Math.sqrt((ax11 - bx11) * (ax11 - bx11) + (ay11 - by11) * (ay11 - by11)) * curveDist;
+			var x6 = last.fx + Math.cos(Math.atan2(last.ty - last.fy,last.tx - last.fx)) * Math.sqrt((ax11 - bx11) * (ax11 - bx11) + (ay11 - by11) * (ay11 - by11)) * curveDist;
+			var ax12 = last.fx;
+			var ay12 = last.fy;
+			var bx12 = last.tx;
+			var by12 = last.ty;
+			var y6 = last.fy + Math.sin(Math.atan2(last.ty - last.fy,last.tx - last.fx)) * Math.sqrt((ax12 - bx12) * (ax12 - bx12) + (ay12 - by12) * (ay12 - by12)) * curveDist;
 			_this6.flush();
 			_this6.addVertex(x6,y6,_this6.curR,_this6.curG,_this6.curB,_this6.curA,x6 * _this6.ma + y6 * _this6.mc + _this6.mx,x6 * _this6.mb + y6 * _this6.md + _this6.my);
 			var _this7 = this.canvas;
 			var x7 = last.tx;
 			var y7 = last.ty;
 			_this7.addVertex(x7,y7,_this7.curR,_this7.curG,_this7.curB,_this7.curA,x7 * _this7.ma + y7 * _this7.mc + _this7.mx,x7 * _this7.mb + y7 * _this7.md + _this7.my);
-			this.bufferCanvas.clear();
-			this.bufferLines = [];
+			tdata.bufferCanvas.clear();
+			tdata.bufferLines = [];
 		}
 	}
 	,onResize: function() {
@@ -1274,6 +1275,31 @@ StringTools.hex = function(n,digits) {
 		while(s.length < digits) s = "0" + s;
 	}
 	return s;
+};
+var TouchDrawingData = function(e) {
+	this.bufferLines = [];
+	this.avgDist = 0.;
+	this.firstStroke = true;
+	this.touchId = e.touchId;
+	this.bufferCanvas = new h2d_Graphics(Client.ME.root);
+	this.updateMouseCoords(e);
+};
+$hxClasses["TouchDrawingData"] = TouchDrawingData;
+TouchDrawingData.__name__ = "TouchDrawingData";
+TouchDrawingData.prototype = {
+	updateMouseCoords: function(e) {
+		this.lastKnownMouse = new h2d_col_Point(e.relX * Const.SCALE,e.relY * Const.SCALE);
+	}
+	,dispose: function() {
+		this.bufferLines = null;
+		this.lastKnownMouse = null;
+		var _this = this.bufferCanvas;
+		if(_this != null && _this.parent != null) {
+			_this.parent.removeChild(_this);
+		}
+		this.bufferCanvas = null;
+	}
+	,__class__: TouchDrawingData
 };
 var Type = function() { };
 $hxClasses["Type"] = Type;
