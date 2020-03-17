@@ -172,7 +172,8 @@ class Client extends Process {
 		while( tdata.bufferLines.length>=2 ) {
 			var from = tdata.bufferLines.shift();
 			var to = tdata.bufferLines[0];
-			tdata.avgDist = 0.9*tdata.avgDist + 0.1*(from.length + to.length);
+			tdata.avgDist = 0.9*tdata.avgDist + 0.1*from.length;
+
 			canvas.moveTo( from.getSubX(curveDist), from.getSubY(curveDist) );
 			canvas.lineTo( from.getSubX(1-curveDist+0.1), from.getSubY(1-curveDist+0.1) );
 			canvas.curveTo(
@@ -266,10 +267,10 @@ class Client extends Process {
 		}
 
 		#if debug
-		var n = 0;
+		var t = "";
 		for(d in touchDrawingData)
-			n++;
-		debugTf.text = M.round(hxd.Timer.fps()) + " touches="+n;
+			t += "#"+d.touchId+"(avg="+Std.int(d.avgDist)+") ";
+		debugTf.text = M.round(hxd.Timer.fps()) + " touches="+t;
 		#end
 	}
 }
