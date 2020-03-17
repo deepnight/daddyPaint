@@ -22,7 +22,7 @@ class Client extends Process {
 
 	var lines : Array<Line> = [];
 	var lastMouse : h2d.col.Point;
-	var elapsedDist = 0.;
+	var avgDist = 0.;
 
 	var bg : h2d.Graphics;
 	var canvas : h2d.Graphics;
@@ -124,7 +124,7 @@ class Client extends Process {
 		drawing = true;
 		firstStroke = true;
 		lastMouse.set( getClientMouseX(), getClientMouseY() );
-		elapsedDist = 0;
+		avgDist = 0;
 
 		// Line rounded start
 		canvas.lineStyle();
@@ -166,6 +166,7 @@ class Client extends Process {
 		while( bufferLines.length>=2 ) {
 			var from = bufferLines.shift();
 			var to = bufferLines[0];
+			avgDist = 0.9*avgDist + 0.1*(from.length + to.length);
 			canvas.moveTo( from.getSubX(curveDist), from.getSubY(curveDist) );
 			canvas.lineTo( from.getSubX(1-curveDist+0.1), from.getSubY(1-curveDist+0.1) );
 			canvas.curveTo(
@@ -259,7 +260,7 @@ class Client extends Process {
 		}
 
 		#if debug
-		debugTf.text = Std.string( M.round(hxd.Timer.fps()) );
+		debugTf.text = Std.string( M.round(hxd.Timer.fps()) )+" avg="+M.pretty(avgDist,1);
 		#end
 	}
 }
