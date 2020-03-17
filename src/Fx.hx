@@ -162,7 +162,7 @@ class Fx extends dn.Process {
 		}
 	}
 
-	public function segment(fx:Float,fy:Float, tx:Float, ty:Float, c:UInt) {
+	public function segment(fx:Float,fy:Float, tx:Float, ty:Float, size:Float, c:UInt) {
 		var dist = M.dist(fx,fy,tx,ty);
 		var ang = Math.atan2(ty-fy, tx-fx);
 
@@ -173,8 +173,8 @@ class Fx extends dn.Process {
 			var r = i/n;
 			var p = allocBgAdd(
 				getTile("fxLine"),
-				fx+Math.cos(ang)*dist*r + rnd(0,client.brushSize,true),
-				fy+Math.sin(ang)*dist*r + rnd(0,client.brushSize,true)
+				fx+Math.cos(ang)*dist*r + rnd(0,size,true),
+				fy+Math.sin(ang)*dist*r + rnd(0,size,true)
 			);
 			p.setFadeS(rnd(0.7,1), rnd(0.1,0.3), rnd(2,2.5));
 			p.colorAnimS(c, Const.BG_COLOR, rnd(0.7,1.4));
@@ -195,8 +195,8 @@ class Fx extends dn.Process {
 				var r = i/n;
 				var p = allocBgAdd(
 					getTile("fxSpark"),
-					fx+Math.cos(ang)*dist*r + client.brushSize*rnd(0.4,0.9,true),
-					fy+Math.sin(ang)*dist*r + client.brushSize*rnd(0.4,0.9,true)
+					fx+Math.cos(ang)*dist*r + size*rnd(0.4,0.9,true),
+					fy+Math.sin(ang)*dist*r + size*rnd(0.4,0.9,true)
 				);
 				p.setFadeS(rnd(0.1,0.2), rnd(0.1,0.3), rnd(1,1.5));
 				p.colorAnimS(c, Const.BG_COLOR, rnd(3,5));

@@ -26,6 +26,10 @@ class TouchDrawingData {
 		originY = mouseY;
 	}
 
+	public function getBrushSize() {
+		return client.baseBrushSize * ( 0.6 + 0.4*Math.cos(getElapsedTimeS()*8) );
+	}
+
 	public inline function getElapsedTimeS() return haxe.Timer.stamp() - startTime;
 	public inline function getDistToOrigin() return M.dist(originX, originY, mouseX, mouseY);
 

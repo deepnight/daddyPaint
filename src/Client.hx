@@ -13,7 +13,7 @@ class Client extends Process {
 
 	var touchDrawingData : Map<Int, TouchDrawingData> = new Map();
 	public var color : UInt;
-	public var brushSize = 6;
+	public var baseBrushSize = 10;
 
 	var lines : Array<Line> = [];
 
@@ -70,7 +70,7 @@ class Client extends Process {
 		var mx = e.relX;
 		var my = e.relY;
 		if( mx!=tdata.mouseX || my!=tdata.mouseY ) {
-			var radius = brushSize*0.5;
+			var radius = tdata.getBrushSize()*0.5;
 
 			// Debug render
 			#if debug
@@ -125,7 +125,7 @@ class Client extends Process {
 		// Line rounded start
 		canvas.lineStyle();
 		canvas.beginFill(color);
-		canvas.drawCircle(tdata.mouseX, tdata.mouseY, brushSize*0.4);
+		canvas.drawCircle(tdata.mouseX, tdata.mouseY, tdata.getBrushSize()*0.4);
 		canvas.endFill();
 	}
 
@@ -142,7 +142,7 @@ class Client extends Process {
 		// Line rounded end
 		canvas.lineStyle();
 		canvas.beginFill(color);
-		canvas.drawCircle(tdata.mouseX, tdata.mouseY, brushSize*0.4);
+		canvas.drawCircle(tdata.mouseX, tdata.mouseY, tdata.getBrushSize()*0.4);
 		canvas.endFill();
 
 		// HACK: fix cropped h2d.Graphics render bug
@@ -157,17 +157,16 @@ class Client extends Process {
 	}
 
 	function flushLineBuffer(e:hxd.Event, isFinal:Bool) {
-		var tdata = touchDrawingData.get(e.touchId);
-
 		var curveDist = 0.4;
+		var tdata = touchDrawingData.get(e.touchId);
 
 		inline function drawSegment(fx:Float, fy:Float, tx:Float, ty:Float) {
 			// canvas.lineStyle(brushSize, C.interpolateInt(color,Const.BG_COLOR, 0.8));
 			// canvas.moveTo(fx,fy+brushSize*0.3);
 			// canvas.lineTo(tx,ty+brushSize*0.3);
 
-			canvas.lineStyle(brushSize, color);
-			this.fx.segment( fx,fy, tx,ty, color );
+			canvas.lineStyle(tdata.getBrushSize(), color);
+			this.fx.segment( fx,fy, tx,ty, tdata.getBrushSize(), color );
 			canvas.moveTo(fx,fy);
 			canvas.lineTo(tx,ty);
 		}
@@ -199,7 +198,7 @@ class Client extends Process {
 			);
 
 			tdata.bufferCanvas.clear();
-			tdata.bufferCanvas.lineStyle(brushSize, 0xffffff);
+			tdata.bufferCanvas.lineStyle(tdata.getBrushSize(), 0xffffff);
 			tdata.bufferCanvas.moveTo( to.getSubX(1-curveDist), to.getSubY(1-curveDist) );
 			tdata.bufferCanvas.lineTo(to.tx, to.ty);
 		}
@@ -287,6 +286,7 @@ class Client extends Process {
 			if( ca.selectPressed() )
 				Main.ME.startClient();
 		}
+		// brushSize = 6 + 4*Math.cos(ftime*0.6);
 
 		#if debug
 		var t = "";
