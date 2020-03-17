@@ -21,13 +21,22 @@
 			"priority": -11
 		},
 		{
-			"text": "☕ Build JS",
+			"text": "☕ JS debug",
+			"color": "yellow",
+			"commandType":"palette",
+			"command": "workbench.action.tasks.runTask|JS debug",
+			"alignment": "right",
+			"skipTerminateQuickPick": false,
+			"priority": -20
+		},
+		{
+			"text": "☕ JS release",
 			"color": "yellow",
 			"commandType":"palette",
 			"command": "workbench.action.tasks.runTask|JS release",
 			"alignment": "right",
 			"skipTerminateQuickPick": false,
-			"priority": -20
+			"priority": -21
 		},
 		{
 			"text": "Run JS",
@@ -35,7 +44,7 @@
 			"command": "start js.html",
 			"alignment": "right",
 			"skipTerminateQuickPick": false,
-			"priority": -21
+			"priority": -22
 		},
 		{
 			"text": "🅰️ Build POT",
