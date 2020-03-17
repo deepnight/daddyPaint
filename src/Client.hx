@@ -3,10 +3,6 @@ import hxd.Key;
 
 class Client extends Process {
 	public static var ME : Client;
-	public static var BG_COLOR = Color.hexToInt("#151c2d");
-	public static var ALL_COLORS = [
-		Color.hexToInt("#ffcc00"),
-	];
 
 	public var ca : dn.heaps.Controller.ControllerAccess;
 	public var fx : Fx;
@@ -35,7 +31,7 @@ class Client extends Process {
 		ca.setRightDeadZone(0.2);
 		createRootInLayers(Main.ME.root, Const.DP_BG);
 		mouse = new h2d.col.Point();
-		color = ALL_COLORS[0];
+		color = Const.ALL_COLORS[0];
 
 		// Init misc classes
 		fx = new Fx();
@@ -116,6 +112,7 @@ class Client extends Process {
 
 		var tdata = new TouchDrawingData(e);
 		touchDrawingData.set(tdata.touchId, tdata);
+		fx.smokeTap(tdata.mouseX, tdata.mouseY, color);
 
 		// Debug: start mark
 		#if debug
@@ -216,7 +213,7 @@ class Client extends Process {
 		super.onResize();
 
 		bg.clear();
-		bg.beginFill(BG_COLOR);
+		bg.beginFill(Const.BG_COLOR);
 		bg.drawRect(0,0,w(),h());
 
 		touchCatcher.width = w();

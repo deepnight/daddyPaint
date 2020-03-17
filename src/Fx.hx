@@ -128,6 +128,23 @@ class Fx extends dn.Process {
 		});
 	}
 
+	public function smokeTap(x:Float,y:Float,c:UInt) {
+		var n = 35;
+		for(i in 0...n ) {
+			var a = 6.28 * i/n + rnd(0,0.2,true);
+			var p = allocBgAdd(getTile("fxSmoke"), x+Math.cos(a)*rnd(5,10), y+Math.sin(a)*rnd(5,10));
+			p.colorize( Color.interpolateInt(c, Const.BG_COLOR, rnd(0.6,1)) );
+			p.setScale(rnd(3,4,true));
+			p.setFadeS(rnd(0.1,0.2), rnd(0.1,0.3), rnd(1,2));
+			p.moveAwayFrom(x,y,rnd(2,5));
+			p.frict = rnd(0.96,0.97);
+			p.rotation = rnd(0,6.28);
+			p.dr = rnd(0,0.01,true);
+			p.ds = rnd(0.002,0.005);
+			p.lifeS = rnd(0.3,0.5);
+		}
+	}
+
 	override function update() {
 		super.update();
 

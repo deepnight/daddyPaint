@@ -1,8 +1,8 @@
 class Const {
 	public static var FPS = 60;
 	public static var FIXED_FPS = 30;
-	public static var AUTO_SCALE_TARGET_WID = -1; // -1 to disable auto-scaling on width
-	public static var AUTO_SCALE_TARGET_HEI = -1; // -1 to disable auto-scaling on height
+	public static var AUTO_SCALE_TARGET_WID = 1200; // -1 to disable auto-scaling on width
+	public static var AUTO_SCALE_TARGET_HEI = 700; // -1 to disable auto-scaling on height
 	public static var SCALE = 1.0; // ignored if auto-scaling
 	public static var UI_SCALE = 1.0;
 	public static var GRID = 16;
@@ -19,4 +19,9 @@ class Const {
 	public static var DP_FX_FRONT = _inc++;
 	public static var DP_TOP = _inc++;
 	public static var DP_UI = _inc++;
+
+	public static var BG_COLOR = Color.hexToInt("#151c2d");
+	public static var ALL_COLORS = [
+		Color.hexToInt("#ffcc00"),
+	];
 }
