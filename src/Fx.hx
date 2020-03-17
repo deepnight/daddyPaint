@@ -133,7 +133,7 @@ class Fx extends dn.Process {
 		for(i in 0...n ) {
 			var a = 6.28 * i/n + rnd(0,0.2,true);
 			var p = allocBgAdd(getTile("fxSmoke"), x+Math.cos(a)*rnd(5,10), y+Math.sin(a)*rnd(5,10));
-			p.colorize( Color.interpolateInt(c, Const.BG_COLOR, rnd(0.6,1)) );
+			p.colorAnimS( c, Const.BG_COLOR, rnd(0.7,1.3) );
 			p.setScale(rnd(3,4,true));
 			p.setFadeS(rnd(0.1,0.2), rnd(0.1,0.3), rnd(1,2));
 			p.moveAwayFrom(x,y,rnd(2,5));
@@ -142,6 +142,31 @@ class Fx extends dn.Process {
 			p.dr = rnd(0,0.01,true);
 			p.ds = rnd(0.002,0.005);
 			p.lifeS = rnd(0.3,0.5);
+		}
+	}
+
+	public function segment(fx:Float,fy:Float, tx:Float, ty:Float, c:UInt) {
+		var dist = M.dist(fx,fy,tx,ty);
+		var ang = Math.atan2(ty-fy, tx-fx);
+		var n = M.ceil( dist/5 );
+		var step = dist/n;
+		for(i in 0...n ) {
+			var r = i/n;
+			var p = allocBgAdd(
+				getTile("fxLine"),
+				fx+Math.cos(ang)*dist*r + rnd(0,10,true),
+				fy+Math.sin(ang)*dist*r + rnd(0,10,true)
+			);
+			p.setFadeS(rnd(0.4,0.7), rnd(0.1,0.3), rnd(2,2.5));
+			p.colorAnimS(c, Const.BG_COLOR, rnd(0.1,0.3));
+			p.setScale(rnd(2,3,true));
+			p.moveAng(ang, rnd(3,5));
+			p.frict = rnd(0.96,0.97);
+			p.rotation = ang;
+			p.scaleX = step;
+			p.scaleY = rnd(2,3);
+			p.scaleXMul = rnd(0.97,0.98);
+			p.lifeS = rnd(0.4,0.7);
 		}
 	}
 

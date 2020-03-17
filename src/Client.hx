@@ -158,12 +158,20 @@ class Client extends Process {
 		var tdata = touchDrawingData.get(e.touchId);
 
 		var curveDist = 0.4;
-		canvas.lineStyle(brushSize, color);
+
+		inline function drawSegment(fx:Float, fy:Float, tx:Float, ty:Float) {
+			canvas.lineStyle(brushSize, color);
+			this.fx.segment( fx,fy, tx,ty, color );
+			canvas.moveTo(fx,fy);
+			canvas.lineTo(tx,ty);
+		}
 
 		if( tdata.firstStroke && tdata.bufferLines.length>0 ) {
 			var l = tdata.bufferLines[0];
-			canvas.moveTo(l.fx, l.fy);
-			canvas.lineTo(l.getSubX(1-curveDist), l.getSubY(1-curveDist));
+			drawSegment(
+				l.fx, l.fy,
+				l.getSubX(1-curveDist), l.getSubY(1-curveDist)
+			);
 			tdata.firstStroke = false;
 		}
 
@@ -173,8 +181,10 @@ class Client extends Process {
 			var to = tdata.bufferLines[0];
 			tdata.avgDist = 0.9*tdata.avgDist + 0.1*from.length;
 
-			canvas.moveTo( from.getSubX(curveDist), from.getSubY(curveDist) );
-			canvas.lineTo( from.getSubX(1-curveDist+0.1), from.getSubY(1-curveDist+0.1) );
+			drawSegment(
+				from.getSubX(curveDist), from.getSubY(curveDist),
+				from.getSubX(1-curveDist+0.1), from.getSubY(1-curveDist+0.1)
+			);
 			canvas.curveTo(
 				from.tx,
 				from.ty,
@@ -198,12 +208,10 @@ class Client extends Process {
 		// Final segment
 		if( isFinal && tdata.bufferLines.length>0 ) {
 			var last = tdata.bufferLines[0];
-			canvas.lineStyle(brushSize, color);
-			canvas.moveTo(
-				last.fx+Math.cos(last.angle)*last.length*curveDist,
-				last.fy+Math.sin(last.angle)*last.length*curveDist
+			drawSegment(
+				last.fx+Math.cos(last.angle)*last.length*curveDist, last.fy+Math.sin(last.angle)*last.length*curveDist,
+				last.tx, last.ty
 			);
-			canvas.lineTo(last.tx, last.ty);
 			tdata.bufferCanvas.clear();
 			tdata.bufferLines = [];
 		}
@@ -241,6 +249,10 @@ class Client extends Process {
 			// Clear canvas
 			if( hxd.Key.isPressed(Key.C) )
 				clear();
+
+			// Toggle fullscreen
+			if( hxd.Key.isPressed(Key.F) || Key.isDown(Key.ALT) && Key.isPressed(Key.ENTER) )
+				engine.fullScreen = !engine.fullScreen;
 
 			// Show debug lines
 			#if debug
