@@ -12,7 +12,7 @@ class Client extends Process {
 	var debugTf : h2d.Text;
 
 	var touchDrawingData : Map<Int, TouchDrawingData> = new Map();
-	var color : UInt;
+	public var color : UInt;
 	var brushSize = 10;
 
 	var lines : Array<Line> = [];

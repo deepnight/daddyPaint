@@ -145,6 +145,23 @@ class Fx extends dn.Process {
 		}
 	}
 
+	public function pickColor(x:Float,y:Float,wid:Float,hei:Float,c:UInt) {
+		var n = 150;
+		for(i in 0...n ) {
+			var a = 6.28 * i/n + rnd(0,0.2,true);
+			var p = allocTopAdd(getTile("fxSpark"), x+wid*rnd(0,0.9), y+hei*rnd(0,1));
+			p.colorAnimS( c, Const.BG_COLOR, rnd(0.8,1) );
+			// p.scaleX = hei / p.t.width;
+			p.setFadeS(rnd(0.7,0.9), rnd(0,0.1), rnd(0.3,0.7));
+			p.dx = rnd(0.2,6);
+			p.frict = rnd(0.92,0.97);
+			p.setScale(rnd(0.3,1));
+			// p.rotation = M.PIHALF;
+			p.ds = rnd(0.002,0.005);
+			p.lifeS = rnd(0.1,0.2);
+		}
+	}
+
 	public function segment(fx:Float,fy:Float, tx:Float, ty:Float, c:UInt) {
 		var dist = M.dist(fx,fy,tx,ty);
 		var ang = Math.atan2(ty-fy, tx-fx);

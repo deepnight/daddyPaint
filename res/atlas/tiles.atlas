@@ -6,70 +6,77 @@ filter: Linear,Linear
 repeat: none
 empty
   rotate: false
-  xy: 1, 126
+  xy: 123, 1
   size: 1, 1
   orig: 1, 1
   offset: 0, 0
   index: -1
 fxBlurryDot0
   rotate: false
-  xy: 1, 46
+  xy: 1, 20
   size: 36, 37
   orig: 36, 37
   offset: 0, 0
   index: -1
 fxCircle
   rotate: false
-  xy: 69, 1
+  xy: 38, 20
   size: 16, 16
   orig: 16, 16
   offset: 0, 0
   index: -1
 fxDot
   rotate: false
-  xy: 53, 1
+  xy: 119, 1
   size: 3, 3
   orig: 3, 3
   offset: 0, 0
   index: -1
+fxHeavyLine0
+  rotate: false
+  xy: 1, 1
+  size: 65, 18
+  orig: 65, 18
+  offset: 0, 0
+  index: -1
 fxLine
   rotate: false
-  xy: 1, 122
+  xy: 1, 96
   size: 33, 3
   orig: 33, 3
   offset: 0, 0
   index: -1
 fxLineDir0
   rotate: false
-  xy: 35, 122
+  xy: 1, 100
   size: 33, 3
   orig: 33, 3
   offset: 0, 0
   index: -1
 fxSmallCircle
   rotate: false
-  xy: 46, 1
+  xy: 112, 1
   size: 6, 6
   orig: 6, 6
   offset: 0, 0
   index: -1
 fxSmoke0
   rotate: false
-  xy: 1, 1
+  xy: 67, 1
   size: 44, 44
   orig: 44, 44
   offset: 0, 0
   index: -1
 fxSpark0
   rotate: false
-  xy: 1, 84
+  xy: 1, 58
   size: 36, 37
   orig: 36, 37
   offset: 0, 0
   index: -1
 pixel
   rotate: false
-  xy: 3, 126
+  xy: 125, 1
   size: 1, 1
   orig: 1, 1
   offset: 0, 0

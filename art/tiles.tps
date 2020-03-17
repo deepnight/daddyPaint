@@ -235,6 +235,19 @@
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
+            <key type="filename">export_tiles/fxHeavyLine0.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>16,5,33,9</rect>
+                <key>scale9Paddings</key>
+                <rect>16,5,33,9</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
             <key type="filename">export_tiles/fxLine.png</key>
             <key type="filename">export_tiles/fxLineDir0.png</key>
             <struct type="IndividualSpriteSettings">
