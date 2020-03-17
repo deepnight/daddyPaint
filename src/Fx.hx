@@ -135,7 +135,7 @@ class Fx extends dn.Process {
 			var p = allocBgAdd(getTile("fxSmoke"), x+Math.cos(a)*rnd(5,10), y+Math.sin(a)*rnd(5,10));
 			p.colorAnimS( c, Const.BG_COLOR, rnd(0.7,1.3) );
 			p.setScale(rnd(3,4,true));
-			p.setFadeS(rnd(0.1,0.2), rnd(0.1,0.3), rnd(1,2));
+			p.setFadeS(rnd(0.07,0.10), rnd(0.1,0.3), rnd(1,2));
 			p.moveAwayFrom(x,y,rnd(2,5));
 			p.frict = rnd(0.96,0.97);
 			p.rotation = rnd(0,6.28);
