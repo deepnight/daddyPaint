@@ -152,10 +152,10 @@ class Fx extends dn.Process {
 			var p = allocTopAdd(getTile("fxSpark"), x+wid*rnd(0,0.9), y+hei*rnd(0,1));
 			p.colorAnimS( c, Const.BG_COLOR, rnd(0.8,1) );
 			// p.scaleX = hei / p.t.width;
-			p.setFadeS(rnd(0.7,0.9), rnd(0,0.1), rnd(0.3,0.7));
+			p.setFadeS(rnd(0.7,0.9), rnd(0,0.1), rnd(0.3,1.2));
 			p.dx = rnd(0.2,6);
 			p.frict = rnd(0.92,0.97);
-			p.setScale(rnd(0.3,1));
+			p.setScale(rnd(0.15,0.7));
 			// p.rotation = M.PIHALF;
 			p.ds = rnd(0.002,0.005);
 			p.lifeS = rnd(0.1,0.2);
@@ -173,16 +173,16 @@ class Fx extends dn.Process {
 			var r = i/n;
 			var p = allocBgAdd(
 				getTile("fxLine"),
-				fx+Math.cos(ang)*dist*r + rnd(0,10,true),
-				fy+Math.sin(ang)*dist*r + rnd(0,10,true)
+				fx+Math.cos(ang)*dist*r + rnd(0,client.brushSize,true),
+				fy+Math.sin(ang)*dist*r + rnd(0,client.brushSize,true)
 			);
 			p.setFadeS(rnd(0.7,1), rnd(0.1,0.3), rnd(2,2.5));
-			p.colorAnimS(c, Const.BG_COLOR, rnd(0.4,0.7));
+			p.colorAnimS(c, Const.BG_COLOR, rnd(0.7,1.4));
 			p.moveAng(ang, rnd(2,3));
 			p.frict = rnd(0.96,0.97);
 			p.rotation = ang;
-			p.scaleX = step;
-			p.scaleY = rnd(2,3);
+			p.scaleX = step*rnd(0.5,0.8);
+			p.scaleY = rnd(1,2);
 			p.scaleXMul = rnd(0.97,0.98);
 			p.lifeS = rnd(0.4,0.7);
 		}
@@ -195,8 +195,8 @@ class Fx extends dn.Process {
 				var r = i/n;
 				var p = allocBgAdd(
 					getTile("fxSpark"),
-					fx+Math.cos(ang)*dist*r + rnd(4,8,true),
-					fy+Math.sin(ang)*dist*r + rnd(4,8,true)
+					fx+Math.cos(ang)*dist*r + client.brushSize*rnd(0.4,0.9,true),
+					fy+Math.sin(ang)*dist*r + client.brushSize*rnd(0.4,0.9,true)
 				);
 				p.setFadeS(rnd(0.1,0.2), rnd(0.1,0.3), rnd(1,1.5));
 				p.colorAnimS(c, Const.BG_COLOR, rnd(3,5));

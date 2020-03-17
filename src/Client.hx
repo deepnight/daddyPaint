@@ -13,7 +13,7 @@ class Client extends Process {
 
 	var touchDrawingData : Map<Int, TouchDrawingData> = new Map();
 	public var color : UInt;
-	var brushSize = 10;
+	public var brushSize = 6;
 
 	var lines : Array<Line> = [];
 
@@ -162,6 +162,10 @@ class Client extends Process {
 		var curveDist = 0.4;
 
 		inline function drawSegment(fx:Float, fy:Float, tx:Float, ty:Float) {
+			// canvas.lineStyle(brushSize, C.interpolateInt(color,Const.BG_COLOR, 0.8));
+			// canvas.moveTo(fx,fy+brushSize*0.3);
+			// canvas.lineTo(tx,ty+brushSize*0.3);
+
 			canvas.lineStyle(brushSize, color);
 			this.fx.segment( fx,fy, tx,ty, color );
 			canvas.moveTo(fx,fy);
