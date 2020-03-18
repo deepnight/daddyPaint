@@ -5,14 +5,14 @@ class Hud extends dn.Process {
 	public var fx(get,never) : Fx; inline function get_fx() return Client.ME.fx;
 
 	var invalidated = true;
-	var left : h2d.Layers;
+	var toolBar : h2d.Flow;
 
 	public function new() {
 		super(Client.ME);
 
 		createRootInLayers(client.root, Const.DP_UI);
 
-		left = new h2d.Layers(root);
+		toolBar = new h2d.Flow(root);
 	}
 
 	override function onDispose() {
@@ -27,46 +27,51 @@ class Hud extends dn.Process {
 	}
 
 	function render() {
-		left.removeChildren();
+		var isVertical = w()>h();
+
+		toolBar.removeChildren();
+		toolBar.layout = isVertical ? Vertical : Horizontal;
 
 		var allColors = [client.theme.bg].concat( client.theme.palette );
-		// var allColors = client.theme.palette.concat([client.theme.bg]);
-		var btHei = M.ceil( h()/Const.SCALE / (allColors.length+1) );
-		var btWid = 0.07 * w()/Const.SCALE;
+		var barSize = 0.07 * (isVertical?w():h())/Const.SCALE;
+		var btSize = M.ceil( (isVertical?h():w())/Const.SCALE / (allColors.length+1) );
 
-		var i = new h2d.Interactive(btWid, btHei, left);
-		i.propagateEvents = true;
-		i.backgroundColor = C.addAlphaF(0xffffff);
-		i.onClick = function(_) {
-			client.baseBrushSize = client.baseBrushSize==10 ? 50 : 10;
+		function createButton(col:UInt, cb:Void->Void) {
+			var i = new h2d.Interactive(isVertical?barSize:btSize, isVertical?btSize:barSize, toolBar);
+			i.propagateEvents = true;
+			i.backgroundColor = C.addAlphaF(col);
+			i.onPush = function(e:hxd.Event) {
+				e.propagate = false;
+				cb();
+			}
+			i.onClick = function(e:hxd.Event) {
+				e.propagate = false;
+			}
+			return i;
 		}
 
+		// Brush size button
+		var i = createButton(0xffffff, function() {
+			client.baseBrushSize = client.baseBrushSize==10 ? 50 : 10;
+		});
+
 		// Palette
-		var idx = 1;
 		var active = null;
 		for(c in allColors) {
-			var i = new h2d.Interactive(btWid, btHei, left);
-			i.propagateEvents = true;
-			i.y = btHei*idx;
+			var i = createButton(c, function() {
+				// Pick color
+				client.color = c;
+				fx.pickColor(toolBar.x+i.x, toolBar.y+i.y, i.width, i.height, c);
+				invalidate();
+			});
 
+			// Active
 			if( c==client.color ) {
 				active = i;
 				i.width+=7;
 				i.filter = new h2d.filter.Glow(c, 1, 64, true);
-				i.backgroundColor = C.addAlphaF(c);
 			}
-			else
-				i.backgroundColor = C.addAlphaF( C.toBlack(c,0.1) );
-
-			i.onPush = function(_) {
-				// Select color
-				client.color = c;
-				fx.pickColor(left.x+i.x, left.y+i.y, i.width, i.height, c);
-				invalidate();
-			}
-			idx++;
 		}
-		left.over(active);
 	}
 
 	override function postUpdate() {
