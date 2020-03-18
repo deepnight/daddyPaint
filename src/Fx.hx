@@ -150,7 +150,8 @@ class Fx extends dn.Process {
 	}
 
 	public function pickColor(x:Float,y:Float,wid:Float,hei:Float,c:UInt) {
-		var n = 150;
+		// Sparks
+		var n = 80;
 		for(i in 0...n ) {
 			var a = 6.28 * i/n + rnd(0,0.2,true);
 			var p = allocTopAdd(getTile("fxSpark"), x+wid*rnd(0,0.9), y+hei*rnd(0,1));
