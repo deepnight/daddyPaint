@@ -549,8 +549,9 @@ var Client = function() {
 	this.hud = new ui_Hud();
 	this.bg = new h2d_Graphics();
 	this.root.addChildAt(this.bg,Const.DP_BG);
-	this.canvas = new h2d_Graphics();
-	this.root.addChildAt(this.canvas,Const.DP_MAIN);
+	this.wrapper = new h2d_Object();
+	this.root.addChildAt(this.wrapper,Const.DP_MAIN);
+	this.canvas = new h2d_Graphics(this.wrapper);
 	this.debugCanvas = new h2d_Graphics();
 	this.root.addChildAt(this.debugCanvas,Const.DP_MAIN);
 	this.debugCanvas.set_visible(false);
@@ -605,9 +606,18 @@ Client.prototype = $extend(dn_Process.prototype,{
 			d1.dispose();
 		}
 		this.touchDrawingData = new haxe_ds_IntMap();
+		this.disposeFlatten();
 		this.canvas.clear();
 		this.debugCanvas.clear();
 		this.lines = [];
+	}
+	,isDrawing: function() {
+		var d = this.touchDrawingData.iterator();
+		while(d.hasNext()) {
+			var d1 = d.next();
+			return true;
+		}
+		return false;
 	}
 	,startDrawing: function(e) {
 		if(this.touchDrawingData.h.hasOwnProperty(e.touchId)) {
@@ -617,7 +627,7 @@ Client.prototype = $extend(dn_Process.prototype,{
 		this.touchDrawingData.h[tdata.touchId] = tdata;
 		this.canvas.lineStyle();
 		this.canvas.beginFill(this.color);
-		this.canvas.drawCircle(tdata.lastKnownMouse.x / Const.SCALE | 0,tdata.lastKnownMouse.y / Const.SCALE | 0,tdata.getBrushSize() * 0.4);
+		this.canvas.drawCircle(tdata.lastKnownMouse.x / Const.SCALE | 0,tdata.lastKnownMouse.y / Const.SCALE | 0,tdata.getBrushSize() * 0.5);
 		this.canvas.endFill();
 	}
 	,stopDrawing: function(e) {
@@ -631,7 +641,7 @@ Client.prototype = $extend(dn_Process.prototype,{
 		}
 		this.canvas.lineStyle();
 		this.canvas.beginFill(this.color);
-		this.canvas.drawCircle(tdata.lastKnownMouse.x / Const.SCALE | 0,tdata.lastKnownMouse.y / Const.SCALE | 0,tdata.getBrushSize() * 0.4);
+		this.canvas.drawCircle(tdata.lastKnownMouse.x / Const.SCALE | 0,tdata.lastKnownMouse.y / Const.SCALE | 0,tdata.getBrushSize() * 0.5);
 		this.canvas.endFill();
 		this.canvas.lineStyle();
 		this.canvas.beginFill(0,0);
@@ -640,6 +650,80 @@ Client.prototype = $extend(dn_Process.prototype,{
 		this.canvas.endFill();
 		this.touchDrawingData.remove(tdata.touchId);
 		tdata.dispose();
+		var _this = this.cd;
+		var frames = Const.INFINITE * this.cd.baseFps;
+		var allowLower = true;
+		var onComplete = null;
+		if(allowLower == null) {
+			allowLower = true;
+		}
+		frames = Math.floor(frames * 1000) / 1000;
+		var cur = _this._getCdObject(0);
+		if(!(cur != null && frames < cur.frames && !allowLower)) {
+			if(frames <= 0) {
+				if(cur != null) {
+					HxOverrides.remove(_this.cdList,cur);
+					cur.frames = 0;
+					cur.cb = null;
+					_this.fastCheck.remove(cur.k);
+				}
+			} else {
+				_this.fastCheck.h[0] = true;
+				if(cur != null) {
+					cur.frames = frames;
+				} else {
+					_this.cdList.push(new dn__$Cooldown_CdInst(0,frames));
+				}
+			}
+			if(onComplete != null) {
+				if(frames <= 0) {
+					onComplete();
+				} else {
+					var cd = _this._getCdObject(0);
+					if(cd == null) {
+						throw new js__$Boot_HaxeError("cannot bind onComplete(" + 0 + "): cooldown " + 0 + " isn't running");
+					}
+					cd.cb = onComplete;
+				}
+			}
+		}
+		var _this1 = this.cd;
+		var frames1 = 0.5 * this.cd.baseFps;
+		var allowLower1 = true;
+		var onComplete1 = null;
+		if(allowLower1 == null) {
+			allowLower1 = true;
+		}
+		frames1 = Math.floor(frames1 * 1000) / 1000;
+		var cur1 = _this1._getCdObject(4194304);
+		if(!(cur1 != null && frames1 < cur1.frames && !allowLower1)) {
+			if(frames1 <= 0) {
+				if(cur1 != null) {
+					HxOverrides.remove(_this1.cdList,cur1);
+					cur1.frames = 0;
+					cur1.cb = null;
+					_this1.fastCheck.remove(cur1.k);
+				}
+			} else {
+				_this1.fastCheck.h[4194304] = true;
+				if(cur1 != null) {
+					cur1.frames = frames1;
+				} else {
+					_this1.cdList.push(new dn__$Cooldown_CdInst(4194304,frames1));
+				}
+			}
+			if(onComplete1 != null) {
+				if(frames1 <= 0) {
+					onComplete1();
+				} else {
+					var cd1 = _this1._getCdObject(4194304);
+					if(cd1 == null) {
+						throw new js__$Boot_HaxeError("cannot bind onComplete(" + 4194304 + "): cooldown " + 4194304 + " isn't running");
+					}
+					cd1.cb = onComplete1;
+				}
+			}
+		}
 	}
 	,flushLineBuffer: function(e,isFinal) {
 		var _gthis = this;
@@ -783,6 +867,40 @@ Client.prototype = $extend(dn_Process.prototype,{
 		dn_Process.prototype.onDispose.call(this);
 		this.fx.destroyed = true;
 	}
+	,disposeFlatten: function() {
+		if(this.flatten == null) {
+			return;
+		}
+		this.flatten.tile.dispose();
+		this.flatten.set_tile(null);
+		var _this = this.flatten;
+		if(_this != null && _this.parent != null) {
+			_this.parent.removeChild(_this);
+		}
+		this.flatten = null;
+	}
+	,flushCanvasToTexture: function() {
+		var tile = this.getCanvasTile();
+		this.disposeFlatten();
+		this.flatten = new h2d_Bitmap(tile);
+		this.wrapper.addChildAt(this.flatten,0);
+		var _this = this.flatten;
+		var v = 1 / Const.SCALE;
+		_this.posChanged = true;
+		_this.scaleX = v;
+		_this.posChanged = true;
+		_this.scaleY = v;
+		this.canvas.clear();
+	}
+	,getCanvasTexture: function() {
+		var t = Date.now() / 1000;
+		var tex = new h3d_mat_Texture(dn_Process.CUSTOM_STAGE_WIDTH > 0 ? dn_Process.CUSTOM_STAGE_WIDTH : hxd_Window.getInstance().get_width(),dn_Process.CUSTOM_STAGE_HEIGHT > 0 ? dn_Process.CUSTOM_STAGE_HEIGHT : hxd_Window.getInstance().get_height(),[h3d_mat_TextureFlags.Target]);
+		this.wrapper.drawTo(tex);
+		return tex;
+	}
+	,getCanvasTile: function() {
+		return h2d_Tile.fromTexture(this.getCanvasTexture());
+	}
 	,preUpdate: function() {
 		dn_Process.prototype.preUpdate.call(this);
 	}
@@ -823,6 +941,23 @@ Client.prototype = $extend(dn_Process.prototype,{
 			}
 			if(tmp) {
 				Main.ME.startClient();
+			}
+		}
+		if(this.cd.fastCheck.h.hasOwnProperty(0) && !this.cd.fastCheck.h.hasOwnProperty(4194304) && !this.isDrawing()) {
+			this.flushCanvasToTexture();
+			var _this1 = this.cd;
+			var _g = 0;
+			var _g1 = _this1.cdList;
+			while(_g < _g1.length) {
+				var cd = _g1[_g];
+				++_g;
+				if(cd.k == 0) {
+					HxOverrides.remove(_this1.cdList,cd);
+					cd.frames = 0;
+					cd.cb = null;
+					_this1.fastCheck.remove(cd.k);
+					break;
+				}
 			}
 		}
 	}
@@ -1034,9 +1169,9 @@ Fx.prototype = $extend(dn_Process.prototype,{
 			_this3.parent.removeChild(_this3);
 		}
 	}
-	,allocBgAdd: function(t,x,y) {
+	,allocTopAdd: function(t,x,y) {
 		var _this = this.pool;
-		var sb = this.bgAddSb;
+		var sb = this.topAddSb;
 		if(_this.nalloc < _this.all.length) {
 			var p = _this.all[_this.nalloc];
 			p.reset(sb,t,x,y);
@@ -1061,9 +1196,9 @@ Fx.prototype = $extend(dn_Process.prototype,{
 			return best;
 		}
 	}
-	,allocBgNormal: function(t,x,y) {
+	,allocTopNormal: function(t,x,y) {
 		var _this = this.pool;
-		var sb = this.bgNormalSb;
+		var sb = this.topNormalSb;
 		if(_this.nalloc < _this.all.length) {
 			var p = _this.all[_this.nalloc];
 			p.reset(sb,t,x,y);
@@ -1112,7 +1247,7 @@ Fx.prototype = $extend(dn_Process.prototype,{
 				sign2 = false;
 			}
 			var y2 = sign2 ? (5 + Math.random() * 5) * (Std.random(2) * 2 - 1) : 5 + Math.random() * 5;
-			var p = (Client.ME.theme.isLight ? $bind(this,this.allocBgNormal) : $bind(this,this.allocBgAdd))(t,x + x1 * x2,y + y1 * y2);
+			var p = (Client.ME.theme.isLight ? $bind(this,this.allocTopNormal) : $bind(this,this.allocTopAdd))(t,x + x1 * x2,y + y1 * y2);
 			var sign3 = null;
 			if(sign3 == null) {
 				sign3 = false;
@@ -1174,7 +1309,7 @@ Fx.prototype = $extend(dn_Process.prototype,{
 		}
 	}
 	,pickColor: function(x,y,wid,hei,c) {
-		var n = 150;
+		var n = 80;
 		var _g = 0;
 		var _g1 = n;
 		while(_g < _g1) {
@@ -1301,7 +1436,7 @@ Fx.prototype = $extend(dn_Process.prototype,{
 				sign1 = false;
 			}
 			var y1 = sign1 ? Math.random() * size * (Std.random(2) * 2 - 1) : Math.random() * size;
-			var p = (Client.ME.theme.isLight ? $bind(this,this.allocBgNormal) : $bind(this,this.allocBgAdd))(t2,x1 + x2,y + y1);
+			var p = (Client.ME.theme.isLight ? $bind(this,this.allocTopNormal) : $bind(this,this.allocTopAdd))(t2,x1 + x2,y + y1);
 			var sign2 = null;
 			if(sign2 == null) {
 				sign2 = false;
@@ -1386,7 +1521,7 @@ Fx.prototype = $extend(dn_Process.prototype,{
 				sign13 = false;
 			}
 			var y3 = sign13 ? (0.4 + Math.random() * 0.5) * (Std.random(2) * 2 - 1) : 0.4 + Math.random() * 0.5;
-			var p1 = (Client.ME.theme.isLight ? $bind(this,this.allocBgNormal) : $bind(this,this.allocBgAdd))(t5,x4 + size * x5,y2 + size * y3);
+			var p1 = (Client.ME.theme.isLight ? $bind(this,this.allocTopNormal) : $bind(this,this.allocTopAdd))(t5,x4 + size * x5,y2 + size * y3);
 			var sign14 = null;
 			if(sign14 == null) {
 				sign14 = false;
@@ -1456,7 +1591,7 @@ Fx.prototype = $extend(dn_Process.prototype,{
 				sign23 = false;
 			}
 			var y5 = sign23 ? (0.4 + Math.random() * 0.5) * (Std.random(2) * 2 - 1) : 0.4 + Math.random() * 0.5;
-			var p2 = (Client.ME.theme.isLight ? $bind(this,this.allocBgNormal) : $bind(this,this.allocBgAdd))(t6,x9 + size * x10,y4 + size * y5);
+			var p2 = (Client.ME.theme.isLight ? $bind(this,this.allocTopNormal) : $bind(this,this.allocTopAdd))(t6,x9 + size * x10,y4 + size * y5);
 			var sign24 = null;
 			if(sign24 == null) {
 				sign24 = false;
@@ -1995,7 +2130,7 @@ TouchDrawingData.prototype = {
 	getBrushSize: function() {
 		var _this = Client.ME;
 		if(_this.color == _this.theme.bg) {
-			return 40;
+			return Client.ME.baseBrushSize * 3;
 		} else {
 			return Client.ME.baseBrushSize * (0.8 + 0.2 * Math.cos((Date.now() / 1000 - this.startTime) * 8));
 		}
@@ -2386,6 +2521,18 @@ dn_Cooldown.prototype = {
 	destroy: function() {
 		this.cdList = null;
 		this.fastCheck = null;
+	}
+	,_getCdObject: function(k) {
+		var _g = 0;
+		var _g1 = this.cdList;
+		while(_g < _g1.length) {
+			var cd = _g1[_g];
+			++_g;
+			if(cd.k == k) {
+				return cd;
+			}
+		}
+		return null;
 	}
 	,update: function(dt) {
 		var i = 0;
@@ -4419,6 +4566,18 @@ h2d_Object.prototype = {
 	}
 	,removeChildren: function() {
 		while(this.children.length > 0) this.removeChild(this.children[0]);
+	}
+	,drawTo: function(t) {
+		var s = this.getScene();
+		var needDispose = s == null;
+		if(s == null) {
+			s = new h2d_Scene();
+		}
+		s.drawImplTo(this,t);
+		if(needDispose) {
+			s.dispose();
+			this.onRemove();
+		}
 	}
 	,draw: function(ctx) {
 	}
@@ -12143,7 +12302,10 @@ var h3d_impl_RenderContext = function() {
 $hxClasses["h3d.impl.RenderContext"] = h3d_impl_RenderContext;
 h3d_impl_RenderContext.__name__ = "h3d.impl.RenderContext";
 h3d_impl_RenderContext.prototype = {
-	__class__: h3d_impl_RenderContext
+	dispose: function() {
+		this.textures.dispose();
+	}
+	,__class__: h3d_impl_RenderContext
 };
 var h2d_RenderContext = function(scene) {
 	this.tmpBounds = new h2d_col_Bounds();
@@ -12168,7 +12330,13 @@ $hxClasses["h2d.RenderContext"] = h2d_RenderContext;
 h2d_RenderContext.__name__ = "h2d.RenderContext";
 h2d_RenderContext.__super__ = h3d_impl_RenderContext;
 h2d_RenderContext.prototype = $extend(h3d_impl_RenderContext.prototype,{
-	begin: function() {
+	dispose: function() {
+		h3d_impl_RenderContext.prototype.dispose.call(this);
+		if(this.fixedBuffer != null) {
+			this.fixedBuffer.dispose();
+		}
+	}
+	,begin: function() {
 		this.texture = null;
 		this.currentObj = null;
 		this.bufPos = 0;
@@ -13950,8 +14118,33 @@ h2d_Scene.prototype = $extend(h2d_Layers.prototype,{
 			this.events.onRemove(i);
 		}
 	}
+	,dispose: function() {
+		if(this.allocated) {
+			this.onRemove();
+		}
+		this.ctx.dispose();
+	}
 	,setElapsedTime: function(v) {
 		this.ctx.elapsedTime = v;
+	}
+	,drawImplTo: function(s,t) {
+		if((t.flags & 1 << h3d_mat_TextureFlags.Target._hx_index) == 0) {
+			throw new js__$Boot_HaxeError("Can only draw to texture created with Target flag");
+		}
+		var needClear = (t.flags & 1 << h3d_mat_TextureFlags.WasCleared._hx_index) == 0;
+		this.ctx.engine = h3d_Engine.CURRENT;
+		var oldBG = this.ctx.engine.backgroundColor;
+		this.ctx.engine.backgroundColor = null;
+		this.ctx.engine.begin();
+		this.ctx.globalAlpha = this.alpha;
+		this.ctx.begin();
+		this.ctx.pushTarget(t);
+		if(needClear) {
+			this.ctx.engine.clear(0);
+		}
+		s.drawRec(this.ctx);
+		this.ctx.popTarget();
+		this.ctx.engine.backgroundColor = oldBG;
 	}
 	,render: function(engine) {
 		this.ctx.engine = engine;
@@ -14497,6 +14690,12 @@ h2d_Tile.prototype = {
 	,scaleToSize: function(w,h) {
 		this.width = w;
 		this.height = h;
+	}
+	,dispose: function() {
+		if(this.innerTex != null) {
+			this.innerTex.dispose();
+		}
+		this.innerTex = null;
 	}
 	,clone: function() {
 		var t = new h2d_Tile(null,this.x,this.y,this.width,this.height,this.dx,this.dy);
@@ -18838,6 +19037,16 @@ h3d_impl_TextureCache.prototype = {
 			defaultDepth = false;
 		}
 		return this.allocTarget(name,Math.ceil(tile.width + tile.x) - Math.floor(tile.x),Math.ceil(tile.height + tile.y) - Math.floor(tile.y),defaultDepth,format);
+	}
+	,dispose: function() {
+		var _g = 0;
+		var _g1 = this.cache;
+		while(_g < _g1.length) {
+			var t = _g1[_g];
+			++_g;
+			t.dispose();
+		}
+		this.cache = [];
 	}
 	,__class__: h3d_impl_TextureCache
 };
@@ -43830,7 +44039,7 @@ ui_Hud.prototype = $extend(dn_Process.prototype,{
 	,render: function() {
 		var _gthis = this;
 		this.left.removeChildren();
-		var allColors = Client.ME.theme.palette.concat([Client.ME.theme.bg]);
+		var allColors = [Client.ME.theme.bg].concat(Client.ME.theme.palette);
 		var x = (dn_Process.CUSTOM_STAGE_HEIGHT > 0 ? dn_Process.CUSTOM_STAGE_HEIGHT : hxd_Window.getInstance().get_height()) / Const.SCALE / (allColors.length + 1);
 		var btHei;
 		if(x > .0) {
@@ -43848,7 +44057,6 @@ ui_Hud.prototype = $extend(dn_Process.prototype,{
 		i.backgroundColor = (255. | 0) << 24 | 16777215;
 		i.onClick = function(_) {
 			Client.ME.baseBrushSize = Client.ME.baseBrushSize == 10 ? 50 : 10;
-			haxe_Log.trace(Client.ME.baseBrushSize,{ fileName : "src/ui/Hud.hx", lineNumber : 41, className : "ui.Hud", methodName : "render"});
 		};
 		var idx = 1;
 		var active = null;
@@ -43863,7 +44071,7 @@ ui_Hud.prototype = $extend(dn_Process.prototype,{
 			if(c[0] == Client.ME.color) {
 				active = i1[0];
 				i1[0].width += 7;
-				i1[0].set_filter(new h2d_filter_Glow(0,1,64,null,null,true));
+				i1[0].set_filter(new h2d_filter_Glow(c[0],1,64,null,null,true));
 				i1[0].backgroundColor = (255. | 0) << 24 | c[0];
 			} else {
 				var from_r = c[0] >> 16 & 255;
@@ -44105,6 +44313,7 @@ Const.AUTO_SCALE_TARGET_WID = 1000;
 Const.AUTO_SCALE_TARGET_HEI = -1;
 Const.SCALE = 1.0;
 Const.UI_SCALE = 1.0;
+Const.INFINITE = 999999;
 Const._inc = 0;
 Const.DP_BG = Const._inc++;
 Const.DP_FX_BG = Const._inc++;
@@ -44112,7 +44321,7 @@ Const.DP_MAIN = Const._inc++;
 Const.DP_UI = Const._inc++;
 Const.DP_FX_FRONT = Const._inc++;
 Const.DP_TOP = Const._inc++;
-Const.THEMES = [{ isLight : false, bg : Std.parseInt("0x" + HxOverrides.substr("#1a1c2c",1,999)), palette : [Std.parseInt("0x" + HxOverrides.substr("#FFcc00",1,999)),Std.parseInt("0x" + HxOverrides.substr("#FF2674",1,999)),Std.parseInt("0x" + HxOverrides.substr("#4998D4",1,999)),Std.parseInt("0x" + HxOverrides.substr("#54E58E",1,999)),Std.parseInt("0x" + HxOverrides.substr("#B0EF44",1,999))]},{ isLight : true, bg : Std.parseInt("0x" + HxOverrides.substr("#f3efd8",1,999)), palette : [Std.parseInt("0x" + HxOverrides.substr("#FFcc00",1,999)),Std.parseInt("0x" + HxOverrides.substr("#FF2674",1,999)),Std.parseInt("0x" + HxOverrides.substr("#4998D4",1,999)),Std.parseInt("0x" + HxOverrides.substr("#54E58E",1,999)),Std.parseInt("0x" + HxOverrides.substr("#B0EF44",1,999))]}];
+Const.THEMES = [{ isLight : false, bg : Std.parseInt("0x" + HxOverrides.substr("#1a1c2c",1,999)), palette : [Std.parseInt("0x" + HxOverrides.substr("#FFcc00",1,999)),Std.parseInt("0x" + HxOverrides.substr("#A95431",1,999)),Std.parseInt("0x" + HxOverrides.substr("#FF2674",1,999)),Std.parseInt("0x" + HxOverrides.substr("#4998D4",1,999)),Std.parseInt("0x" + HxOverrides.substr("#62F5D3",1,999)),Std.parseInt("0x" + HxOverrides.substr("#B0EF44",1,999))]},{ isLight : true, bg : Std.parseInt("0x" + HxOverrides.substr("#f3efd8",1,999)), palette : [Std.parseInt("0x" + HxOverrides.substr("#FFcc00",1,999)),Std.parseInt("0x" + HxOverrides.substr("#A95431",1,999)),Std.parseInt("0x" + HxOverrides.substr("#FF2674",1,999)),Std.parseInt("0x" + HxOverrides.substr("#4998D4",1,999)),Std.parseInt("0x" + HxOverrides.substr("#62F5D3",1,999)),Std.parseInt("0x" + HxOverrides.substr("#B0EF44",1,999))]}];
 Lang._initDone = false;
 Lang.DEFAULT = "en";
 Lang.CUR = "??";
@@ -44124,7 +44333,7 @@ Xml.DocType = 4;
 Xml.ProcessingInstruction = 5;
 Xml.Document = 6;
 dn_Color.BLACK = { r : 0, g : 0, b : 0};
-dn_Cooldown.__meta__ = { obj : { indexes : ["emitterLife","emitterTick"]}};
+dn_Cooldown.__meta__ = { obj : { indexes : ["canvasFlushRequired","canvasFlushLocked","emitterLife","emitterTick"]}};
 dn_data_MoReader.MAGIC = -1794895138;
 dn_data_MoReader.MAGIC2 = -569244523;
 dn_heaps_Controller.UNIQ_ID = 0;
