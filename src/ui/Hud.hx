@@ -29,7 +29,8 @@ class Hud extends dn.Process {
 	function render() {
 		left.removeChildren();
 
-		var allColors = client.theme.palette.concat([client.theme.bg]);
+		var allColors = [client.theme.bg].concat( client.theme.palette );
+		// var allColors = client.theme.palette.concat([client.theme.bg]);
 		var btHei = M.ceil( h()/Const.SCALE / (allColors.length+1) );
 		var btWid = 0.07 * w()/Const.SCALE;
 
@@ -51,7 +52,7 @@ class Hud extends dn.Process {
 			if( c==client.color ) {
 				active = i;
 				i.width+=7;
-				i.filter = new h2d.filter.Glow(0x0, 1, 64, true);
+				i.filter = new h2d.filter.Glow(c, 1, 64, true);
 				i.backgroundColor = C.addAlphaF(c);
 			}
 			else
