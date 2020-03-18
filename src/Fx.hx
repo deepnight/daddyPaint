@@ -133,7 +133,7 @@ class Fx extends dn.Process {
 		for(i in 0...n ) {
 			var a = 6.28 * i/n + rnd(0,0.2,true);
 			var p = allocBgAdd(getTile("fxSmoke"), x+Math.cos(a)*rnd(5,10), y+Math.sin(a)*rnd(5,10));
-			p.colorAnimS( c, Const.BG_COLOR, rnd(0.7,1.3) );
+			p.colorAnimS( c, client.theme.bg, rnd(0.7,1.3) );
 			p.setScale(rnd(3,4,true));
 			p.setFadeS(rnd(0.07,0.10), rnd(0.1,0.3), rnd(1,2));
 			p.moveAwayFrom(x,y,rnd(2,5));
@@ -150,7 +150,7 @@ class Fx extends dn.Process {
 		for(i in 0...n ) {
 			var a = 6.28 * i/n + rnd(0,0.2,true);
 			var p = allocTopAdd(getTile("fxSpark"), x+wid*rnd(0,0.9), y+hei*rnd(0,1));
-			p.colorAnimS( c, Const.BG_COLOR, rnd(0.8,1) );
+			p.colorAnimS( c, client.theme.bg, rnd(0.8,1) );
 			// p.scaleX = hei / p.t.width;
 			p.setFadeS(rnd(0.7,0.9), rnd(0,0.1), rnd(0.3,1.2));
 			p.dx = rnd(0.2,6);
@@ -177,7 +177,7 @@ class Fx extends dn.Process {
 				fy+Math.sin(ang)*dist*r + rnd(0,size,true)
 			);
 			p.setFadeS(rnd(0.7,1), rnd(0.1,0.3), rnd(2,2.5));
-			p.colorAnimS(c, Const.BG_COLOR, rnd(0.7,1.4));
+			p.colorAnimS(c, client.theme.bg, rnd(0.7,1.4));
 			p.moveAng(ang, rnd(2,3));
 			p.frict = rnd(0.96,0.97);
 			p.rotation = ang;
@@ -199,7 +199,7 @@ class Fx extends dn.Process {
 					fy+Math.sin(ang)*dist*r + size*rnd(0.4,0.9,true)
 				);
 				p.setFadeS(rnd(0.1,0.2), rnd(0.1,0.3), rnd(1,1.5));
-				p.colorAnimS(c, Const.BG_COLOR, rnd(3,5));
+				p.colorAnimS(c, client.theme.bg, rnd(3,5));
 				p.setScale(rnd(0.3,0.5,true));
 				p.moveAng(ang, rnd(0.5,1.5));
 				p.frict = rnd(0.96,0.97);
@@ -226,7 +226,7 @@ class Fx extends dn.Process {
 					fy+Math.sin(ang)*dist*r + size*rnd(0.4,0.9,true)
 				);
 				p.setFadeS(rnd(0.3,0.6), rnd(0.1,0.3), rnd(0.3,1));
-				p.colorAnimS(c, Const.BG_COLOR, rnd(3,5));
+				p.colorAnimS(c, client.theme.bg, rnd(3,5));
 				p.setScale(rnd(0.1,0.3,true));
 				p.moveAng(ang, rnd(0.5,1.5));
 				p.frict = rnd(0.96,0.97);

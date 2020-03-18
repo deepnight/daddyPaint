@@ -22,6 +22,7 @@ class Client extends Process {
 	var debugCanvas : h2d.Graphics;
 
 	var skipFrames = 0.; // TODO
+	public var theme : Theme;
 
 	public function new() {
 		super(Main.ME);
@@ -31,7 +32,8 @@ class Client extends Process {
 		ca.setRightDeadZone(0.2);
 		createRootInLayers(Main.ME.root, Const.DP_BG);
 		mouse = new h2d.col.Point();
-		color = Const.ALL_COLORS[0];
+		theme = Const.THEMES[0];
+		color = theme.palette[0];
 
 		// Init misc classes
 		fx = new Fx();
@@ -105,7 +107,7 @@ class Client extends Process {
 		lines = [];
 	}
 
-	public inline function isEraser() return color==Const.BG_COLOR;
+	public inline function isEraser() return color==theme.bg;
 
 	function startDrawing(e:hxd.Event) {
 		if( touchDrawingData.exists(e.touchId) )
@@ -231,7 +233,7 @@ class Client extends Process {
 		super.onResize();
 
 		bg.clear();
-		bg.beginFill(Const.BG_COLOR);
+		bg.beginFill(theme.bg);
 		bg.drawRect(0,0,w(),h());
 
 		touchCatcher.width = w();

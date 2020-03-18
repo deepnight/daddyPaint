@@ -29,16 +29,17 @@ class Hud extends dn.Process {
 	}
 
 	function render() {
+		var allColors = client.theme.palette.concat([client.theme.bg]);
+		var btHei = M.ceil( h()/Const.SCALE / allColors.length );
+
 		// Palette
 		palette.removeChildren();
-		var all = Const.ALL_COLORS.concat([Const.BG_COLOR]);
-		var chei = M.ceil( h()/Const.SCALE / all.length );
 		var idx = 0;
 		var active = null;
-		for(c in all) {
-			var i = new h2d.Interactive(w()/Const.SCALE*0.07, chei, palette);
+		for(c in allColors) {
+			var i = new h2d.Interactive(w()/Const.SCALE*0.07, btHei, palette);
 			i.propagateEvents = true;
-			i.y = chei*idx;
+			i.y = btHei*idx;
 
 			if( c==client.color ) {
 				active = i;
