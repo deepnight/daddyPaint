@@ -543,14 +543,19 @@ var Client = function() {
 	_this1.rightDeadZone = 0.2;
 	this.createRootInLayers(Main.ME.root,Const.DP_BG);
 	this.mouse = new h2d_col_Point();
-	this.color = Const.ALL_COLORS[0];
+	this.theme = Const.THEMES[1];
+	this.color = this.theme.palette[0];
 	this.fx = new Fx();
 	this.hud = new ui_Hud();
-	this.bg = new h2d_Graphics(this.root);
-	this.canvas = new h2d_Graphics(this.root);
-	this.debugCanvas = new h2d_Graphics(this.root);
+	this.bg = new h2d_Graphics();
+	this.root.addChildAt(this.bg,Const.DP_BG);
+	this.canvas = new h2d_Graphics();
+	this.root.addChildAt(this.canvas,Const.DP_MAIN);
+	this.debugCanvas = new h2d_Graphics();
+	this.root.addChildAt(this.debugCanvas,Const.DP_MAIN);
 	this.debugCanvas.set_visible(false);
-	this.touchCatcher = new h2d_Interactive(100,100,this.root);
+	this.touchCatcher = new h2d_Interactive(100,100);
+	this.root.addChildAt(this.touchCatcher,Const.DP_MAIN);
 	this.touchCatcher.propagateEvents = true;
 	this.touchCatcher.onPush = function(e) {
 		_gthis.startDrawing(e);
@@ -565,7 +570,8 @@ var Client = function() {
 		_gthis.stopDrawing(e3);
 	};
 	this.touchCatcher.onMove = $bind(this,this.onMouseMove);
-	this.debugTf = new h2d_Text(Assets.fontSmall,this.root);
+	this.debugTf = new h2d_Text(Assets.fontSmall);
+	this.root.addChildAt(this.debugTf,Const.DP_TOP);
 	var _this2 = this.debugTf;
 	_this2.posChanged = true;
 	_this2.scaleX = 2;
@@ -654,7 +660,11 @@ Client.prototype = $extend(dn_Process.prototype,{
 			var by1 = l.ty;
 			var ty = l.fy + Math.sin(Math.atan2(l.ty - l.fy,l.tx - l.fx)) * Math.sqrt((ax1 - bx1) * (ax1 - bx1) + (ay1 - by1) * (ay1 - by1)) * (1 - curveDist);
 			_gthis.canvas.lineStyle(tdata.getBrushSize(),_gthis.color);
-			_gthis.fx.segment(fx,fy,tx,ty,tdata.getBrushSize(),_gthis.color);
+			if(_gthis.color == _gthis.theme.bg) {
+				_gthis.fx.eraserSegment(fx,fy,tx,ty,tdata.getBrushSize(),11254235);
+			} else {
+				_gthis.fx.segment(fx,fy,tx,ty,tdata.getBrushSize(),_gthis.color);
+			}
 			var _this = _gthis.canvas;
 			_this.flush();
 			_this.addVertex(fx,fy,_this.curR,_this.curG,_this.curB,_this.curA,fx * _this.ma + fy * _this.mc + _this.mx,fx * _this.mb + fy * _this.md + _this.my);
@@ -691,7 +701,11 @@ Client.prototype = $extend(dn_Process.prototype,{
 			var by6 = from.ty;
 			var ty1 = from.fy + Math.sin(Math.atan2(from.ty - from.fy,from.tx - from.fx)) * Math.sqrt((ax6 - bx6) * (ax6 - bx6) + (ay6 - by6) * (ay6 - by6)) * (1 - curveDist + 0.1);
 			_gthis.canvas.lineStyle(tdata.getBrushSize(),_gthis.color);
-			_gthis.fx.segment(fx1,fy1,tx1,ty1,tdata.getBrushSize(),_gthis.color);
+			if(_gthis.color == _gthis.theme.bg) {
+				_gthis.fx.eraserSegment(fx1,fy1,tx1,ty1,tdata.getBrushSize(),11254235);
+			} else {
+				_gthis.fx.segment(fx1,fy1,tx1,ty1,tdata.getBrushSize(),_gthis.color);
+			}
 			var _this2 = _gthis.canvas;
 			_this2.flush();
 			_this2.addVertex(fx1,fy1,_this2.curR,_this2.curG,_this2.curB,_this2.curA,fx1 * _this2.ma + fy1 * _this2.mc + _this2.mx,fx1 * _this2.mb + fy1 * _this2.md + _this2.my);
@@ -707,7 +721,7 @@ Client.prototype = $extend(dn_Process.prototype,{
 			var by8 = to.ty;
 			this.canvas.curveTo(from.tx,from.ty,to.fx + Math.cos(Math.atan2(to.ty - to.fy,to.tx - to.fx)) * Math.sqrt((ax7 - bx7) * (ax7 - bx7) + (ay7 - by7) * (ay7 - by7)) * curveDist,to.fy + Math.sin(Math.atan2(to.ty - to.fy,to.tx - to.fx)) * Math.sqrt((ax8 - bx8) * (ax8 - bx8) + (ay8 - by8) * (ay8 - by8)) * curveDist);
 			tdata.bufferCanvas.clear();
-			tdata.bufferCanvas.lineStyle(tdata.getBrushSize(),16777215);
+			tdata.bufferCanvas.lineStyle(tdata.getBrushSize(),this.color == this.theme.bg ? this.color : 16777215);
 			var _this4 = tdata.bufferCanvas;
 			var ax9 = to.fx;
 			var ay9 = to.fy;
@@ -741,7 +755,11 @@ Client.prototype = $extend(dn_Process.prototype,{
 			var tx2 = last.tx;
 			var ty2 = last.ty;
 			_gthis.canvas.lineStyle(tdata.getBrushSize(),_gthis.color);
-			_gthis.fx.segment(fx2,fy2,tx2,ty2,tdata.getBrushSize(),_gthis.color);
+			if(_gthis.color == _gthis.theme.bg) {
+				_gthis.fx.eraserSegment(fx2,fy2,tx2,ty2,tdata.getBrushSize(),11254235);
+			} else {
+				_gthis.fx.segment(fx2,fy2,tx2,ty2,tdata.getBrushSize(),_gthis.color);
+			}
 			var _this6 = _gthis.canvas;
 			_this6.flush();
 			_this6.addVertex(fx2,fy2,_this6.curR,_this6.curG,_this6.curB,_this6.curA,fx2 * _this6.ma + fy2 * _this6.mc + _this6.mx,fx2 * _this6.mb + fy2 * _this6.md + _this6.my);
@@ -754,7 +772,7 @@ Client.prototype = $extend(dn_Process.prototype,{
 	,onResize: function() {
 		dn_Process.prototype.onResize.call(this);
 		this.bg.clear();
-		this.bg.beginFill(Const.BG_COLOR);
+		this.bg.beginFill(this.theme.bg);
 		this.bg.drawRect(0,0,dn_Process.CUSTOM_STAGE_WIDTH > 0 ? dn_Process.CUSTOM_STAGE_WIDTH : hxd_Window.getInstance().get_width(),dn_Process.CUSTOM_STAGE_HEIGHT > 0 ? dn_Process.CUSTOM_STAGE_HEIGHT : hxd_Window.getInstance().get_height());
 		var tmp = dn_Process.CUSTOM_STAGE_WIDTH > 0 ? dn_Process.CUSTOM_STAGE_WIDTH : hxd_Window.getInstance().get_width();
 		this.touchCatcher.width = tmp;
@@ -1016,6 +1034,60 @@ Fx.prototype = $extend(dn_Process.prototype,{
 			_this3.parent.removeChild(_this3);
 		}
 	}
+	,allocBgAdd: function(t,x,y) {
+		var _this = this.pool;
+		var sb = this.bgAddSb;
+		if(_this.nalloc < _this.all.length) {
+			var p = _this.all[_this.nalloc];
+			p.reset(sb,t,x,y);
+			p.poolIdx = _this.nalloc;
+			_this.nalloc++;
+			return p;
+		} else {
+			var best = null;
+			var _g = 0;
+			var _g1 = _this.all;
+			while(_g < _g1.length) {
+				var p1 = _g1[_g];
+				++_g;
+				if(best == null || p1.stamp <= best.stamp) {
+					best = p1;
+				}
+			}
+			if(best.onKill != null) {
+				best.onKill();
+			}
+			best.reset(sb,t,x,y);
+			return best;
+		}
+	}
+	,allocBgNormal: function(t,x,y) {
+		var _this = this.pool;
+		var sb = this.bgNormalSb;
+		if(_this.nalloc < _this.all.length) {
+			var p = _this.all[_this.nalloc];
+			p.reset(sb,t,x,y);
+			p.poolIdx = _this.nalloc;
+			_this.nalloc++;
+			return p;
+		} else {
+			var best = null;
+			var _g = 0;
+			var _g1 = _this.all;
+			while(_g < _g1.length) {
+				var p1 = _g1[_g];
+				++_g;
+				if(best == null || p1.stamp <= best.stamp) {
+					best = p1;
+				}
+			}
+			if(best.onKill != null) {
+				best.onKill();
+			}
+			best.reset(sb,t,x,y);
+			return best;
+		}
+	}
 	,smokeTap: function(x,y,c) {
 		var n = 35;
 		var _g = 0;
@@ -1028,47 +1100,24 @@ Fx.prototype = $extend(dn_Process.prototype,{
 			}
 			var a = 6.28 * i / n + (sign ? Math.random() * 0.2 * (Std.random(2) * 2 - 1) : Math.random() * 0.2);
 			var t = Assets.tiles.getTileRandom("fxSmoke");
+			var x1 = Math.cos(a);
 			var sign1 = null;
 			if(sign1 == null) {
 				sign1 = false;
 			}
-			var x1 = x + Math.cos(a) * (sign1 ? (5 + Math.random() * 5) * (Std.random(2) * 2 - 1) : 5 + Math.random() * 5);
+			var x2 = sign1 ? (5 + Math.random() * 5) * (Std.random(2) * 2 - 1) : 5 + Math.random() * 5;
+			var y1 = Math.sin(a);
 			var sign2 = null;
 			if(sign2 == null) {
 				sign2 = false;
 			}
-			var y1 = y + Math.sin(a) * (sign2 ? (5 + Math.random() * 5) * (Std.random(2) * 2 - 1) : 5 + Math.random() * 5);
-			var _this = this.pool;
-			var sb = this.bgAddSb;
-			var p;
-			if(_this.nalloc < _this.all.length) {
-				var p1 = _this.all[_this.nalloc];
-				p1.reset(sb,t,x1,y1);
-				p1.poolIdx = _this.nalloc;
-				_this.nalloc++;
-				p = p1;
-			} else {
-				var best = null;
-				var _g2 = 0;
-				var _g11 = _this.all;
-				while(_g2 < _g11.length) {
-					var p2 = _g11[_g2];
-					++_g2;
-					if(best == null || p2.stamp <= best.stamp) {
-						best = p2;
-					}
-				}
-				if(best.onKill != null) {
-					best.onKill();
-				}
-				best.reset(sb,t,x1,y1);
-				p = best;
-			}
+			var y2 = sign2 ? (5 + Math.random() * 5) * (Std.random(2) * 2 - 1) : 5 + Math.random() * 5;
+			var p = (Client.ME.theme.isLight ? $bind(this,this.allocBgNormal) : $bind(this,this.allocBgAdd))(t,x + x1 * x2,y + y1 * y2);
 			var sign3 = null;
 			if(sign3 == null) {
 				sign3 = false;
 			}
-			p.colorAnimS(c,Const.BG_COLOR,sign3 ? (0.7 + Math.random() * 0.60000000000000009) * (Std.random(2) * 2 - 1) : 0.7 + Math.random() * 0.60000000000000009);
+			p.colorAnimS(c,Client.ME.theme.bg,sign3 ? (0.7 + Math.random() * 0.60000000000000009) * (Std.random(2) * 2 - 1) : 0.7 + Math.random() * 0.60000000000000009);
 			var sign4 = true;
 			if(sign4 == null) {
 				sign4 = false;
@@ -1176,7 +1225,7 @@ Fx.prototype = $extend(dn_Process.prototype,{
 			if(sign3 == null) {
 				sign3 = false;
 			}
-			p.colorAnimS(c,Const.BG_COLOR,sign3 ? (0.8 + Math.random() * 0.19999999999999996) * (Std.random(2) * 2 - 1) : 0.8 + Math.random() * 0.19999999999999996);
+			p.colorAnimS(c,Client.ME.theme.bg,sign3 ? (0.8 + Math.random() * 0.19999999999999996) * (Std.random(2) * 2 - 1) : 0.8 + Math.random() * 0.19999999999999996);
 			var sign4 = null;
 			if(sign4 == null) {
 				sign4 = false;
@@ -1240,42 +1289,19 @@ Fx.prototype = $extend(dn_Process.prototype,{
 			var i = _g++;
 			var r = i / n;
 			var t2 = Assets.tiles.getTileRandom("fxLine");
+			var x1 = fx + Math.cos(ang) * dist * r;
 			var sign = true;
 			if(sign == null) {
 				sign = false;
 			}
-			var x1 = fx + Math.cos(ang) * dist * r + (sign ? Math.random() * size * (Std.random(2) * 2 - 1) : Math.random() * size);
+			var x2 = sign ? Math.random() * size * (Std.random(2) * 2 - 1) : Math.random() * size;
+			var y = fy + Math.sin(ang) * dist * r;
 			var sign1 = true;
 			if(sign1 == null) {
 				sign1 = false;
 			}
-			var y = fy + Math.sin(ang) * dist * r + (sign1 ? Math.random() * size * (Std.random(2) * 2 - 1) : Math.random() * size);
-			var _this = this.pool;
-			var sb = this.bgAddSb;
-			var p;
-			if(_this.nalloc < _this.all.length) {
-				var p1 = _this.all[_this.nalloc];
-				p1.reset(sb,t2,x1,y);
-				p1.poolIdx = _this.nalloc;
-				_this.nalloc++;
-				p = p1;
-			} else {
-				var best = null;
-				var _g2 = 0;
-				var _g11 = _this.all;
-				while(_g2 < _g11.length) {
-					var p2 = _g11[_g2];
-					++_g2;
-					if(best == null || p2.stamp <= best.stamp) {
-						best = p2;
-					}
-				}
-				if(best.onKill != null) {
-					best.onKill();
-				}
-				best.reset(sb,t2,x1,y);
-				p = best;
-			}
+			var y1 = sign1 ? Math.random() * size * (Std.random(2) * 2 - 1) : Math.random() * size;
+			var p = (Client.ME.theme.isLight ? $bind(this,this.allocBgNormal) : $bind(this,this.allocBgAdd))(t2,x1 + x2,y + y1);
 			var sign2 = null;
 			if(sign2 == null) {
 				sign2 = false;
@@ -1295,7 +1321,7 @@ Fx.prototype = $extend(dn_Process.prototype,{
 			if(sign5 == null) {
 				sign5 = false;
 			}
-			p.colorAnimS(c,Const.BG_COLOR,sign5 ? (0.7 + Math.random() * 0.7) * (Std.random(2) * 2 - 1) : 0.7 + Math.random() * 0.7);
+			p.colorAnimS(c,Client.ME.theme.bg,sign5 ? (0.7 + Math.random() * 0.7) * (Std.random(2) * 2 - 1) : 0.7 + Math.random() * 0.7);
 			var sign6 = null;
 			if(sign6 == null) {
 				sign6 = false;
@@ -1330,65 +1356,42 @@ Fx.prototype = $extend(dn_Process.prototype,{
 			}
 			p.set_lifeS(sign11 ? (0.4 + Math.random() * 0.29999999999999993) * (Std.random(2) * 2 - 1) : 0.4 + Math.random() * 0.29999999999999993);
 		}
-		var x2 = dist / 2;
+		var x3 = dist / 2;
 		var n1;
-		if(x2 > .0) {
-			var t3 = x2 + .5 | 0;
-			n1 = t3 < x2 ? t3 + 1 : t3;
-		} else if(x2 < .0) {
-			var t4 = x2 - .5 | 0;
-			n1 = t4 < x2 ? t4 + 1 : t4;
+		if(x3 > .0) {
+			var t3 = x3 + .5 | 0;
+			n1 = t3 < x3 ? t3 + 1 : t3;
+		} else if(x3 < .0) {
+			var t4 = x3 - .5 | 0;
+			n1 = t4 < x3 ? t4 + 1 : t4;
 		} else {
 			n1 = 0;
 		}
 		var step1 = dist / n1;
-		var _g21 = 0;
+		var _g2 = 0;
 		var _g3 = n1;
-		while(_g21 < _g3) {
-			var i1 = _g21++;
+		while(_g2 < _g3) {
+			var i1 = _g2++;
 			var r1 = i1 / n1;
-			var t5 = Assets.tiles.getTileRandom("fxSpark");
+			var t5 = Assets.tiles.getTileRandom("pixel");
+			var x4 = fx + Math.cos(ang) * dist * r1;
 			var sign12 = true;
 			if(sign12 == null) {
 				sign12 = false;
 			}
-			var x3 = fx + Math.cos(ang) * dist * r1 + size * (sign12 ? (0.4 + Math.random() * 0.5) * (Std.random(2) * 2 - 1) : 0.4 + Math.random() * 0.5);
+			var x5 = sign12 ? (0.4 + Math.random() * 0.5) * (Std.random(2) * 2 - 1) : 0.4 + Math.random() * 0.5;
+			var y2 = fy + Math.sin(ang) * dist * r1;
 			var sign13 = true;
 			if(sign13 == null) {
 				sign13 = false;
 			}
-			var y1 = fy + Math.sin(ang) * dist * r1 + size * (sign13 ? (0.4 + Math.random() * 0.5) * (Std.random(2) * 2 - 1) : 0.4 + Math.random() * 0.5);
-			var _this1 = this.pool;
-			var sb1 = this.bgAddSb;
-			var p3;
-			if(_this1.nalloc < _this1.all.length) {
-				var p4 = _this1.all[_this1.nalloc];
-				p4.reset(sb1,t5,x3,y1);
-				p4.poolIdx = _this1.nalloc;
-				_this1.nalloc++;
-				p3 = p4;
-			} else {
-				var best1 = null;
-				var _g4 = 0;
-				var _g12 = _this1.all;
-				while(_g4 < _g12.length) {
-					var p5 = _g12[_g4];
-					++_g4;
-					if(best1 == null || p5.stamp <= best1.stamp) {
-						best1 = p5;
-					}
-				}
-				if(best1.onKill != null) {
-					best1.onKill();
-				}
-				best1.reset(sb1,t5,x3,y1);
-				p3 = best1;
-			}
+			var y3 = sign13 ? (0.4 + Math.random() * 0.5) * (Std.random(2) * 2 - 1) : 0.4 + Math.random() * 0.5;
+			var p1 = (Client.ME.theme.isLight ? $bind(this,this.allocBgNormal) : $bind(this,this.allocBgAdd))(t5,x4 + size * x5,y2 + size * y3);
 			var sign14 = null;
 			if(sign14 == null) {
 				sign14 = false;
 			}
-			var tmp2 = sign14 ? (0.1 + Math.random() * 0.1) * (Std.random(2) * 2 - 1) : 0.1 + Math.random() * 0.1;
+			var tmp2 = sign14 ? (0.5 + Math.random() * 0.30000000000000004) * (Std.random(2) * 2 - 1) : 0.5 + Math.random() * 0.30000000000000004;
 			var sign15 = null;
 			if(sign15 == null) {
 				sign15 = false;
@@ -1398,134 +1401,308 @@ Fx.prototype = $extend(dn_Process.prototype,{
 			if(sign16 == null) {
 				sign16 = false;
 			}
-			p3.setFadeS(tmp2,tmp3,sign16 ? (1 + Math.random() * 0.5) * (Std.random(2) * 2 - 1) : 1 + Math.random() * 0.5);
+			p1.setFadeS(tmp2,tmp3,sign16 ? (0.3 + Math.random() * 1.2) * (Std.random(2) * 2 - 1) : 0.3 + Math.random() * 1.2);
+			var ratio = 1.0;
+			if(ratio == null) {
+				ratio = 1.0;
+			}
+			var a = _$UInt_UInt_$Impl_$.toFloat(16777215 >>> 16);
+			var x6 = a + (_$UInt_UInt_$Impl_$.toFloat(c >>> 16) - a) * ratio;
+			p1.r = ((x6 > 0 ? x6 + .5 : x6 < 0 ? x6 - .5 : 0) | 0) / 255;
+			var a1 = _$UInt_UInt_$Impl_$.toFloat(16777215 >>> 8 & 255);
+			var x7 = a1 + (_$UInt_UInt_$Impl_$.toFloat(c >>> 8 & 255) - a1) * ratio;
+			p1.g = ((x7 > 0 ? x7 + .5 : x7 < 0 ? x7 - .5 : 0) | 0) / 255;
+			var a2 = _$UInt_UInt_$Impl_$.toFloat(16777215 & 255);
+			var x8 = a2 + (_$UInt_UInt_$Impl_$.toFloat(c & 255) - a2) * ratio;
+			p1.b = ((x8 > 0 ? x8 + .5 : x8 < 0 ? x8 - .5 : 0) | 0) / 255;
 			var sign17 = null;
 			if(sign17 == null) {
 				sign17 = false;
 			}
-			p3.colorAnimS(c,Const.BG_COLOR,sign17 ? (3 + Math.random() * 2) * (Std.random(2) * 2 - 1) : 3 + Math.random() * 2);
-			var sign18 = true;
+			p1.scaleX = p1.scaleY = sign17 ? (2 + Math.random() * 2) * (Std.random(2) * 2 - 1) : 2 + Math.random() * 2;
+			var sign18 = null;
 			if(sign18 == null) {
 				sign18 = false;
 			}
-			p3.scaleX = p3.scaleY = sign18 ? (0.3 + Math.random() * 0.2) * (Std.random(2) * 2 - 1) : 0.3 + Math.random() * 0.2;
+			var spd1 = sign18 ? (0.5 + Math.random()) * (Std.random(2) * 2 - 1) : 0.5 + Math.random();
+			p1.dx = Math.cos(ang) * spd1;
+			p1.dy = Math.sin(ang) * spd1;
 			var sign19 = null;
 			if(sign19 == null) {
 				sign19 = false;
 			}
-			var spd1 = sign19 ? (0.5 + Math.random()) * (Std.random(2) * 2 - 1) : 0.5 + Math.random();
-			p3.dx = Math.cos(ang) * spd1;
-			p3.dy = Math.sin(ang) * spd1;
+			p1.frictX = p1.frictY = sign19 ? (0.96 + Math.random() * 0.010000000000000009) * (Std.random(2) * 2 - 1) : 0.96 + Math.random() * 0.010000000000000009;
 			var sign20 = null;
 			if(sign20 == null) {
 				sign20 = false;
 			}
-			p3.frictX = p3.frictY = sign20 ? (0.96 + Math.random() * 0.010000000000000009) * (Std.random(2) * 2 - 1) : 0.96 + Math.random() * 0.010000000000000009;
+			p1.scaleMul = sign20 ? (0.991 + Math.random() * 0.0030000000000000027) * (Std.random(2) * 2 - 1) : 0.991 + Math.random() * 0.0030000000000000027;
 			var sign21 = null;
 			if(sign21 == null) {
 				sign21 = false;
 			}
-			p3.rotation = sign21 ? Math.random() * 6.28 * (Std.random(2) * 2 - 1) : Math.random() * 6.28;
-			var sign22 = null;
+			p1.set_lifeS(sign21 ? (0.5 + Math.random() * 0.5) * (Std.random(2) * 2 - 1) : 0.5 + Math.random() * 0.5);
+			var r2 = i1 / n1;
+			var t6 = Assets.tiles.getTileRandom("pixel");
+			var x9 = fx + Math.cos(ang) * dist * r2;
+			var sign22 = true;
 			if(sign22 == null) {
 				sign22 = false;
 			}
-			p3.scaleMul = sign22 ? (0.991 + Math.random() * 0.0030000000000000027) * (Std.random(2) * 2 - 1) : 0.991 + Math.random() * 0.0030000000000000027;
-			var sign23 = null;
+			var x10 = sign22 ? (0.4 + Math.random() * 0.5) * (Std.random(2) * 2 - 1) : 0.4 + Math.random() * 0.5;
+			var y4 = fy + Math.sin(ang) * dist * r2;
+			var sign23 = true;
 			if(sign23 == null) {
 				sign23 = false;
 			}
-			p3.set_lifeS(sign23 ? (0.5 + Math.random() * 0.5) * (Std.random(2) * 2 - 1) : 0.5 + Math.random() * 0.5);
-			var r2 = i1 / n1;
-			var t6 = Assets.tiles.getTileRandom("fxSpark");
-			var sign24 = true;
+			var y5 = sign23 ? (0.4 + Math.random() * 0.5) * (Std.random(2) * 2 - 1) : 0.4 + Math.random() * 0.5;
+			var p2 = (Client.ME.theme.isLight ? $bind(this,this.allocBgNormal) : $bind(this,this.allocBgAdd))(t6,x9 + size * x10,y4 + size * y5);
+			var sign24 = null;
 			if(sign24 == null) {
 				sign24 = false;
 			}
-			var x4 = fx + Math.cos(ang) * dist * r2 + size * (sign24 ? (0.4 + Math.random() * 0.5) * (Std.random(2) * 2 - 1) : 0.4 + Math.random() * 0.5);
-			var sign25 = true;
+			var tmp4 = sign24 ? (0.5 + Math.random() * 0.30000000000000004) * (Std.random(2) * 2 - 1) : 0.5 + Math.random() * 0.30000000000000004;
+			var sign25 = null;
 			if(sign25 == null) {
 				sign25 = false;
 			}
-			var y2 = fy + Math.sin(ang) * dist * r2 + size * (sign25 ? (0.4 + Math.random() * 0.5) * (Std.random(2) * 2 - 1) : 0.4 + Math.random() * 0.5);
-			var _this2 = this.pool;
-			var sb2 = this.bgAddSb;
-			var p6;
-			if(_this2.nalloc < _this2.all.length) {
-				var p7 = _this2.all[_this2.nalloc];
-				p7.reset(sb2,t6,x4,y2);
-				p7.poolIdx = _this2.nalloc;
-				_this2.nalloc++;
-				p6 = p7;
-			} else {
-				var best2 = null;
-				var _g5 = 0;
-				var _g13 = _this2.all;
-				while(_g5 < _g13.length) {
-					var p8 = _g13[_g5];
-					++_g5;
-					if(best2 == null || p8.stamp <= best2.stamp) {
-						best2 = p8;
-					}
-				}
-				if(best2.onKill != null) {
-					best2.onKill();
-				}
-				best2.reset(sb2,t6,x4,y2);
-				p6 = best2;
-			}
+			var tmp5 = sign25 ? (0.1 + Math.random() * 0.19999999999999998) * (Std.random(2) * 2 - 1) : 0.1 + Math.random() * 0.19999999999999998;
 			var sign26 = null;
 			if(sign26 == null) {
 				sign26 = false;
 			}
-			var tmp4 = sign26 ? (0.1 + Math.random() * 0.1) * (Std.random(2) * 2 - 1) : 0.1 + Math.random() * 0.1;
+			p2.setFadeS(tmp4,tmp5,sign26 ? (0.3 + Math.random() * 1.2) * (Std.random(2) * 2 - 1) : 0.3 + Math.random() * 1.2);
+			var ratio1 = 1.0;
+			if(ratio1 == null) {
+				ratio1 = 1.0;
+			}
+			var a3 = _$UInt_UInt_$Impl_$.toFloat(16777215 >>> 16);
+			var x11 = a3 + (_$UInt_UInt_$Impl_$.toFloat(c >>> 16) - a3) * ratio1;
+			p2.r = ((x11 > 0 ? x11 + .5 : x11 < 0 ? x11 - .5 : 0) | 0) / 255;
+			var a4 = _$UInt_UInt_$Impl_$.toFloat(16777215 >>> 8 & 255);
+			var x12 = a4 + (_$UInt_UInt_$Impl_$.toFloat(c >>> 8 & 255) - a4) * ratio1;
+			p2.g = ((x12 > 0 ? x12 + .5 : x12 < 0 ? x12 - .5 : 0) | 0) / 255;
+			var a5 = _$UInt_UInt_$Impl_$.toFloat(16777215 & 255);
+			var x13 = a5 + (_$UInt_UInt_$Impl_$.toFloat(c & 255) - a5) * ratio1;
+			p2.b = ((x13 > 0 ? x13 + .5 : x13 < 0 ? x13 - .5 : 0) | 0) / 255;
 			var sign27 = null;
 			if(sign27 == null) {
 				sign27 = false;
 			}
-			var tmp5 = sign27 ? (0.1 + Math.random() * 0.19999999999999998) * (Std.random(2) * 2 - 1) : 0.1 + Math.random() * 0.19999999999999998;
+			p2.scaleX = p2.scaleY = sign27 ? (2 + Math.random() * 2) * (Std.random(2) * 2 - 1) : 2 + Math.random() * 2;
 			var sign28 = null;
 			if(sign28 == null) {
 				sign28 = false;
 			}
-			p6.setFadeS(tmp4,tmp5,sign28 ? (1 + Math.random() * 0.5) * (Std.random(2) * 2 - 1) : 1 + Math.random() * 0.5);
+			var spd2 = sign28 ? (0.5 + Math.random()) * (Std.random(2) * 2 - 1) : 0.5 + Math.random();
+			p2.dx = Math.cos(ang) * spd2;
+			p2.dy = Math.sin(ang) * spd2;
 			var sign29 = null;
 			if(sign29 == null) {
 				sign29 = false;
 			}
-			p6.colorAnimS(c,Const.BG_COLOR,sign29 ? (3 + Math.random() * 2) * (Std.random(2) * 2 - 1) : 3 + Math.random() * 2);
-			var sign30 = true;
+			p2.frictX = p2.frictY = sign29 ? (0.96 + Math.random() * 0.010000000000000009) * (Std.random(2) * 2 - 1) : 0.96 + Math.random() * 0.010000000000000009;
+			var sign30 = null;
 			if(sign30 == null) {
 				sign30 = false;
 			}
-			p6.scaleX = p6.scaleY = sign30 ? (0.3 + Math.random() * 0.2) * (Std.random(2) * 2 - 1) : 0.3 + Math.random() * 0.2;
+			p2.scaleMul = sign30 ? (0.991 + Math.random() * 0.0030000000000000027) * (Std.random(2) * 2 - 1) : 0.991 + Math.random() * 0.0030000000000000027;
 			var sign31 = null;
 			if(sign31 == null) {
 				sign31 = false;
 			}
-			var spd2 = sign31 ? (0.5 + Math.random()) * (Std.random(2) * 2 - 1) : 0.5 + Math.random();
-			p6.dx = Math.cos(ang) * spd2;
-			p6.dy = Math.sin(ang) * spd2;
-			var sign32 = null;
-			if(sign32 == null) {
-				sign32 = false;
+			p2.set_lifeS(sign31 ? (0.5 + Math.random() * 0.5) * (Std.random(2) * 2 - 1) : 0.5 + Math.random() * 0.5);
+		}
+	}
+	,eraserSegment: function(fx,fy,tx,ty,size,c) {
+		var dist = Math.sqrt((fx - tx) * (fx - tx) + (fy - ty) * (fy - ty));
+		var ang = Math.atan2(ty - fy,tx - fx);
+		var x = dist / 2;
+		var n;
+		if(x > .0) {
+			var t = x + .5 | 0;
+			n = t < x ? t + 1 : t;
+		} else if(x < .0) {
+			var t1 = x - .5 | 0;
+			n = t1 < x ? t1 + 1 : t1;
+		} else {
+			n = 0;
+		}
+		var step = dist / n;
+		var _g = 0;
+		var _g1 = n;
+		while(_g < _g1) {
+			var i = _g++;
+			var r = i / n;
+			var t2 = Assets.tiles.getTileRandom("pixel");
+			var sign = true;
+			if(sign == null) {
+				sign = false;
 			}
-			p6.frictX = p6.frictY = sign32 ? (0.96 + Math.random() * 0.010000000000000009) * (Std.random(2) * 2 - 1) : 0.96 + Math.random() * 0.010000000000000009;
-			var sign33 = null;
-			if(sign33 == null) {
-				sign33 = false;
+			var x1 = fx + Math.cos(ang) * dist * r + size * (sign ? (0.4 + Math.random() * 0.5) * (Std.random(2) * 2 - 1) : 0.4 + Math.random() * 0.5);
+			var sign1 = true;
+			if(sign1 == null) {
+				sign1 = false;
 			}
-			p6.rotation = sign33 ? Math.random() * 6.28 * (Std.random(2) * 2 - 1) : Math.random() * 6.28;
-			var sign34 = null;
-			if(sign34 == null) {
-				sign34 = false;
+			var y = fy + Math.sin(ang) * dist * r + size * (sign1 ? (0.4 + Math.random() * 0.5) * (Std.random(2) * 2 - 1) : 0.4 + Math.random() * 0.5);
+			var _this = this.pool;
+			var sb = this.topNormalSb;
+			var p;
+			if(_this.nalloc < _this.all.length) {
+				var p1 = _this.all[_this.nalloc];
+				p1.reset(sb,t2,x1,y);
+				p1.poolIdx = _this.nalloc;
+				_this.nalloc++;
+				p = p1;
+			} else {
+				var best = null;
+				var _g2 = 0;
+				var _g11 = _this.all;
+				while(_g2 < _g11.length) {
+					var p2 = _g11[_g2];
+					++_g2;
+					if(best == null || p2.stamp <= best.stamp) {
+						best = p2;
+					}
+				}
+				if(best.onKill != null) {
+					best.onKill();
+				}
+				best.reset(sb,t2,x1,y);
+				p = best;
 			}
-			p6.scaleMul = sign34 ? (0.991 + Math.random() * 0.0030000000000000027) * (Std.random(2) * 2 - 1) : 0.991 + Math.random() * 0.0030000000000000027;
-			var sign35 = null;
-			if(sign35 == null) {
-				sign35 = false;
+			var sign2 = null;
+			if(sign2 == null) {
+				sign2 = false;
 			}
-			p6.set_lifeS(sign35 ? (0.5 + Math.random() * 0.5) * (Std.random(2) * 2 - 1) : 0.5 + Math.random() * 0.5);
+			var tmp = sign2 ? (0.3 + Math.random() * 0.3) * (Std.random(2) * 2 - 1) : 0.3 + Math.random() * 0.3;
+			var sign3 = null;
+			if(sign3 == null) {
+				sign3 = false;
+			}
+			var tmp1 = sign3 ? (0.1 + Math.random() * 0.19999999999999998) * (Std.random(2) * 2 - 1) : 0.1 + Math.random() * 0.19999999999999998;
+			var sign4 = null;
+			if(sign4 == null) {
+				sign4 = false;
+			}
+			p.setFadeS(tmp,tmp1,sign4 ? (0.3 + Math.random() * 0.7) * (Std.random(2) * 2 - 1) : 0.3 + Math.random() * 0.7);
+			var sign5 = null;
+			if(sign5 == null) {
+				sign5 = false;
+			}
+			p.colorAnimS(c,Client.ME.theme.bg,sign5 ? (3 + Math.random() * 2) * (Std.random(2) * 2 - 1) : 3 + Math.random() * 2);
+			var sign6 = null;
+			if(sign6 == null) {
+				sign6 = false;
+			}
+			p.scaleX = p.scaleY = sign6 ? (2 + Math.random() * 3) * (Std.random(2) * 2 - 1) : 2 + Math.random() * 3;
+			var sign7 = null;
+			if(sign7 == null) {
+				sign7 = false;
+			}
+			var spd = sign7 ? (0.5 + Math.random()) * (Std.random(2) * 2 - 1) : 0.5 + Math.random();
+			p.dx = Math.cos(ang) * spd;
+			p.dy = Math.sin(ang) * spd;
+			var sign8 = null;
+			if(sign8 == null) {
+				sign8 = false;
+			}
+			p.frictX = p.frictY = sign8 ? (0.96 + Math.random() * 0.010000000000000009) * (Std.random(2) * 2 - 1) : 0.96 + Math.random() * 0.010000000000000009;
+			var sign9 = null;
+			if(sign9 == null) {
+				sign9 = false;
+			}
+			p.scaleMul = sign9 ? (0.991 + Math.random() * 0.0030000000000000027) * (Std.random(2) * 2 - 1) : 0.991 + Math.random() * 0.0030000000000000027;
+			var sign10 = null;
+			if(sign10 == null) {
+				sign10 = false;
+			}
+			p.set_lifeS(sign10 ? (0.2 + Math.random() * 0.099999999999999978) * (Std.random(2) * 2 - 1) : 0.2 + Math.random() * 0.099999999999999978);
+			var r1 = i / n;
+			var t3 = Assets.tiles.getTileRandom("pixel");
+			var sign11 = true;
+			if(sign11 == null) {
+				sign11 = false;
+			}
+			var x2 = fx + Math.cos(ang) * dist * r1 + size * (sign11 ? (0.4 + Math.random() * 0.5) * (Std.random(2) * 2 - 1) : 0.4 + Math.random() * 0.5);
+			var sign12 = true;
+			if(sign12 == null) {
+				sign12 = false;
+			}
+			var y1 = fy + Math.sin(ang) * dist * r1 + size * (sign12 ? (0.4 + Math.random() * 0.5) * (Std.random(2) * 2 - 1) : 0.4 + Math.random() * 0.5);
+			var _this1 = this.pool;
+			var sb1 = this.topNormalSb;
+			var p3;
+			if(_this1.nalloc < _this1.all.length) {
+				var p4 = _this1.all[_this1.nalloc];
+				p4.reset(sb1,t3,x2,y1);
+				p4.poolIdx = _this1.nalloc;
+				_this1.nalloc++;
+				p3 = p4;
+			} else {
+				var best1 = null;
+				var _g3 = 0;
+				var _g12 = _this1.all;
+				while(_g3 < _g12.length) {
+					var p5 = _g12[_g3];
+					++_g3;
+					if(best1 == null || p5.stamp <= best1.stamp) {
+						best1 = p5;
+					}
+				}
+				if(best1.onKill != null) {
+					best1.onKill();
+				}
+				best1.reset(sb1,t3,x2,y1);
+				p3 = best1;
+			}
+			var sign13 = null;
+			if(sign13 == null) {
+				sign13 = false;
+			}
+			var tmp2 = sign13 ? (0.3 + Math.random() * 0.3) * (Std.random(2) * 2 - 1) : 0.3 + Math.random() * 0.3;
+			var sign14 = null;
+			if(sign14 == null) {
+				sign14 = false;
+			}
+			var tmp3 = sign14 ? (0.1 + Math.random() * 0.19999999999999998) * (Std.random(2) * 2 - 1) : 0.1 + Math.random() * 0.19999999999999998;
+			var sign15 = null;
+			if(sign15 == null) {
+				sign15 = false;
+			}
+			p3.setFadeS(tmp2,tmp3,sign15 ? (0.3 + Math.random() * 0.7) * (Std.random(2) * 2 - 1) : 0.3 + Math.random() * 0.7);
+			var sign16 = null;
+			if(sign16 == null) {
+				sign16 = false;
+			}
+			p3.colorAnimS(c,Client.ME.theme.bg,sign16 ? (3 + Math.random() * 2) * (Std.random(2) * 2 - 1) : 3 + Math.random() * 2);
+			var sign17 = null;
+			if(sign17 == null) {
+				sign17 = false;
+			}
+			p3.scaleX = p3.scaleY = sign17 ? (2 + Math.random() * 3) * (Std.random(2) * 2 - 1) : 2 + Math.random() * 3;
+			var sign18 = null;
+			if(sign18 == null) {
+				sign18 = false;
+			}
+			var spd1 = sign18 ? (0.5 + Math.random()) * (Std.random(2) * 2 - 1) : 0.5 + Math.random();
+			p3.dx = Math.cos(ang) * spd1;
+			p3.dy = Math.sin(ang) * spd1;
+			var sign19 = null;
+			if(sign19 == null) {
+				sign19 = false;
+			}
+			p3.frictX = p3.frictY = sign19 ? (0.96 + Math.random() * 0.010000000000000009) * (Std.random(2) * 2 - 1) : 0.96 + Math.random() * 0.010000000000000009;
+			var sign20 = null;
+			if(sign20 == null) {
+				sign20 = false;
+			}
+			p3.scaleMul = sign20 ? (0.991 + Math.random() * 0.0030000000000000027) * (Std.random(2) * 2 - 1) : 0.991 + Math.random() * 0.0030000000000000027;
+			var sign21 = null;
+			if(sign21 == null) {
+				sign21 = false;
+			}
+			p3.set_lifeS(sign21 ? (0.2 + Math.random() * 0.099999999999999978) * (Std.random(2) * 2 - 1) : 0.2 + Math.random() * 0.099999999999999978);
 		}
 	}
 	,update: function() {
@@ -1816,7 +1993,12 @@ $hxClasses["TouchDrawingData"] = TouchDrawingData;
 TouchDrawingData.__name__ = "TouchDrawingData";
 TouchDrawingData.prototype = {
 	getBrushSize: function() {
-		return Client.ME.baseBrushSize * (0.6 + 0.4 * Math.cos((Date.now() / 1000 - this.startTime) * 8));
+		var _this = Client.ME;
+		if(_this.color == _this.theme.bg) {
+			return 40;
+		} else {
+			return Client.ME.baseBrushSize * (0.8 + 0.2 * Math.cos((Date.now() / 1000 - this.startTime) * 8));
+		}
 	}
 	,checkTap: function(onRelease) {
 		var tmp;
@@ -43632,8 +43814,7 @@ var ui_Hud = function() {
 	this.invalidated = true;
 	dn_Process.call(this,Client.ME);
 	this.createRootInLayers(Client.ME.root,Const.DP_UI);
-	this.palette = new h2d_Layers(this.root);
-	this.flow = new h2d_Flow(this.root);
+	this.left = new h2d_Layers(this.root);
 };
 $hxClasses["ui.Hud"] = ui_Hud;
 ui_Hud.__name__ = "ui.Hud";
@@ -43648,34 +43829,42 @@ ui_Hud.prototype = $extend(dn_Process.prototype,{
 	}
 	,render: function() {
 		var _gthis = this;
-		this.palette.removeChildren();
-		var x = (dn_Process.CUSTOM_STAGE_HEIGHT > 0 ? dn_Process.CUSTOM_STAGE_HEIGHT : hxd_Window.getInstance().get_height()) / Const.SCALE / Const.ALL_COLORS.length;
-		var chei;
+		this.left.removeChildren();
+		var allColors = Client.ME.theme.palette.concat([Client.ME.theme.bg]);
+		var x = (dn_Process.CUSTOM_STAGE_HEIGHT > 0 ? dn_Process.CUSTOM_STAGE_HEIGHT : hxd_Window.getInstance().get_height()) / Const.SCALE / (allColors.length + 1);
+		var btHei;
 		if(x > .0) {
 			var t = x + .5 | 0;
-			chei = t < x ? t + 1 : t;
+			btHei = t < x ? t + 1 : t;
 		} else if(x < .0) {
 			var t1 = x - .5 | 0;
-			chei = t1 < x ? t1 + 1 : t1;
+			btHei = t1 < x ? t1 + 1 : t1;
 		} else {
-			chei = 0;
+			btHei = 0;
 		}
-		var idx = 0;
+		var btWid = 0.07 * (dn_Process.CUSTOM_STAGE_WIDTH > 0 ? dn_Process.CUSTOM_STAGE_WIDTH : hxd_Window.getInstance().get_width()) / Const.SCALE;
+		var i = new h2d_Interactive(btWid,btHei,this.left);
+		i.propagateEvents = true;
+		i.backgroundColor = (255. | 0) << 24 | 16777215;
+		i.onClick = function(_) {
+			Client.ME.baseBrushSize = Client.ME.baseBrushSize == 10 ? 50 : 10;
+			haxe_Log.trace(Client.ME.baseBrushSize,{ fileName : "src/ui/Hud.hx", lineNumber : 41, className : "ui.Hud", methodName : "render"});
+		};
+		var idx = 1;
 		var active = null;
 		var _g = 0;
-		var _g1 = Const.ALL_COLORS;
-		while(_g < _g1.length) {
-			var c = [_g1[_g]];
+		while(_g < allColors.length) {
+			var c = [allColors[_g]];
 			++_g;
-			var i = [new h2d_Interactive((dn_Process.CUSTOM_STAGE_WIDTH > 0 ? dn_Process.CUSTOM_STAGE_WIDTH : hxd_Window.getInstance().get_width()) / Const.SCALE * 0.07,chei,this.palette)];
-			i[0].propagateEvents = true;
-			i[0].posChanged = true;
-			i[0].y = chei * idx;
+			var i1 = [new h2d_Interactive(btWid,btHei,this.left)];
+			i1[0].propagateEvents = true;
+			i1[0].posChanged = true;
+			i1[0].y = btHei * idx;
 			if(c[0] == Client.ME.color) {
-				active = i[0];
-				i[0].width += 7;
-				i[0].set_filter(new h2d_filter_Glow(0,1,64,null,null,true));
-				i[0].backgroundColor = (255. | 0) << 24 | c[0];
+				active = i1[0];
+				i1[0].width += 7;
+				i1[0].set_filter(new h2d_filter_Glow(0,1,64,null,null,true));
+				i1[0].backgroundColor = (255. | 0) << 24 | c[0];
 			} else {
 				var from_r = c[0] >> 16 & 255;
 				var from_g = c[0] >> 8 & 255;
@@ -43686,18 +43875,18 @@ ui_Hud.prototype = $extend(dn_Process.prototype,{
 				var c_r = from_r + (to.r - from_r) * ratio | 0;
 				var c_g = from_g + (to.g - from_g) * ratio | 0;
 				var c_b = from_b + (to.b - from_b) * ratio | 0;
-				i[0].backgroundColor = (255. | 0) << 24 | (c_r << 16 | c_g << 8 | c_b);
+				i1[0].backgroundColor = (255. | 0) << 24 | (c_r << 16 | c_g << 8 | c_b);
 			}
-			i[0].onClick = (function(i1,c1) {
-				return function(_) {
+			i1[0].onPush = (function(i2,c1) {
+				return function(_1) {
 					Client.ME.color = c1[0];
-					Client.ME.fx.pickColor(_gthis.palette.x + i1[0].x,_gthis.palette.y + i1[0].y,i1[0].width,i1[0].height,c1[0]);
+					Client.ME.fx.pickColor(_gthis.left.x + i2[0].x,_gthis.left.y + i2[0].y,i2[0].width,i2[0].height,c1[0]);
 					_gthis.invalidated = true;
 				};
-			})(i,c);
+			})(i1,c);
 			++idx;
 		}
-		this.palette.over(active);
+		this.left.over(active);
 	}
 	,postUpdate: function() {
 		dn_Process.prototype.postUpdate.call(this);
@@ -43919,10 +44108,11 @@ Const.UI_SCALE = 1.0;
 Const._inc = 0;
 Const.DP_BG = Const._inc++;
 Const.DP_FX_BG = Const._inc++;
+Const.DP_MAIN = Const._inc++;
 Const.DP_UI = Const._inc++;
 Const.DP_FX_FRONT = Const._inc++;
-Const.BG_COLOR = Std.parseInt("0x" + HxOverrides.substr("#1a1c2c",1,999));
-Const.ALL_COLORS = [Std.parseInt("0x" + HxOverrides.substr("#FFcc00",1,999)),Std.parseInt("0x" + HxOverrides.substr("#FF2674",1,999)),Std.parseInt("0x" + HxOverrides.substr("#4998D4",1,999)),Std.parseInt("0x" + HxOverrides.substr("#54E58E",1,999)),Std.parseInt("0x" + HxOverrides.substr("#B0EF44",1,999))];
+Const.DP_TOP = Const._inc++;
+Const.THEMES = [{ isLight : false, bg : Std.parseInt("0x" + HxOverrides.substr("#1a1c2c",1,999)), palette : [Std.parseInt("0x" + HxOverrides.substr("#FFcc00",1,999)),Std.parseInt("0x" + HxOverrides.substr("#FF2674",1,999)),Std.parseInt("0x" + HxOverrides.substr("#4998D4",1,999)),Std.parseInt("0x" + HxOverrides.substr("#54E58E",1,999)),Std.parseInt("0x" + HxOverrides.substr("#B0EF44",1,999))]},{ isLight : true, bg : Std.parseInt("0x" + HxOverrides.substr("#f3efd8",1,999)), palette : [Std.parseInt("0x" + HxOverrides.substr("#FFcc00",1,999)),Std.parseInt("0x" + HxOverrides.substr("#FF2674",1,999)),Std.parseInt("0x" + HxOverrides.substr("#4998D4",1,999)),Std.parseInt("0x" + HxOverrides.substr("#54E58E",1,999)),Std.parseInt("0x" + HxOverrides.substr("#B0EF44",1,999))]}];
 Lang._initDone = false;
 Lang.DEFAULT = "en";
 Lang.CUR = "??";
