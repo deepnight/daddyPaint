@@ -19,7 +19,7 @@ class Client extends Process {
 
 	var wrapper : h2d.Object;
 	var bg : h2d.Graphics;
-	var flatten : h2d.Bitmap;
+	var flatten : Null<h2d.Bitmap>;
 	var canvas : h2d.Graphics;
 	var debugCanvas : h2d.Graphics;
 
@@ -42,12 +42,15 @@ class Client extends Process {
 		hud = new ui.Hud();
 
 		// Init canvas
+		bg = new h2d.Graphics();
+		root.add(bg, Const.DP_BG);
+
 		wrapper = new h2d.Object();
 		root.add(wrapper, Const.DP_MAIN);
-		bg = new h2d.Graphics(wrapper);
-		flatten = new h2d.Bitmap(wrapper);
 		canvas = new h2d.Graphics(wrapper);
-		debugCanvas = new h2d.Graphics(wrapper);
+
+		debugCanvas = new h2d.Graphics();
+		root.add(debugCanvas, Const.DP_MAIN);
 		debugCanvas.visible = false;
 
 		// Init touch interactive
@@ -108,6 +111,7 @@ class Client extends Process {
 		for(d in touchDrawingData)
 			d.dispose();
 		touchDrawingData = new Map();
+		disposeFlatten();
 
 		canvas.clear();
 		debugCanvas.clear();
@@ -115,6 +119,11 @@ class Client extends Process {
 	}
 
 	public inline function isEraser() return color==theme.bg;
+	public function isDrawing() {
+		for(d in touchDrawingData)
+			return true;
+		return false;
+	}
 
 	function startDrawing(e:hxd.Event) {
 		if( touchDrawingData.exists(e.touchId) )
@@ -165,6 +174,8 @@ class Client extends Process {
 
 		touchDrawingData.remove(tdata.touchId);
 		tdata.dispose();
+		cd.setS("canvasFlushRequired", Const.INFINITE);
+		cd.setS("canvasFlushLocked", 0.5);
 	}
 
 	function flushLineBuffer(e:hxd.Event, isFinal:Bool) {
@@ -172,10 +183,6 @@ class Client extends Process {
 		var tdata = touchDrawingData.get(e.touchId);
 
 		inline function drawSegment(fx:Float, fy:Float, tx:Float, ty:Float) {
-			// canvas.lineStyle(brushSize, C.interpolateInt(color,Const.BG_COLOR, 0.8));
-			// canvas.moveTo(fx,fy+brushSize*0.3);
-			// canvas.lineTo(tx,ty+brushSize*0.3);
-
 			canvas.lineStyle(tdata.getBrushSize(), color);
 			if( isEraser() )
 				this.fx.eraserSegment( fx,fy, tx,ty, tdata.getBrushSize(), 0xABB9DB );
@@ -239,8 +246,6 @@ class Client extends Process {
 	override function onResize() {
 		super.onResize();
 
-		flatten.setScale(1/Const.SCALE); // HACK TODO should capture in lower res
-
 		bg.clear();
 		bg.beginFill(theme.bg);
 		bg.drawRect(0,0,w(),h());
@@ -255,18 +260,36 @@ class Client extends Process {
 		fx.destroy();
 	}
 
+	function disposeFlatten() {
+		if( flatten==null )
+			return;
+
+		flatten.tile.dispose();
+		flatten.tile = null;
+		flatten.remove();
+		flatten = null;
+	}
+
 	function flushCanvasToTexture() {
-		if( flatten.tile!=null )
-			flatten.tile.dispose();
-		flatten.tile = getCanvasTile();
+		var tile = getCanvasTile();
+
+		// Clear previous flatten bitmap
+		disposeFlatten();
+
+		// Add new flatten
+		flatten = new h2d.Bitmap(tile);
+		wrapper.addChildAt(flatten,0);
+		flatten.setScale(1/Const.SCALE); // HACK TODO should capture in lower res
 		canvas.clear();
 	}
 
 	function getCanvasTexture() {
 		var t = haxe.Timer.stamp();
-		var tex = new h3d.mat.Texture( w(), Std.int(h()), [Target] );
+		var tex = new h3d.mat.Texture( w(), h(), [Target] );
 		wrapper.drawTo(tex);
+		#if debug
 		trace("capture="+M.pretty(haxe.Timer.stamp()-t)+"s, "+tex.width+"x"+tex.height);
+		#end
 		return tex;
 	}
 
@@ -331,7 +354,12 @@ class Client extends Process {
 			if( ca.selectPressed() )
 				Main.ME.startClient();
 		}
-		// brushSize = 6 + 4*Math.cos(ftime*0.6);
+
+		// Flatten canvas
+		if( cd.has("canvasFlushRequired") && !cd.has("canvasFlushLocked") && !isDrawing() ) {
+			flushCanvasToTexture();
+			cd.unset("canvasFlushRequired");
+		}
 
 		#if debug
 		var t = "";
@@ -339,7 +367,8 @@ class Client extends Process {
 			t += "#"+d.touchId+"(avg="+Std.int(d.avgDist)+") ";
 		debugTf.text = M.round(hxd.Timer.fps()) + "fps"
 			+" fx="+fx.pool.count()
-			+" touches="+t;
+			+" touches="+t
+			+" "+isDrawing();
 		#end
 	}
 }
