@@ -20,15 +20,6 @@ class Const {
 	public static var DP_FX_FRONT = _inc++;
 	public static var DP_TOP = _inc++;
 
-	// public static var BG_COLOR = Color.hexToInt("#1a1c2c");
-	// public static var ALL_COLORS = [ // sweetie 16
-	// 	Color.hexToInt("#FFcc00"),
-	// 	Color.hexToInt("#FF2674"),
-	// 	Color.hexToInt("#4998D4"),
-	// 	Color.hexToInt("#54E58E"),
-	// 	Color.hexToInt("#B0EF44"),
-	// ];
-
 	public static var THEMES : Array<Theme> = [
 		{
 			bg: Color.hexToInt("#1a1c2c"),
