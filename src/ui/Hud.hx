@@ -31,10 +31,11 @@ class Hud extends dn.Process {
 	function render() {
 		// Palette
 		palette.removeChildren();
-		var chei = M.ceil( h()/Const.SCALE / Const.ALL_COLORS.length );
+		var all = Const.ALL_COLORS.concat([Const.BG_COLOR]);
+		var chei = M.ceil( h()/Const.SCALE / all.length );
 		var idx = 0;
 		var active = null;
-		for(c in Const.ALL_COLORS) {
+		for(c in all) {
 			var i = new h2d.Interactive(w()/Const.SCALE*0.07, chei, palette);
 			i.propagateEvents = true;
 			i.y = chei*idx;

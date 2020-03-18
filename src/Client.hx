@@ -105,6 +105,8 @@ class Client extends Process {
 		lines = [];
 	}
 
+	public inline function isEraser() return color==Const.BG_COLOR;
+
 	function startDrawing(e:hxd.Event) {
 		if( touchDrawingData.exists(e.touchId) )
 			return;
@@ -166,7 +168,8 @@ class Client extends Process {
 			// canvas.lineTo(tx,ty+brushSize*0.3);
 
 			canvas.lineStyle(tdata.getBrushSize(), color);
-			this.fx.segment( fx,fy, tx,ty, tdata.getBrushSize(), color );
+			if( !isEraser() )
+				this.fx.segment( fx,fy, tx,ty, tdata.getBrushSize(), color );
 			canvas.moveTo(fx,fy);
 			canvas.lineTo(tx,ty);
 		}
@@ -198,7 +201,7 @@ class Client extends Process {
 			);
 
 			tdata.bufferCanvas.clear();
-			tdata.bufferCanvas.lineStyle(tdata.getBrushSize(), 0xffffff);
+			tdata.bufferCanvas.lineStyle(tdata.getBrushSize(), isEraser() ? color : 0xffffff);
 			tdata.bufferCanvas.moveTo( to.getSubX(1-curveDist), to.getSubY(1-curveDist) );
 			tdata.bufferCanvas.lineTo(to.tx, to.ty);
 		}
