@@ -145,7 +145,7 @@ class Client extends Process {
 		// Line rounded start
 		canvas.lineStyle();
 		canvas.beginFill(color);
-		canvas.drawCircle(tdata.mouseX, tdata.mouseY, tdata.getBrushSize()*0.4);
+		canvas.drawCircle(tdata.mouseX, tdata.mouseY, tdata.getBrushSize()*0.5);
 		canvas.endFill();
 	}
 
@@ -162,7 +162,7 @@ class Client extends Process {
 		// Line rounded end
 		canvas.lineStyle();
 		canvas.beginFill(color);
-		canvas.drawCircle(tdata.mouseX, tdata.mouseY, tdata.getBrushSize()*0.4);
+		canvas.drawCircle(tdata.mouseX, tdata.mouseY, tdata.getBrushSize()*0.5);
 		canvas.endFill();
 
 		// HACK: fix cropped h2d.Graphics render bug
