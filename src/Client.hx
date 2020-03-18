@@ -40,13 +40,19 @@ class Client extends Process {
 		hud = new ui.Hud();
 
 		// Init canvas
-		bg = new h2d.Graphics(root);
-		canvas = new h2d.Graphics(root);
-		debugCanvas = new h2d.Graphics(root);
+		bg = new h2d.Graphics();
+		root.add(bg, Const.DP_BG);
+
+		canvas = new h2d.Graphics();
+		root.add(canvas, Const.DP_MAIN);
+
+		debugCanvas = new h2d.Graphics();
+		root.add(debugCanvas, Const.DP_MAIN);
 		debugCanvas.visible = false;
 
 		// Init touch interactive
-		touchCatcher = new h2d.Interactive(100,100, root);
+		touchCatcher = new h2d.Interactive(100,100);
+		root.add(touchCatcher, Const.DP_MAIN);
 		touchCatcher.propagateEvents = true;
 		touchCatcher.onPush = function(e) startDrawing(e);
 		touchCatcher.onRelease = function(e) stopDrawing(e);
@@ -54,7 +60,8 @@ class Client extends Process {
 		touchCatcher.onOut = function(e) stopDrawing(e);
 		touchCatcher.onMove = onMouseMove;
 
-		debugTf = new h2d.Text(Assets.fontSmall, root);
+		debugTf = new h2d.Text(Assets.fontSmall);
+		root.add(debugTf, Const.DP_TOP);
 		debugTf.setScale(2);
 	}
 
@@ -246,6 +253,18 @@ class Client extends Process {
 		fx.destroy();
 	}
 
+	function getCanvasTexture() {
+		var t = haxe.Timer.stamp();
+		var tex = new h3d.mat.Texture( w(), Std.int(h()), [Target] );
+		canvas.drawTo(tex);
+		trace("capture="+M.pretty(haxe.Timer.stamp()-t)+"s, "+tex.width+"x"+tex.height);
+		return tex;
+	}
+
+	function getCanvasTile() {
+		return h2d.Tile.fromTexture( getCanvasTexture() );
+	}
+
 	override function preUpdate() {
 		super.preUpdate();
 	}
@@ -277,6 +296,15 @@ class Client extends Process {
 				debugCanvas.visible = !debugCanvas.visible;
 				canvas.alpha = debugCanvas.visible ? 0.3 : 1;
 				touchCatcher.backgroundColor = debugCanvas.visible ? Color.addAlphaF(0x00ff00,0.2) : 0x0;
+			}
+			#end
+
+			// Flush into texture
+			#if debug
+			if( hxd.Key.isPressed(Key.T) ) {
+				var bmp = new h2d.Bitmap( getCanvasTile() );
+				root.add(bmp, Const.DP_TOP);
+				bmp.scale(0.5/Const.SCALE);
 			}
 			#end
 
