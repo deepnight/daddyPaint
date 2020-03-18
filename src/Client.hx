@@ -17,7 +17,9 @@ class Client extends Process {
 
 	var lines : Array<Line> = [];
 
+	var wrapper : h2d.Object;
 	var bg : h2d.Graphics;
+	var flatten : h2d.Bitmap;
 	var canvas : h2d.Graphics;
 	var debugCanvas : h2d.Graphics;
 
@@ -40,14 +42,12 @@ class Client extends Process {
 		hud = new ui.Hud();
 
 		// Init canvas
-		bg = new h2d.Graphics();
-		root.add(bg, Const.DP_BG);
-
-		canvas = new h2d.Graphics();
-		root.add(canvas, Const.DP_MAIN);
-
-		debugCanvas = new h2d.Graphics();
-		root.add(debugCanvas, Const.DP_MAIN);
+		wrapper = new h2d.Object();
+		root.add(wrapper, Const.DP_MAIN);
+		bg = new h2d.Graphics(wrapper);
+		flatten = new h2d.Bitmap(wrapper);
+		canvas = new h2d.Graphics(wrapper);
+		debugCanvas = new h2d.Graphics(wrapper);
 		debugCanvas.visible = false;
 
 		// Init touch interactive
@@ -239,6 +239,8 @@ class Client extends Process {
 	override function onResize() {
 		super.onResize();
 
+		flatten.setScale(1/Const.SCALE); // HACK TODO should capture in lower res
+
 		bg.clear();
 		bg.beginFill(theme.bg);
 		bg.drawRect(0,0,w(),h());
@@ -253,10 +255,17 @@ class Client extends Process {
 		fx.destroy();
 	}
 
+	function flushCanvasToTexture() {
+		if( flatten.tile!=null )
+			flatten.tile.dispose();
+		flatten.tile = getCanvasTile();
+		canvas.clear();
+	}
+
 	function getCanvasTexture() {
 		var t = haxe.Timer.stamp();
 		var tex = new h3d.mat.Texture( w(), Std.int(h()), [Target] );
-		canvas.drawTo(tex);
+		wrapper.drawTo(tex);
 		trace("capture="+M.pretty(haxe.Timer.stamp()-t)+"s, "+tex.width+"x"+tex.height);
 		return tex;
 	}
@@ -302,9 +311,10 @@ class Client extends Process {
 			// Flush into texture
 			#if debug
 			if( hxd.Key.isPressed(Key.T) ) {
-				var bmp = new h2d.Bitmap( getCanvasTile() );
-				root.add(bmp, Const.DP_TOP);
-				bmp.scale(0.5/Const.SCALE);
+				flushCanvasToTexture();
+				// var bmp = new h2d.Bitmap( getCanvasTile() );
+				// root.add(bmp, Const.DP_TOP);
+				// bmp.scale(0.5/Const.SCALE);
 			}
 			#end
 
