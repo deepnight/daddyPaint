@@ -287,9 +287,9 @@ class Client extends Process {
 		var t = haxe.Timer.stamp();
 		var tex = new h3d.mat.Texture( w(), h(), [Target] );
 		wrapper.drawTo(tex);
-		#if debug
-		trace("capture="+M.pretty(haxe.Timer.stamp()-t)+"s, "+tex.width+"x"+tex.height);
-		#end
+		// #if debug
+		// trace("capture="+M.pretty(haxe.Timer.stamp()-t)+"s, "+tex.width+"x"+tex.height);
+		// #end
 		return tex;
 	}
 

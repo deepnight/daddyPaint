@@ -38,7 +38,6 @@ class Hud extends dn.Process {
 		i.backgroundColor = C.addAlphaF(0xffffff);
 		i.onClick = function(_) {
 			client.baseBrushSize = client.baseBrushSize==10 ? 50 : 10;
-			trace(client.baseBrushSize);
 		}
 
 		// Palette
