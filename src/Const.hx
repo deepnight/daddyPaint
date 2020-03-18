@@ -22,6 +22,7 @@ class Const {
 
 	public static var THEMES : Array<Theme> = [
 		{ // dark
+			isLight: false,
 			bg: Color.hexToInt("#1a1c2c"),
 			palette: [
 				Color.hexToInt("#FFcc00"),
@@ -32,6 +33,7 @@ class Const {
 			],
 		},
 		{ // light
+			isLight: true,
 			bg: Color.hexToInt("#f3efd8"),
 			palette: [
 				Color.hexToInt("#FFcc00"),

@@ -71,6 +71,10 @@ class Fx extends dn.Process {
 		return Assets.tiles.getTileRandom(id);
 	}
 
+	public inline function allocCanvas(t:h2d.Tile, x:Float, y:Float) {
+		return ( client.theme.isLight ? allocBgNormal : allocBgAdd )( t, x, y );
+	}
+
 	public function killAll() {
 		pool.killAll();
 	}
@@ -132,7 +136,7 @@ class Fx extends dn.Process {
 		var n = 35;
 		for(i in 0...n ) {
 			var a = 6.28 * i/n + rnd(0,0.2,true);
-			var p = allocBgAdd(getTile("fxSmoke"), x+Math.cos(a)*rnd(5,10), y+Math.sin(a)*rnd(5,10));
+			var p = allocCanvas(getTile("fxSmoke"), x+Math.cos(a)*rnd(5,10), y+Math.sin(a)*rnd(5,10));
 			p.colorAnimS( c, client.theme.bg, rnd(0.7,1.3) );
 			p.setScale(rnd(3,4,true));
 			p.setFadeS(rnd(0.07,0.10), rnd(0.1,0.3), rnd(1,2));
@@ -171,7 +175,7 @@ class Fx extends dn.Process {
 		var step = dist/n;
 		for(i in 0...n ) {
 			var r = i/n;
-			var p = allocBgAdd(
+			var p = allocCanvas(
 				getTile("fxLine"),
 				fx+Math.cos(ang)*dist*r + rnd(0,size,true),
 				fy+Math.sin(ang)*dist*r + rnd(0,size,true)
@@ -193,17 +197,20 @@ class Fx extends dn.Process {
 		for(i in 0...n ) {
 			for(j in 0...2) {
 				var r = i/n;
-				var p = allocBgAdd(
-					getTile("fxSpark"),
+				var p = allocCanvas(
+					getTile("pixel"),
 					fx+Math.cos(ang)*dist*r + size*rnd(0.4,0.9,true),
 					fy+Math.sin(ang)*dist*r + size*rnd(0.4,0.9,true)
 				);
-				p.setFadeS(rnd(0.1,0.2), rnd(0.1,0.3), rnd(1,1.5));
-				p.colorAnimS(c, client.theme.bg, rnd(3,5));
-				p.setScale(rnd(0.3,0.5,true));
+				p.setFadeS(rnd(0.5,0.8), rnd(0.1,0.3), rnd(0.3,1.5));
+				// p.setFadeS(rnd(0.1,0.2), rnd(0.1,0.3), rnd(1,1.5));
+				p.colorize(c);
+				// p.colorAnimS(c, client.theme.bg, rnd(3,5));
+				p.setScale(rnd(2,4));
+				// p.setScale(rnd(0.3,0.5,true));
 				p.moveAng(ang, rnd(0.5,1.5));
 				p.frict = rnd(0.96,0.97);
-				p.rotation = rnd(0,6.28);
+				// p.rotation = rnd(0,6.28);
 				p.scaleMul = rnd(0.991,0.994);
 				p.lifeS = rnd(0.5,1);
 			}
@@ -220,17 +227,16 @@ class Fx extends dn.Process {
 		for(i in 0...n ) {
 			for(j in 0...2) {
 				var r = i/n;
-				var p = allocBgAdd(
-					getTile("fxSpark"),
+				var p = allocCanvas(
+					getTile("pixel"),
 					fx+Math.cos(ang)*dist*r + size*rnd(0.4,0.9,true),
 					fy+Math.sin(ang)*dist*r + size*rnd(0.4,0.9,true)
 				);
 				p.setFadeS(rnd(0.3,0.6), rnd(0.1,0.3), rnd(0.3,1));
 				p.colorAnimS(c, client.theme.bg, rnd(3,5));
-				p.setScale(rnd(0.1,0.3,true));
+				p.setScale( rnd(2,5) );
 				p.moveAng(ang, rnd(0.5,1.5));
 				p.frict = rnd(0.96,0.97);
-				p.rotation = rnd(0,6.28);
 				p.scaleMul = rnd(0.991,0.994);
 				p.lifeS = rnd(0.2,0.3);
 			}
