@@ -26,9 +26,10 @@ class Const {
 			bg: Color.hexToInt("#1a1c2c"),
 			palette: [
 				Color.hexToInt("#FFcc00"),
+				Color.hexToInt("#A95431"),
 				Color.hexToInt("#FF2674"),
 				Color.hexToInt("#4998D4"),
-				Color.hexToInt("#54E58E"),
+				Color.hexToInt("#62F5D3"),
 				Color.hexToInt("#B0EF44")
 			],
 		},
@@ -37,9 +38,10 @@ class Const {
 			bg: Color.hexToInt("#f3efd8"),
 			palette: [
 				Color.hexToInt("#FFcc00"),
+				Color.hexToInt("#A95431"),
 				Color.hexToInt("#FF2674"),
 				Color.hexToInt("#4998D4"),
-				Color.hexToInt("#54E58E"),
+				Color.hexToInt("#62F5D3"),
 				Color.hexToInt("#B0EF44")
 			],
 		},
