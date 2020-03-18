@@ -21,8 +21,18 @@ class Const {
 	public static var DP_TOP = _inc++;
 
 	public static var THEMES : Array<Theme> = [
-		{
+		{ // dark
 			bg: Color.hexToInt("#1a1c2c"),
+			palette: [
+				Color.hexToInt("#FFcc00"),
+				Color.hexToInt("#FF2674"),
+				Color.hexToInt("#4998D4"),
+				Color.hexToInt("#54E58E"),
+				Color.hexToInt("#B0EF44")
+			],
+		},
+		{ // light
+			bg: Color.hexToInt("#f3efd8"),
 			palette: [
 				Color.hexToInt("#FFcc00"),
 				Color.hexToInt("#FF2674"),

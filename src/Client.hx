@@ -32,7 +32,7 @@ class Client extends Process {
 		ca.setRightDeadZone(0.2);
 		createRootInLayers(Main.ME.root, Const.DP_BG);
 		mouse = new h2d.col.Point();
-		theme = Const.THEMES[0];
+		theme = Const.THEMES[1];
 		color = theme.palette[0];
 
 		// Init misc classes
