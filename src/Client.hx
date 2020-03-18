@@ -168,7 +168,9 @@ class Client extends Process {
 			// canvas.lineTo(tx,ty+brushSize*0.3);
 
 			canvas.lineStyle(tdata.getBrushSize(), color);
-			if( !isEraser() )
+			if( isEraser() )
+				this.fx.eraserSegment( fx,fy, tx,ty, tdata.getBrushSize(), 0xABB9DB );
+			else
 				this.fx.segment( fx,fy, tx,ty, tdata.getBrushSize(), color );
 			canvas.moveTo(fx,fy);
 			canvas.lineTo(tx,ty);

@@ -210,6 +210,33 @@ class Fx extends dn.Process {
 		}
 	}
 
+	public function eraserSegment(fx:Float,fy:Float, tx:Float, ty:Float, size:Float, c:UInt) {
+		var dist = M.dist(fx,fy,tx,ty);
+		var ang = Math.atan2(ty-fy, tx-fx);
+
+		// Dust
+		var n = M.ceil( dist/2 );
+		var step = dist/n;
+		for(i in 0...n ) {
+			for(j in 0...2) {
+				var r = i/n;
+				var p = allocBgAdd(
+					getTile("fxSpark"),
+					fx+Math.cos(ang)*dist*r + size*rnd(0.4,0.9,true),
+					fy+Math.sin(ang)*dist*r + size*rnd(0.4,0.9,true)
+				);
+				p.setFadeS(rnd(0.3,0.6), rnd(0.1,0.3), rnd(0.3,1));
+				p.colorAnimS(c, Const.BG_COLOR, rnd(3,5));
+				p.setScale(rnd(0.1,0.3,true));
+				p.moveAng(ang, rnd(0.5,1.5));
+				p.frict = rnd(0.96,0.97);
+				p.rotation = rnd(0,6.28);
+				p.scaleMul = rnd(0.991,0.994);
+				p.lifeS = rnd(0.2,0.3);
+			}
+		}
+	}
+
 	override function update() {
 		super.update();
 
