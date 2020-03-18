@@ -27,7 +27,9 @@ class TouchDrawingData {
 	}
 
 	public function getBrushSize() {
-		return client.isEraser() ? 40 : client.baseBrushSize * ( 0.8 + 0.2*Math.cos(getElapsedTimeS()*8) );
+		return client.isEraser()
+			? client.baseBrushSize * 3
+			: client.baseBrushSize * ( 0.8 + 0.2*Math.cos(getElapsedTimeS()*8) );
 	}
 
 	public inline function getElapsedTimeS() return haxe.Timer.stamp() - startTime;
