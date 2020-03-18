@@ -4,17 +4,15 @@ class Hud extends dn.Process {
 	public var client(get,never) : Client; inline function get_client() return Client.ME;
 	public var fx(get,never) : Fx; inline function get_fx() return Client.ME.fx;
 
-	var flow : h2d.Flow;
 	var invalidated = true;
-	var palette : h2d.Layers;
+	var left : h2d.Layers;
 
 	public function new() {
 		super(Client.ME);
 
 		createRootInLayers(client.root, Const.DP_UI);
 
-		palette = new h2d.Layers(root);
-		flow = new h2d.Flow(root);
+		left = new h2d.Layers(root);
 	}
 
 	override function onDispose() {
@@ -29,15 +27,25 @@ class Hud extends dn.Process {
 	}
 
 	function render() {
+		left.removeChildren();
+
 		var allColors = client.theme.palette.concat([client.theme.bg]);
-		var btHei = M.ceil( h()/Const.SCALE / allColors.length );
+		var btHei = M.ceil( h()/Const.SCALE / (allColors.length+1) );
+		var btWid = 0.07 * w()/Const.SCALE;
+
+		var i = new h2d.Interactive(btWid, btHei, left);
+		i.propagateEvents = true;
+		i.backgroundColor = C.addAlphaF(0xffffff);
+		i.onClick = function(_) {
+			client.baseBrushSize = client.baseBrushSize==10 ? 50 : 10;
+			trace(client.baseBrushSize);
+		}
 
 		// Palette
-		palette.removeChildren();
-		var idx = 0;
+		var idx = 1;
 		var active = null;
 		for(c in allColors) {
-			var i = new h2d.Interactive(w()/Const.SCALE*0.07, btHei, palette);
+			var i = new h2d.Interactive(btWid, btHei, left);
 			i.propagateEvents = true;
 			i.y = btHei*idx;
 
@@ -50,15 +58,15 @@ class Hud extends dn.Process {
 			else
 				i.backgroundColor = C.addAlphaF( C.toBlack(c,0.1) );
 
-			i.onClick = function(_) {
+			i.onPush = function(_) {
 				// Select color
 				client.color = c;
-				fx.pickColor(palette.x+i.x, palette.y+i.y, i.width, i.height, c);
+				fx.pickColor(left.x+i.x, left.y+i.y, i.width, i.height, c);
 				invalidate();
 			}
 			idx++;
 		}
-		palette.over(active);
+		left.over(active);
 	}
 
 	override function postUpdate() {
