@@ -72,7 +72,7 @@ class Fx extends dn.Process {
 	}
 
 	public inline function allocCanvas(t:h2d.Tile, x:Float, y:Float) {
-		return ( client.theme.isLight ? allocBgNormal : allocBgAdd )( t, x, y );
+		return ( client.theme.isLight ? allocTopNormal : allocTopAdd )( t, x, y );
 	}
 
 	public function killAll() {
