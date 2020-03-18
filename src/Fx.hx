@@ -227,7 +227,7 @@ class Fx extends dn.Process {
 		for(i in 0...n ) {
 			for(j in 0...2) {
 				var r = i/n;
-				var p = allocCanvas(
+				var p = allocTopNormal(
 					getTile("pixel"),
 					fx+Math.cos(ang)*dist*r + size*rnd(0.4,0.9,true),
 					fy+Math.sin(ang)*dist*r + size*rnd(0.4,0.9,true)
