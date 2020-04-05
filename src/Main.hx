@@ -4,6 +4,7 @@ class Main extends dn.Process {
 	public static var ME : Main;
 	public var controller : dn.heaps.Controller;
 	public var ca : dn.heaps.Controller.ControllerAccess;
+	var overlay : dn.heaps.filter.OverlayTexture;
 
 	public function new(s:h2d.Scene) {
 		super();
@@ -17,7 +18,10 @@ class Main extends dn.Process {
 		engine.backgroundColor = 0xff<<24|0x111133;
         // #if( hl && !debug )
         engine.fullScreen = true;
-        // #end
+		// #end
+
+		s.filter = overlay = new dn.heaps.filter.OverlayTexture(Deep);
+		overlay.alpha = 0.5;
 
 		// Resources
 		#if(hl && debug)
@@ -71,6 +75,7 @@ class Main extends dn.Process {
 		else if( Const.AUTO_SCALE_TARGET_HEI>0 )
 			Const.SCALE = M.ceil( h()/Const.AUTO_SCALE_TARGET_HEI );
 		root.setScale(Const.SCALE);
+		overlay.bevelSize = Std.int(Const.SCALE);
 	}
 
     override function update() {

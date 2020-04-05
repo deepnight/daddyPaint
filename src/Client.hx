@@ -13,7 +13,7 @@ class Client extends Process {
 
 	var touchDrawingData : Map<Int, TouchDrawingData> = new Map();
 	public var color : UInt;
-	public var baseBrushSize = 10;
+	public var baseBrushSize = 2;
 
 	var lines : Array<Line> = [];
 
@@ -63,9 +63,9 @@ class Client extends Process {
 		touchCatcher.onOut = function(e) stopDrawing(e);
 		touchCatcher.onMove = onMouseMove;
 
-		debugTf = new h2d.Text(Assets.fontSmall);
+		debugTf = new h2d.Text(Assets.fontPixel);
 		root.add(debugTf, Const.DP_TOP);
-		debugTf.setScale(2);
+		debugTf.setScale(1);
 	}
 
 	function onMouseMove(e:hxd.Event) {
@@ -156,8 +156,8 @@ class Client extends Process {
 		var tdata = touchDrawingData.get(e.touchId);
 		flushLineBuffer(e, true);
 
-		if( tdata.checkTap(true) )
-			fx.smokeTap(tdata.mouseX, tdata.mouseY, color);
+		// if( tdata.checkTap(true) )
+		// 	fx.smokeTap(tdata.mouseX, tdata.mouseY, color);
 
 		// Line rounded end
 		canvas.lineStyle();
