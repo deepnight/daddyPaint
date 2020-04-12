@@ -15,6 +15,9 @@ class Hud extends dn.Process {
 		toolBar = new h2d.Flow(root);
 	}
 
+	public inline function isVertical() return h()>w();
+	public inline function isHorizontal() return !isVertical();
+
 	override function onDispose() {
 		super.onDispose();
 	}
@@ -27,22 +30,22 @@ class Hud extends dn.Process {
 	}
 
 	function render() {
-		var isVertical = w()>h();
-
 		toolBar.removeChildren();
-		toolBar.layout = isVertical ? Vertical : Horizontal;
+		toolBar.layout = isHorizontal() ? Vertical : Horizontal;
+		toolBar.horizontalAlign = Left;
+		toolBar.verticalAlign = Top;
 
 		var allColors = [client.theme.bg].concat( client.theme.palette );
-		var barSize = 0.07 * (isVertical?w():h())/Const.SCALE;
-		var btSize = M.ceil( (isVertical?h():w())/Const.SCALE / (allColors.length+1) );
+		var barSize = 0.07 * (isHorizontal()?w():h())/Const.SCALE;
+		var btSize = M.ceil( (isHorizontal()?h():w())/Const.SCALE / (allColors.length+1) );
 
-		function createButton(col:UInt, cb:Void->Void) {
-			var i = new h2d.Interactive(isVertical?barSize:btSize, isVertical?btSize:barSize, toolBar);
+		function createButton(col:UInt, cb:h2d.Interactive->Void) {
+			var i = new h2d.Interactive(isHorizontal()?barSize:btSize, isHorizontal()?btSize:barSize, toolBar);
 			i.propagateEvents = true;
 			i.backgroundColor = C.addAlphaF(col);
 			i.onPush = function(e:hxd.Event) {
 				e.propagate = false;
-				cb();
+				cb(i);
 			}
 			i.onClick = function(e:hxd.Event) {
 				e.propagate = false;
@@ -51,14 +54,14 @@ class Hud extends dn.Process {
 		}
 
 		// Brush size button
-		var i = createButton(0xffffff, function() {
+		var i = createButton(0xffffff, function(i) {
 			client.baseBrushSize = client.baseBrushSize==10 ? 50 : 10;
 		});
 
 		// Palette
 		var active = null;
 		for(c in allColors) {
-			var i = createButton(c, function() {
+			var i = createButton(c, function(i) {
 				// Pick color
 				client.color = c;
 				fx.pickColor(toolBar.x+i.x, toolBar.y+i.y, i.width, i.height, c);
@@ -68,7 +71,10 @@ class Hud extends dn.Process {
 			// Active
 			if( c==client.color ) {
 				active = i;
-				i.width+=7;
+				if( isVertical() )
+					i.height+=7;
+				else
+					i.width+=7;
 				i.filter = new h2d.filter.Glow(c, 1, 64, true);
 			}
 		}

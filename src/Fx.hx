@@ -151,16 +151,22 @@ class Fx extends dn.Process {
 
 	public function pickColor(x:Float,y:Float,wid:Float,hei:Float,c:UInt) {
 		// Sparks
-		var n = 80;
+		var n = 100;
+		var v = client.hud.isVertical();
 		for(i in 0...n ) {
 			var a = 6.28 * i/n + rnd(0,0.2,true);
-			var p = allocTopAdd(getTile("fxSpark"), x+wid*rnd(0,0.9), y+hei*rnd(0,1));
-			p.colorAnimS( c, client.theme.bg, rnd(0.8,1) );
+			var p = allocTopAdd(getTile("fxSpark"), x+wid*rnd(0,1) + (!v?-5:0), y+hei*rnd(0,1) + (v?-5:0));
+			p.colorize(c);
+			// p.colorAnimS( c, client.theme.bg, rnd(0.8,1) );
 			// p.scaleX = hei / p.t.width;
-			p.setFadeS(rnd(0.7,0.9), rnd(0,0.1), rnd(0.3,1.2));
-			p.dx = rnd(0.2,6);
+			p.setFadeS(1, rnd(0,0.1), rnd(0.3,1.2));
+			// p.setFadeS(rnd(0.7,0.9), rnd(0,0.1), rnd(0.3,1.2));
+			if( v )
+				p.dy = rnd(0.1,2);
+			else
+				p.dx = rnd(0.1,2);
 			p.frict = rnd(0.92,0.97);
-			p.setScale(rnd(0.15,0.7));
+			p.setScale(rnd(0.03,0.10));
 			// p.rotation = M.PIHALF;
 			p.ds = rnd(0.002,0.005);
 			p.lifeS = rnd(0.1,0.2);
