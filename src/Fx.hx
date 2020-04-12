@@ -183,11 +183,11 @@ class Fx extends dn.Process {
 			);
 			p.setFadeS(rnd(0.7,1), rnd(0.1,0.3), rnd(2,2.5));
 			p.colorAnimS(c, client.theme.bg, rnd(0.7,1.4));
-			p.moveAng(ang, rnd(2,3));
+			p.moveAng(ang, rnd(1,2));
 			p.frict = rnd(0.96,0.97);
 			p.rotation = ang;
-			p.scaleX = step*rnd(0.5,0.8);
-			p.scaleY = rnd(1,2);
+			p.scaleX = step*rnd(0.2,0.7);
+			// p.scaleY = rnd(1,2);
 			p.scaleXMul = rnd(0.97,0.98);
 			p.lifeS = rnd(0.4,0.7);
 		}
@@ -204,14 +204,10 @@ class Fx extends dn.Process {
 					fy+Math.sin(ang)*dist*r + size*rnd(0.4,0.9,true)
 				);
 				p.setFadeS(rnd(0.5,0.8), rnd(0.1,0.3), rnd(0.3,1.5));
-				// p.setFadeS(rnd(0.1,0.2), rnd(0.1,0.3), rnd(1,1.5));
 				p.colorize(c);
-				// p.colorAnimS(c, client.theme.bg, rnd(3,5));
-				p.setScale(rnd(2,4));
-				// p.setScale(rnd(0.3,0.5,true));
-				p.moveAng(ang, rnd(0.5,1.5));
+				p.setScale(rnd(1,2));
+				p.moveAng(ang, rnd(0.2,0.9));
 				p.frict = rnd(0.96,0.97);
-				// p.rotation = rnd(0,6.28);
 				p.scaleMul = rnd(0.991,0.994);
 				p.lifeS = rnd(0.5,1);
 			}
