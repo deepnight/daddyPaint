@@ -49,7 +49,8 @@ class Main extends dn.Process {
 		controller.bind(START, Key.N);
 
 		// Start
-		startClient();
+		new dn.heaps.GameFocusHelper(s, Assets.fontPixel);
+		delayer.addF(startClient,1);
 	}
 
 	public function startClient() {
