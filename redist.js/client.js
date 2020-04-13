@@ -527,11 +527,99 @@ dn_Process.prototype = {
 		p.parent = this;
 		this.children.push(p);
 	}
+	,createChildProcess: function(onUpdate,onDispose,runUpdateImmediatly) {
+		if(runUpdateImmediatly == null) {
+			runUpdateImmediatly = false;
+		}
+		var p = new dn_Process(this);
+		p.name = "childProcess";
+		if(onUpdate != null) {
+			p.onUpdateCb = function() {
+				onUpdate(p);
+			};
+		}
+		if(onDispose != null) {
+			p.onDisposeCb = function() {
+				onDispose(p);
+			};
+		}
+		if(runUpdateImmediatly) {
+			if(!(!(!p.paused && !p.destroyed))) {
+				p.utmod = 1;
+				var x = p.timeMultiplier;
+				p.ftime += p.utmod * (x > 0 ? x : 0);
+				var x1 = p.timeMultiplier;
+				p.delayer.update(p.utmod * (x1 > 0 ? x1 : 0));
+				if(!p.paused && !p.destroyed) {
+					p.udelayer.update(p.utmod);
+				}
+				if(!p.paused && !p.destroyed) {
+					var x2 = p.timeMultiplier;
+					p.cd.update(p.utmod * (x2 > 0 ? x2 : 0));
+				}
+				if(!p.paused && !p.destroyed) {
+					p.ucd.update(p.utmod);
+				}
+				if(!p.paused && !p.destroyed) {
+					var x3 = p.timeMultiplier;
+					p.tw.update(p.utmod * (x3 > 0 ? x3 : 0));
+				}
+				if(!p.paused && !p.destroyed) {
+					p.preUpdate();
+				}
+				if(!p.paused && !p.destroyed) {
+					var _g = 0;
+					var _g1 = p.children;
+					while(_g < _g1.length) {
+						var c = _g1[_g];
+						++_g;
+						var x4 = p.timeMultiplier;
+						if(!(!(!c.paused && !c.destroyed))) {
+							c.utmod = p.utmod * (x4 > 0 ? x4 : 0);
+							var x5 = c.timeMultiplier;
+							c.ftime += c.utmod * (x5 > 0 ? x5 : 0);
+							var x6 = c.timeMultiplier;
+							c.delayer.update(c.utmod * (x6 > 0 ? x6 : 0));
+							if(!c.paused && !c.destroyed) {
+								c.udelayer.update(c.utmod);
+							}
+							if(!c.paused && !c.destroyed) {
+								var x7 = c.timeMultiplier;
+								c.cd.update(c.utmod * (x7 > 0 ? x7 : 0));
+							}
+							if(!c.paused && !c.destroyed) {
+								c.ucd.update(c.utmod);
+							}
+							if(!c.paused && !c.destroyed) {
+								var x8 = c.timeMultiplier;
+								c.tw.update(c.utmod * (x8 > 0 ? x8 : 0));
+							}
+							if(!c.paused && !c.destroyed) {
+								c.preUpdate();
+							}
+							if(!c.paused && !c.destroyed) {
+								var _g2 = 0;
+								var _g11 = c.children;
+								while(_g2 < _g11.length) {
+									var c1 = _g11[_g2];
+									++_g2;
+									var x9 = c.timeMultiplier;
+									dn_Process._doPreUpdate(c1,c.utmod * (x9 > 0 ? x9 : 0));
+								}
+							}
+						}
+					}
+				}
+			}
+			dn_Process._doMainUpdate(p);
+		}
+		return p;
+	}
 	,__class__: dn_Process
 };
 var Client = function() {
 	this.lines = [];
-	this.baseBrushSize = 10;
+	this.baseBrushSize = 2;
 	this.touchDrawingData = new haxe_ds_IntMap();
 	var _gthis = this;
 	dn_Process.call(this,Main.ME);
@@ -571,13 +659,13 @@ var Client = function() {
 		_gthis.stopDrawing(e3);
 	};
 	this.touchCatcher.onMove = $bind(this,this.onMouseMove);
-	this.debugTf = new h2d_Text(Assets.fontSmall);
+	this.debugTf = new h2d_Text(Assets.fontPixel);
 	this.root.addChildAt(this.debugTf,Const.DP_TOP);
 	var _this2 = this.debugTf;
 	_this2.posChanged = true;
-	_this2.scaleX = 2;
+	_this2.scaleX = 1;
 	_this2.posChanged = true;
-	_this2.scaleY = 2;
+	_this2.scaleY = 1;
 };
 $hxClasses["Client"] = Client;
 Client.__name__ = "Client";
@@ -636,9 +724,6 @@ Client.prototype = $extend(dn_Process.prototype,{
 		}
 		var tdata = this.touchDrawingData.h[e.touchId];
 		this.flushLineBuffer(e,true);
-		if(tdata.checkTap(true)) {
-			this.fx.smokeTap(tdata.lastKnownMouse.x / Const.SCALE | 0,tdata.lastKnownMouse.y / Const.SCALE | 0,this.color);
-		}
 		this.canvas.lineStyle();
 		this.canvas.beginFill(this.color);
 		this.canvas.drawCircle(tdata.lastKnownMouse.x / Const.SCALE | 0,tdata.lastKnownMouse.y / Const.SCALE | 0,tdata.getBrushSize() * 0.5);
@@ -1223,93 +1308,10 @@ Fx.prototype = $extend(dn_Process.prototype,{
 			return best;
 		}
 	}
-	,smokeTap: function(x,y,c) {
-		var n = 35;
-		var _g = 0;
-		var _g1 = n;
-		while(_g < _g1) {
-			var i = _g++;
-			var sign = true;
-			if(sign == null) {
-				sign = false;
-			}
-			var a = 6.28 * i / n + (sign ? Math.random() * 0.2 * (Std.random(2) * 2 - 1) : Math.random() * 0.2);
-			var t = Assets.tiles.getTileRandom("fxSmoke");
-			var x1 = Math.cos(a);
-			var sign1 = null;
-			if(sign1 == null) {
-				sign1 = false;
-			}
-			var x2 = sign1 ? (5 + Math.random() * 5) * (Std.random(2) * 2 - 1) : 5 + Math.random() * 5;
-			var y1 = Math.sin(a);
-			var sign2 = null;
-			if(sign2 == null) {
-				sign2 = false;
-			}
-			var y2 = sign2 ? (5 + Math.random() * 5) * (Std.random(2) * 2 - 1) : 5 + Math.random() * 5;
-			var p = (Client.ME.theme.isLight ? $bind(this,this.allocTopNormal) : $bind(this,this.allocTopAdd))(t,x + x1 * x2,y + y1 * y2);
-			var sign3 = null;
-			if(sign3 == null) {
-				sign3 = false;
-			}
-			p.colorAnimS(c,Client.ME.theme.bg,sign3 ? (0.7 + Math.random() * 0.60000000000000009) * (Std.random(2) * 2 - 1) : 0.7 + Math.random() * 0.60000000000000009);
-			var sign4 = true;
-			if(sign4 == null) {
-				sign4 = false;
-			}
-			p.scaleX = p.scaleY = sign4 ? (3 + Math.random()) * (Std.random(2) * 2 - 1) : 3 + Math.random();
-			var sign5 = null;
-			if(sign5 == null) {
-				sign5 = false;
-			}
-			var tmp = sign5 ? (0.07 + Math.random() * 0.03) * (Std.random(2) * 2 - 1) : 0.07 + Math.random() * 0.03;
-			var sign6 = null;
-			if(sign6 == null) {
-				sign6 = false;
-			}
-			var tmp1 = sign6 ? (0.1 + Math.random() * 0.19999999999999998) * (Std.random(2) * 2 - 1) : 0.1 + Math.random() * 0.19999999999999998;
-			var sign7 = null;
-			if(sign7 == null) {
-				sign7 = false;
-			}
-			p.setFadeS(tmp,tmp1,sign7 ? (1 + Math.random()) * (Std.random(2) * 2 - 1) : 1 + Math.random());
-			var sign8 = null;
-			if(sign8 == null) {
-				sign8 = false;
-			}
-			var spd = sign8 ? (2 + Math.random() * 3) * (Std.random(2) * 2 - 1) : 2 + Math.random() * 3;
-			var a1 = Math.atan2(y - p.y,x - p.x);
-			p.dx = -Math.cos(a1) * spd;
-			p.dy = -Math.sin(a1) * spd;
-			var sign9 = null;
-			if(sign9 == null) {
-				sign9 = false;
-			}
-			p.frictX = p.frictY = sign9 ? (0.96 + Math.random() * 0.010000000000000009) * (Std.random(2) * 2 - 1) : 0.96 + Math.random() * 0.010000000000000009;
-			var sign10 = null;
-			if(sign10 == null) {
-				sign10 = false;
-			}
-			p.rotation = sign10 ? Math.random() * 6.28 * (Std.random(2) * 2 - 1) : Math.random() * 6.28;
-			var sign11 = true;
-			if(sign11 == null) {
-				sign11 = false;
-			}
-			p.dr = sign11 ? Math.random() * 0.01 * (Std.random(2) * 2 - 1) : Math.random() * 0.01;
-			var sign12 = null;
-			if(sign12 == null) {
-				sign12 = false;
-			}
-			p.ds = sign12 ? (0.002 + Math.random() * 0.003) * (Std.random(2) * 2 - 1) : 0.002 + Math.random() * 0.003;
-			var sign13 = null;
-			if(sign13 == null) {
-				sign13 = false;
-			}
-			p.set_lifeS(sign13 ? (0.3 + Math.random() * 0.2) * (Std.random(2) * 2 - 1) : 0.3 + Math.random() * 0.2);
-		}
-	}
 	,pickColor: function(x,y,wid,hei,c) {
-		var n = 80;
+		var n = 100;
+		var _this = Client.ME.hud;
+		var v = (dn_Process.CUSTOM_STAGE_HEIGHT > 0 ? dn_Process.CUSTOM_STAGE_HEIGHT : hxd_Window.getInstance().get_height()) > (dn_Process.CUSTOM_STAGE_WIDTH > 0 ? dn_Process.CUSTOM_STAGE_WIDTH : hxd_Window.getInstance().get_width());
 		var _g = 0;
 		var _g1 = n;
 		while(_g < _g1) {
@@ -1324,25 +1326,25 @@ Fx.prototype = $extend(dn_Process.prototype,{
 			if(sign1 == null) {
 				sign1 = false;
 			}
-			var x1 = x + wid * (sign1 ? Math.random() * 0.9 * (Std.random(2) * 2 - 1) : Math.random() * 0.9);
+			var x1 = x + wid * (sign1 ? Math.random() * (Std.random(2) * 2 - 1) : Math.random()) + (!v ? -5 : 0);
 			var sign2 = null;
 			if(sign2 == null) {
 				sign2 = false;
 			}
-			var y1 = y + hei * (sign2 ? Math.random() * (Std.random(2) * 2 - 1) : Math.random());
-			var _this = this.pool;
+			var y1 = y + hei * (sign2 ? Math.random() * (Std.random(2) * 2 - 1) : Math.random()) + (v ? -5 : 0);
+			var _this1 = this.pool;
 			var sb = this.topAddSb;
 			var p;
-			if(_this.nalloc < _this.all.length) {
-				var p1 = _this.all[_this.nalloc];
+			if(_this1.nalloc < _this1.all.length) {
+				var p1 = _this1.all[_this1.nalloc];
 				p1.reset(sb,t,x1,y1);
-				p1.poolIdx = _this.nalloc;
-				_this.nalloc++;
+				p1.poolIdx = _this1.nalloc;
+				_this1.nalloc++;
 				p = p1;
 			} else {
 				var best = null;
 				var _g2 = 0;
-				var _g11 = _this.all;
+				var _g11 = _this1.all;
 				while(_g2 < _g11.length) {
 					var p2 = _g11[_g2];
 					++_g2;
@@ -1356,51 +1358,62 @@ Fx.prototype = $extend(dn_Process.prototype,{
 				best.reset(sb,t,x1,y1);
 				p = best;
 			}
+			var ratio = 1.0;
+			if(ratio == null) {
+				ratio = 1.0;
+			}
+			var a1 = _$UInt_UInt_$Impl_$.toFloat(16777215 >>> 16);
+			var x2 = a1 + (_$UInt_UInt_$Impl_$.toFloat(c >>> 16) - a1) * ratio;
+			p.r = ((x2 > 0 ? x2 + .5 : x2 < 0 ? x2 - .5 : 0) | 0) / 255;
+			var a2 = _$UInt_UInt_$Impl_$.toFloat(16777215 >>> 8 & 255);
+			var x3 = a2 + (_$UInt_UInt_$Impl_$.toFloat(c >>> 8 & 255) - a2) * ratio;
+			p.g = ((x3 > 0 ? x3 + .5 : x3 < 0 ? x3 - .5 : 0) | 0) / 255;
+			var a3 = _$UInt_UInt_$Impl_$.toFloat(16777215 & 255);
+			var x4 = a3 + (_$UInt_UInt_$Impl_$.toFloat(c & 255) - a3) * ratio;
+			p.b = ((x4 > 0 ? x4 + .5 : x4 < 0 ? x4 - .5 : 0) | 0) / 255;
 			var sign3 = null;
 			if(sign3 == null) {
 				sign3 = false;
 			}
-			p.colorAnimS(c,Client.ME.theme.bg,sign3 ? (0.8 + Math.random() * 0.19999999999999996) * (Std.random(2) * 2 - 1) : 0.8 + Math.random() * 0.19999999999999996);
+			var tmp = sign3 ? Math.random() * 0.1 * (Std.random(2) * 2 - 1) : Math.random() * 0.1;
 			var sign4 = null;
 			if(sign4 == null) {
 				sign4 = false;
 			}
-			var tmp = sign4 ? (0.7 + Math.random() * 0.20000000000000007) * (Std.random(2) * 2 - 1) : 0.7 + Math.random() * 0.20000000000000007;
-			var sign5 = null;
-			if(sign5 == null) {
-				sign5 = false;
+			p.setFadeS(1,tmp,sign4 ? (0.3 + Math.random() * 0.89999999999999991) * (Std.random(2) * 2 - 1) : 0.3 + Math.random() * 0.89999999999999991);
+			if(v) {
+				var sign5 = null;
+				if(sign5 == null) {
+					sign5 = false;
+				}
+				p.dy = sign5 ? (0.1 + Math.random() * 1.9) * (Std.random(2) * 2 - 1) : 0.1 + Math.random() * 1.9;
+			} else {
+				var sign6 = null;
+				if(sign6 == null) {
+					sign6 = false;
+				}
+				p.dx = sign6 ? (0.1 + Math.random() * 1.9) * (Std.random(2) * 2 - 1) : 0.1 + Math.random() * 1.9;
 			}
-			var tmp1 = sign5 ? Math.random() * 0.1 * (Std.random(2) * 2 - 1) : Math.random() * 0.1;
-			var sign6 = null;
-			if(sign6 == null) {
-				sign6 = false;
-			}
-			p.setFadeS(tmp,tmp1,sign6 ? (0.3 + Math.random() * 0.89999999999999991) * (Std.random(2) * 2 - 1) : 0.3 + Math.random() * 0.89999999999999991);
 			var sign7 = null;
 			if(sign7 == null) {
 				sign7 = false;
 			}
-			p.dx = sign7 ? (0.2 + Math.random() * 5.8) * (Std.random(2) * 2 - 1) : 0.2 + Math.random() * 5.8;
+			p.frictX = p.frictY = sign7 ? (0.92 + Math.random() * 0.049999999999999933) * (Std.random(2) * 2 - 1) : 0.92 + Math.random() * 0.049999999999999933;
 			var sign8 = null;
 			if(sign8 == null) {
 				sign8 = false;
 			}
-			p.frictX = p.frictY = sign8 ? (0.92 + Math.random() * 0.049999999999999933) * (Std.random(2) * 2 - 1) : 0.92 + Math.random() * 0.049999999999999933;
+			p.scaleX = p.scaleY = sign8 ? (0.03 + Math.random() * 0.07) * (Std.random(2) * 2 - 1) : 0.03 + Math.random() * 0.07;
 			var sign9 = null;
 			if(sign9 == null) {
 				sign9 = false;
 			}
-			p.scaleX = p.scaleY = sign9 ? (0.15 + Math.random() * 0.54999999999999993) * (Std.random(2) * 2 - 1) : 0.15 + Math.random() * 0.54999999999999993;
+			p.ds = sign9 ? (0.002 + Math.random() * 0.003) * (Std.random(2) * 2 - 1) : 0.002 + Math.random() * 0.003;
 			var sign10 = null;
 			if(sign10 == null) {
 				sign10 = false;
 			}
-			p.ds = sign10 ? (0.002 + Math.random() * 0.003) * (Std.random(2) * 2 - 1) : 0.002 + Math.random() * 0.003;
-			var sign11 = null;
-			if(sign11 == null) {
-				sign11 = false;
-			}
-			p.set_lifeS(sign11 ? (0.1 + Math.random() * 0.1) * (Std.random(2) * 2 - 1) : 0.1 + Math.random() * 0.1);
+			p.set_lifeS(sign10 ? (0.1 + Math.random() * 0.1) * (Std.random(2) * 2 - 1) : 0.1 + Math.random() * 0.1);
 		}
 	}
 	,segment: function(fx,fy,tx,ty,size,c) {
@@ -1461,7 +1474,7 @@ Fx.prototype = $extend(dn_Process.prototype,{
 			if(sign6 == null) {
 				sign6 = false;
 			}
-			var spd = sign6 ? (2 + Math.random()) * (Std.random(2) * 2 - 1) : 2 + Math.random();
+			var spd = sign6 ? (1 + Math.random()) * (Std.random(2) * 2 - 1) : 1 + Math.random();
 			p.dx = Math.cos(ang) * spd;
 			p.dy = Math.sin(ang) * spd;
 			var sign7 = null;
@@ -1474,22 +1487,17 @@ Fx.prototype = $extend(dn_Process.prototype,{
 			if(sign8 == null) {
 				sign8 = false;
 			}
-			p.scaleX = step * (sign8 ? (0.5 + Math.random() * 0.30000000000000004) * (Std.random(2) * 2 - 1) : 0.5 + Math.random() * 0.30000000000000004);
+			p.scaleX = step * (sign8 ? (0.2 + Math.random() * 0.49999999999999994) * (Std.random(2) * 2 - 1) : 0.2 + Math.random() * 0.49999999999999994);
 			var sign9 = null;
 			if(sign9 == null) {
 				sign9 = false;
 			}
-			p.scaleY = sign9 ? (1 + Math.random()) * (Std.random(2) * 2 - 1) : 1 + Math.random();
+			p.scaleXMul = sign9 ? (0.97 + Math.random() * 0.010000000000000009) * (Std.random(2) * 2 - 1) : 0.97 + Math.random() * 0.010000000000000009;
 			var sign10 = null;
 			if(sign10 == null) {
 				sign10 = false;
 			}
-			p.scaleXMul = sign10 ? (0.97 + Math.random() * 0.010000000000000009) * (Std.random(2) * 2 - 1) : 0.97 + Math.random() * 0.010000000000000009;
-			var sign11 = null;
-			if(sign11 == null) {
-				sign11 = false;
-			}
-			p.set_lifeS(sign11 ? (0.4 + Math.random() * 0.29999999999999993) * (Std.random(2) * 2 - 1) : 0.4 + Math.random() * 0.29999999999999993);
+			p.set_lifeS(sign10 ? (0.4 + Math.random() * 0.29999999999999993) * (Std.random(2) * 2 - 1) : 0.4 + Math.random() * 0.29999999999999993);
 		}
 		var x3 = dist / 2;
 		var n1;
@@ -1510,33 +1518,33 @@ Fx.prototype = $extend(dn_Process.prototype,{
 			var r1 = i1 / n1;
 			var t5 = Assets.tiles.getTileRandom("pixel");
 			var x4 = fx + Math.cos(ang) * dist * r1;
+			var sign11 = true;
+			if(sign11 == null) {
+				sign11 = false;
+			}
+			var x5 = sign11 ? (0.4 + Math.random() * 0.5) * (Std.random(2) * 2 - 1) : 0.4 + Math.random() * 0.5;
+			var y2 = fy + Math.sin(ang) * dist * r1;
 			var sign12 = true;
 			if(sign12 == null) {
 				sign12 = false;
 			}
-			var x5 = sign12 ? (0.4 + Math.random() * 0.5) * (Std.random(2) * 2 - 1) : 0.4 + Math.random() * 0.5;
-			var y2 = fy + Math.sin(ang) * dist * r1;
-			var sign13 = true;
+			var y3 = sign12 ? (0.4 + Math.random() * 0.5) * (Std.random(2) * 2 - 1) : 0.4 + Math.random() * 0.5;
+			var p1 = (Client.ME.theme.isLight ? $bind(this,this.allocTopNormal) : $bind(this,this.allocTopAdd))(t5,x4 + size * x5,y2 + size * y3);
+			var sign13 = null;
 			if(sign13 == null) {
 				sign13 = false;
 			}
-			var y3 = sign13 ? (0.4 + Math.random() * 0.5) * (Std.random(2) * 2 - 1) : 0.4 + Math.random() * 0.5;
-			var p1 = (Client.ME.theme.isLight ? $bind(this,this.allocTopNormal) : $bind(this,this.allocTopAdd))(t5,x4 + size * x5,y2 + size * y3);
+			var tmp2 = sign13 ? (0.5 + Math.random() * 0.30000000000000004) * (Std.random(2) * 2 - 1) : 0.5 + Math.random() * 0.30000000000000004;
 			var sign14 = null;
 			if(sign14 == null) {
 				sign14 = false;
 			}
-			var tmp2 = sign14 ? (0.5 + Math.random() * 0.30000000000000004) * (Std.random(2) * 2 - 1) : 0.5 + Math.random() * 0.30000000000000004;
+			var tmp3 = sign14 ? (0.1 + Math.random() * 0.19999999999999998) * (Std.random(2) * 2 - 1) : 0.1 + Math.random() * 0.19999999999999998;
 			var sign15 = null;
 			if(sign15 == null) {
 				sign15 = false;
 			}
-			var tmp3 = sign15 ? (0.1 + Math.random() * 0.19999999999999998) * (Std.random(2) * 2 - 1) : 0.1 + Math.random() * 0.19999999999999998;
-			var sign16 = null;
-			if(sign16 == null) {
-				sign16 = false;
-			}
-			p1.setFadeS(tmp2,tmp3,sign16 ? (0.3 + Math.random() * 1.2) * (Std.random(2) * 2 - 1) : 0.3 + Math.random() * 1.2);
+			p1.setFadeS(tmp2,tmp3,sign15 ? (0.3 + Math.random() * 1.2) * (Std.random(2) * 2 - 1) : 0.3 + Math.random() * 1.2);
 			var ratio = 1.0;
 			if(ratio == null) {
 				ratio = 1.0;
@@ -1550,63 +1558,63 @@ Fx.prototype = $extend(dn_Process.prototype,{
 			var a2 = _$UInt_UInt_$Impl_$.toFloat(16777215 & 255);
 			var x8 = a2 + (_$UInt_UInt_$Impl_$.toFloat(c & 255) - a2) * ratio;
 			p1.b = ((x8 > 0 ? x8 + .5 : x8 < 0 ? x8 - .5 : 0) | 0) / 255;
+			var sign16 = null;
+			if(sign16 == null) {
+				sign16 = false;
+			}
+			p1.scaleX = p1.scaleY = sign16 ? (1 + Math.random()) * (Std.random(2) * 2 - 1) : 1 + Math.random();
 			var sign17 = null;
 			if(sign17 == null) {
 				sign17 = false;
 			}
-			p1.scaleX = p1.scaleY = sign17 ? (2 + Math.random() * 2) * (Std.random(2) * 2 - 1) : 2 + Math.random() * 2;
+			var spd1 = sign17 ? (0.2 + Math.random() * 0.7) * (Std.random(2) * 2 - 1) : 0.2 + Math.random() * 0.7;
+			p1.dx = Math.cos(ang) * spd1;
+			p1.dy = Math.sin(ang) * spd1;
 			var sign18 = null;
 			if(sign18 == null) {
 				sign18 = false;
 			}
-			var spd1 = sign18 ? (0.5 + Math.random()) * (Std.random(2) * 2 - 1) : 0.5 + Math.random();
-			p1.dx = Math.cos(ang) * spd1;
-			p1.dy = Math.sin(ang) * spd1;
+			p1.frictX = p1.frictY = sign18 ? (0.96 + Math.random() * 0.010000000000000009) * (Std.random(2) * 2 - 1) : 0.96 + Math.random() * 0.010000000000000009;
 			var sign19 = null;
 			if(sign19 == null) {
 				sign19 = false;
 			}
-			p1.frictX = p1.frictY = sign19 ? (0.96 + Math.random() * 0.010000000000000009) * (Std.random(2) * 2 - 1) : 0.96 + Math.random() * 0.010000000000000009;
+			p1.scaleMul = sign19 ? (0.991 + Math.random() * 0.0030000000000000027) * (Std.random(2) * 2 - 1) : 0.991 + Math.random() * 0.0030000000000000027;
 			var sign20 = null;
 			if(sign20 == null) {
 				sign20 = false;
 			}
-			p1.scaleMul = sign20 ? (0.991 + Math.random() * 0.0030000000000000027) * (Std.random(2) * 2 - 1) : 0.991 + Math.random() * 0.0030000000000000027;
-			var sign21 = null;
-			if(sign21 == null) {
-				sign21 = false;
-			}
-			p1.set_lifeS(sign21 ? (0.5 + Math.random() * 0.5) * (Std.random(2) * 2 - 1) : 0.5 + Math.random() * 0.5);
+			p1.set_lifeS(sign20 ? (0.5 + Math.random() * 0.5) * (Std.random(2) * 2 - 1) : 0.5 + Math.random() * 0.5);
 			var r2 = i1 / n1;
 			var t6 = Assets.tiles.getTileRandom("pixel");
 			var x9 = fx + Math.cos(ang) * dist * r2;
+			var sign21 = true;
+			if(sign21 == null) {
+				sign21 = false;
+			}
+			var x10 = sign21 ? (0.4 + Math.random() * 0.5) * (Std.random(2) * 2 - 1) : 0.4 + Math.random() * 0.5;
+			var y4 = fy + Math.sin(ang) * dist * r2;
 			var sign22 = true;
 			if(sign22 == null) {
 				sign22 = false;
 			}
-			var x10 = sign22 ? (0.4 + Math.random() * 0.5) * (Std.random(2) * 2 - 1) : 0.4 + Math.random() * 0.5;
-			var y4 = fy + Math.sin(ang) * dist * r2;
-			var sign23 = true;
+			var y5 = sign22 ? (0.4 + Math.random() * 0.5) * (Std.random(2) * 2 - 1) : 0.4 + Math.random() * 0.5;
+			var p2 = (Client.ME.theme.isLight ? $bind(this,this.allocTopNormal) : $bind(this,this.allocTopAdd))(t6,x9 + size * x10,y4 + size * y5);
+			var sign23 = null;
 			if(sign23 == null) {
 				sign23 = false;
 			}
-			var y5 = sign23 ? (0.4 + Math.random() * 0.5) * (Std.random(2) * 2 - 1) : 0.4 + Math.random() * 0.5;
-			var p2 = (Client.ME.theme.isLight ? $bind(this,this.allocTopNormal) : $bind(this,this.allocTopAdd))(t6,x9 + size * x10,y4 + size * y5);
+			var tmp4 = sign23 ? (0.5 + Math.random() * 0.30000000000000004) * (Std.random(2) * 2 - 1) : 0.5 + Math.random() * 0.30000000000000004;
 			var sign24 = null;
 			if(sign24 == null) {
 				sign24 = false;
 			}
-			var tmp4 = sign24 ? (0.5 + Math.random() * 0.30000000000000004) * (Std.random(2) * 2 - 1) : 0.5 + Math.random() * 0.30000000000000004;
+			var tmp5 = sign24 ? (0.1 + Math.random() * 0.19999999999999998) * (Std.random(2) * 2 - 1) : 0.1 + Math.random() * 0.19999999999999998;
 			var sign25 = null;
 			if(sign25 == null) {
 				sign25 = false;
 			}
-			var tmp5 = sign25 ? (0.1 + Math.random() * 0.19999999999999998) * (Std.random(2) * 2 - 1) : 0.1 + Math.random() * 0.19999999999999998;
-			var sign26 = null;
-			if(sign26 == null) {
-				sign26 = false;
-			}
-			p2.setFadeS(tmp4,tmp5,sign26 ? (0.3 + Math.random() * 1.2) * (Std.random(2) * 2 - 1) : 0.3 + Math.random() * 1.2);
+			p2.setFadeS(tmp4,tmp5,sign25 ? (0.3 + Math.random() * 1.2) * (Std.random(2) * 2 - 1) : 0.3 + Math.random() * 1.2);
 			var ratio1 = 1.0;
 			if(ratio1 == null) {
 				ratio1 = 1.0;
@@ -1620,33 +1628,33 @@ Fx.prototype = $extend(dn_Process.prototype,{
 			var a5 = _$UInt_UInt_$Impl_$.toFloat(16777215 & 255);
 			var x13 = a5 + (_$UInt_UInt_$Impl_$.toFloat(c & 255) - a5) * ratio1;
 			p2.b = ((x13 > 0 ? x13 + .5 : x13 < 0 ? x13 - .5 : 0) | 0) / 255;
+			var sign26 = null;
+			if(sign26 == null) {
+				sign26 = false;
+			}
+			p2.scaleX = p2.scaleY = sign26 ? (1 + Math.random()) * (Std.random(2) * 2 - 1) : 1 + Math.random();
 			var sign27 = null;
 			if(sign27 == null) {
 				sign27 = false;
 			}
-			p2.scaleX = p2.scaleY = sign27 ? (2 + Math.random() * 2) * (Std.random(2) * 2 - 1) : 2 + Math.random() * 2;
+			var spd2 = sign27 ? (0.2 + Math.random() * 0.7) * (Std.random(2) * 2 - 1) : 0.2 + Math.random() * 0.7;
+			p2.dx = Math.cos(ang) * spd2;
+			p2.dy = Math.sin(ang) * spd2;
 			var sign28 = null;
 			if(sign28 == null) {
 				sign28 = false;
 			}
-			var spd2 = sign28 ? (0.5 + Math.random()) * (Std.random(2) * 2 - 1) : 0.5 + Math.random();
-			p2.dx = Math.cos(ang) * spd2;
-			p2.dy = Math.sin(ang) * spd2;
+			p2.frictX = p2.frictY = sign28 ? (0.96 + Math.random() * 0.010000000000000009) * (Std.random(2) * 2 - 1) : 0.96 + Math.random() * 0.010000000000000009;
 			var sign29 = null;
 			if(sign29 == null) {
 				sign29 = false;
 			}
-			p2.frictX = p2.frictY = sign29 ? (0.96 + Math.random() * 0.010000000000000009) * (Std.random(2) * 2 - 1) : 0.96 + Math.random() * 0.010000000000000009;
+			p2.scaleMul = sign29 ? (0.991 + Math.random() * 0.0030000000000000027) * (Std.random(2) * 2 - 1) : 0.991 + Math.random() * 0.0030000000000000027;
 			var sign30 = null;
 			if(sign30 == null) {
 				sign30 = false;
 			}
-			p2.scaleMul = sign30 ? (0.991 + Math.random() * 0.0030000000000000027) * (Std.random(2) * 2 - 1) : 0.991 + Math.random() * 0.0030000000000000027;
-			var sign31 = null;
-			if(sign31 == null) {
-				sign31 = false;
-			}
-			p2.set_lifeS(sign31 ? (0.5 + Math.random() * 0.5) * (Std.random(2) * 2 - 1) : 0.5 + Math.random() * 0.5);
+			p2.set_lifeS(sign30 ? (0.5 + Math.random() * 0.5) * (Std.random(2) * 2 - 1) : 0.5 + Math.random() * 0.5);
 		}
 	}
 	,eraserSegment: function(fx,fy,tx,ty,size,c) {
@@ -1880,6 +1888,8 @@ var Main = function(s) {
 	hxd_Timer.wantedFPS = Const.FPS;
 	h3d_Engine.CURRENT.backgroundColor = -15658701;
 	h3d_Engine.CURRENT.set_fullScreen(true);
+	s.set_filter(this.overlay = new dn_heaps_filter_OverlayTexture(dn_heaps_filter_BevelType.Deep));
+	this.overlay.get_shader().alpha__ = 0.5;
 	hxd_Res.set_loader(new hxd_res_Loader(new hxd_fs_EmbedFileSystem(haxe_Unserializer.run("oy10:props.jsonty5:atlasoy9:tiles.pngty11:tiles.atlastgy3:mapoy11:markers.tsxty11:markers.pngty9:level.tmxtgy5:fontsoy38:barlow_condensed_medium_regular_17.pngty38:barlow_condensed_medium_regular_17.fntty22:minecraftiaOutline.pngty37:barlow_condensed_medium_regular_9.fntty38:barlow_condensed_medium_regular_32.fntty22:minecraftiaOutline.fntty38:barlow_condensed_medium_regular_11.fntty37:barlow_condensed_medium_regular_9.pngty38:barlow_condensed_medium_regular_32.pngty38:barlow_condensed_medium_regular_11.pngtgy4:langoy5:en.poty5:en.moty15:sourceTexts.pottgg"))));
 	Lang.init("en");
 	Assets.init();
@@ -1893,7 +1903,8 @@ var Main = function(s) {
 	this.controller.bind(1,13,108);
 	this.controller.bind(4,82);
 	this.controller.bind(5,78);
-	this.startClient();
+	new dn_heaps_GameFocusHelper(s,Assets.fontPixel);
+	this.delayer.addF(null,$bind(this,this.startClient),1);
 };
 $hxClasses["Main"] = Main;
 Main.__name__ = "Main";
@@ -1946,6 +1957,12 @@ Main.prototype = $extend(dn_Process.prototype,{
 		_this.scaleX = v;
 		_this.posChanged = true;
 		_this.scaleY = v;
+		var _this1 = this.overlay;
+		var v1 = Const.SCALE | 0;
+		if(_this1.bevelSize != v1) {
+			_this1.invalidated = true;
+		}
+		_this1.bevelSize = v1;
 	}
 	,update: function() {
 		var x = this.timeMultiplier;
@@ -2115,7 +2132,6 @@ StringTools.hex = function(n,digits) {
 var TouchDrawingData = function(e) {
 	this.bufferLines = [];
 	this.avgDist = 0.;
-	this.tapDone = false;
 	this.firstStroke = true;
 	this.touchId = e.touchId;
 	this.bufferCanvas = new h2d_Graphics(Client.ME.root);
@@ -2134,23 +2150,6 @@ TouchDrawingData.prototype = {
 		} else {
 			return Client.ME.baseBrushSize * (0.8 + 0.2 * Math.cos((Date.now() / 1000 - this.startTime) * 8));
 		}
-	}
-	,checkTap: function(onRelease) {
-		var tmp;
-		if(!this.tapDone && (onRelease || Date.now() / 1000 - this.startTime >= 0.07)) {
-			var ax = this.originX;
-			var ay = this.originY;
-			var bx = this.lastKnownMouse.x / Const.SCALE | 0;
-			var by = this.lastKnownMouse.y / Const.SCALE | 0;
-			tmp = Math.sqrt((ax - bx) * (ax - bx) + (ay - by) * (ay - by)) <= 40;
-		} else {
-			tmp = false;
-		}
-		if(tmp) {
-			this.tapDone = true;
-			return true;
-		}
-		return false;
 	}
 	,updateMouseCoords: function(e) {
 		this.lastKnownMouse = new h2d_col_Point(e.relX * Const.SCALE,e.relY * Const.SCALE);
@@ -2484,9 +2483,6 @@ data_Line.__name__ = "data.Line";
 data_Line.prototype = {
 	__class__: data_Line
 };
-var dn_Color = function() { };
-$hxClasses["dn.Color"] = dn_Color;
-dn_Color.__name__ = "dn.Color";
 var dn__$Cooldown_CdInst = function(k,f) {
 	this.k = k;
 	this.frames = f;
@@ -2584,6 +2580,10 @@ dn_Delayer.prototype = {
 		} else {
 			return 0;
 		}
+	}
+	,addS: function(id,cb,sec) {
+		this.delays.push(new dn__$Delayer_Task(id,this.now + sec * this.fps,cb));
+		haxe_ds_ArraySort.sort(this.delays,$bind(this,this.cmp));
 	}
 	,addF: function(id,cb,frames) {
 		this.delays.push(new dn__$Delayer_Task(id,this.now + frames,cb));
@@ -2910,11 +2910,16 @@ dn_data_MoReader.prototype = {
 		this.hash_num_entries = d.readInt32();
 		this.hash_offset = d.readInt32();
 		var texts = new haxe_ds_StringMap();
+		var eot = "\x04";
 		var _g = 0;
 		var _g1 = num_strings;
 		while(_g < _g1) {
 			var i = _g++;
 			var ori = this.getOriginalString(i);
+			if(ori.indexOf(eot) >= 0) {
+				var split = ori.split(eot);
+				ori = split[1] + dn_data_GetText.CONTEXT + split[0];
+			}
 			if(ori == null || ori == "") {
 				continue;
 			}
@@ -3199,6 +3204,171 @@ dn_heaps_ControllerAccess.prototype = {
 	}
 	,__class__: dn_heaps_ControllerAccess
 };
+var dn_heaps_GameFocusHelper = function(s,font) {
+	this.oldSprLibTmod = 1.0;
+	this.showIntro = false;
+	this.suspended = false;
+	dn_Process.call(this);
+	this.font = font;
+	this.scene = s;
+	this.createRoot(this.scene);
+	this.root.set_visible(false);
+	this.showIntro = true;
+	this.suspendGame();
+};
+$hxClasses["dn.heaps.GameFocusHelper"] = dn_heaps_GameFocusHelper;
+dn_heaps_GameFocusHelper.__name__ = "dn.heaps.GameFocusHelper";
+dn_heaps_GameFocusHelper.__super__ = dn_Process;
+dn_heaps_GameFocusHelper.prototype = $extend(dn_Process.prototype,{
+	suspendGame: function() {
+		var _gthis = this;
+		if(this.suspended) {
+			return;
+		}
+		this.suspended = true;
+		this.oldSprLibTmod = dn_heaps_slib_SpriteLib.TMOD;
+		dn_heaps_slib_SpriteLib.TMOD = 0;
+		var _g = 0;
+		var _g1 = dn_Process.ROOTS;
+		while(_g < _g1.length) {
+			var p = _g1[_g];
+			++_g;
+			if(p != this) {
+				p.pause();
+			}
+		}
+		this.root.set_visible(true);
+		this.root.removeChildren();
+		var bg = new h2d_Bitmap(h2d_Tile.fromColor(this.showIntro ? 2436675 : 0,1,1,this.showIntro ? 1 : 0.6),this.root);
+		var i = new h2d_Interactive(1,1,this.root);
+		var tf = new h2d_Text(this.font,this.root);
+		if(this.showIntro) {
+			tf.set_text("Click anywhere to start");
+		} else {
+			tf.set_text("PAUSED - click anywhere to resume");
+		}
+		this.createChildProcess(function(c) {
+			var y = Math.floor((dn_Process.CUSTOM_STAGE_WIDTH > 0 ? dn_Process.CUSTOM_STAGE_WIDTH : hxd_Window.getInstance().get_width()) * 0.35 / tf.get_textWidth());
+			var v = 1 > y ? 1 : y;
+			tf.posChanged = true;
+			tf.scaleX = v;
+			tf.posChanged = true;
+			tf.scaleY = v;
+			var v1 = (dn_Process.CUSTOM_STAGE_WIDTH > 0 ? dn_Process.CUSTOM_STAGE_WIDTH : hxd_Window.getInstance().get_width()) * 0.5 - tf.get_textWidth() * tf.scaleX * 0.5 | 0;
+			tf.posChanged = true;
+			tf.x = v1;
+			var v2 = (dn_Process.CUSTOM_STAGE_HEIGHT > 0 ? dn_Process.CUSTOM_STAGE_HEIGHT : hxd_Window.getInstance().get_height()) * 0.5 - tf.get_textHeight() * tf.scaleY * 0.5 | 0;
+			tf.posChanged = true;
+			tf.y = v2;
+			var tmp = dn_Process.CUSTOM_STAGE_WIDTH > 0 ? dn_Process.CUSTOM_STAGE_WIDTH : hxd_Window.getInstance().get_width();
+			i.width = tmp + 1;
+			var tmp1 = dn_Process.CUSTOM_STAGE_HEIGHT > 0 ? dn_Process.CUSTOM_STAGE_HEIGHT : hxd_Window.getInstance().get_height();
+			i.height = tmp1 + 1;
+			var v3 = dn_Process.CUSTOM_STAGE_WIDTH > 0 ? dn_Process.CUSTOM_STAGE_WIDTH : hxd_Window.getInstance().get_width();
+			bg.posChanged = true;
+			bg.scaleX = v3 + 1;
+			var v4 = dn_Process.CUSTOM_STAGE_WIDTH > 0 ? dn_Process.CUSTOM_STAGE_WIDTH : hxd_Window.getInstance().get_width();
+			bg.posChanged = true;
+			bg.scaleY = v4 + 1;
+			if(!_gthis.suspended) {
+				c.destroyed = true;
+			}
+		},null,true);
+		var loadingMsg = this.showIntro;
+		i.onPush = function(_) {
+			if(loadingMsg) {
+				tf.set_text("Loading, please wait...");
+				var v5 = (dn_Process.CUSTOM_STAGE_WIDTH > 0 ? dn_Process.CUSTOM_STAGE_WIDTH : hxd_Window.getInstance().get_width()) * 0.5 - tf.get_textWidth() * tf.scaleX * 0.5 | 0;
+				tf.posChanged = true;
+				tf.x = v5;
+				var v6 = (dn_Process.CUSTOM_STAGE_HEIGHT > 0 ? dn_Process.CUSTOM_STAGE_HEIGHT : hxd_Window.getInstance().get_height()) * 0.5 - tf.get_textHeight() * tf.scaleY * 0.5 | 0;
+				tf.posChanged = true;
+				tf.y = v6;
+				_gthis.delayer.addS(null,$bind(_gthis,_gthis.resumeGame),1);
+			} else {
+				_gthis.resumeGame();
+			}
+			if(i != null && i.parent != null) {
+				i.parent.removeChild(i);
+			}
+		};
+		this.showIntro = false;
+	}
+	,resumeGame: function() {
+		var _gthis = this;
+		if(!this.suspended) {
+			return;
+		}
+		dn_heaps_slib_SpriteLib.TMOD = this.oldSprLibTmod;
+		this.delayer.addF(null,function() {
+			_gthis.root.set_visible(false);
+			_gthis.root.removeChildren();
+		},1);
+		this.suspended = false;
+		var _g = 0;
+		var _g1 = dn_Process.ROOTS;
+		while(_g < _g1.length) {
+			var p = _g1[_g];
+			++_g;
+			if(p != this) {
+				p.resume();
+			}
+		}
+	}
+	,update: function() {
+		dn_Process.prototype.update.call(this);
+		if(this.suspended) {
+			this.scene.over(this.root);
+		}
+		var _this = this.cd;
+		var frames = 0.2 * this.cd.baseFps;
+		var tmp;
+		if(_this.fastCheck.h.hasOwnProperty(16777216)) {
+			tmp = true;
+		} else {
+			var frames1 = frames;
+			var onComplete = null;
+			frames1 = Math.floor(frames1 * 1000) / 1000;
+			var cur = _this._getCdObject(16777216);
+			if(!(cur != null && frames1 < cur.frames && false)) {
+				if(frames1 <= 0) {
+					if(cur != null) {
+						HxOverrides.remove(_this.cdList,cur);
+						cur.frames = 0;
+						cur.cb = null;
+						_this.fastCheck.remove(cur.k);
+					}
+				} else {
+					_this.fastCheck.h[16777216] = true;
+					if(cur != null) {
+						cur.frames = frames1;
+					} else {
+						_this.cdList.push(new dn__$Cooldown_CdInst(16777216,frames1));
+					}
+				}
+				if(onComplete != null) {
+					if(frames1 <= 0) {
+						onComplete();
+					} else {
+						var cd = _this._getCdObject(16777216);
+						if(cd == null) {
+							throw new js__$Boot_HaxeError("cannot bind onComplete(" + 16777216 + "): cooldown " + 16777216 + " isn't running");
+						}
+						cd.cb = onComplete;
+					}
+				}
+			}
+			tmp = false;
+		}
+		if(!tmp) {
+			var w = hxd_Window.getInstance();
+			if(!w.get_isFocused() && !this.suspended) {
+				this.suspendGame();
+			}
+		}
+	}
+	,__class__: dn_heaps_GameFocusHelper
+});
 var hxd_Pad = function() {
 	this.rawYAxis = 0.;
 	this.rawXAxis = 0.;
@@ -4118,6 +4288,380 @@ dn_heaps_assets_Atlas.convertToSlib = function(atlas,notZeroBaseds,properties,at
 	dn_heaps_assets_Atlas.ltick();
 	return lib;
 };
+var dn_heaps_filter_BevelType = $hxEnums["dn.heaps.filter.BevelType"] = { __ename__ : true, __constructs__ : ["Classic","Soft","Top","Deep"]
+	,Classic: {_hx_index:0,__enum__:"dn.heaps.filter.BevelType",toString:$estr}
+	,Soft: {_hx_index:1,__enum__:"dn.heaps.filter.BevelType",toString:$estr}
+	,Top: {_hx_index:2,__enum__:"dn.heaps.filter.BevelType",toString:$estr}
+	,Deep: {_hx_index:3,__enum__:"dn.heaps.filter.BevelType",toString:$estr}
+};
+dn_heaps_filter_BevelType.__empty_constructs__ = [dn_heaps_filter_BevelType.Classic,dn_heaps_filter_BevelType.Soft,dn_heaps_filter_BevelType.Top,dn_heaps_filter_BevelType.Deep];
+var h2d_filter_Filter = function() {
+	this.enable = true;
+	this.smooth = false;
+	this.boundsExtend = 0.;
+	this.autoBounds = true;
+};
+$hxClasses["h2d.filter.Filter"] = h2d_filter_Filter;
+h2d_filter_Filter.__name__ = "h2d.filter.Filter";
+h2d_filter_Filter.prototype = {
+	get_enable: function() {
+		return this.enable;
+	}
+	,sync: function(ctx,s) {
+	}
+	,bind: function(s) {
+	}
+	,unbind: function(s) {
+	}
+	,getBounds: function(s,bounds) {
+		s.getBounds(s,bounds);
+		bounds.xMin -= this.boundsExtend;
+		bounds.yMin -= this.boundsExtend;
+		bounds.xMax += this.boundsExtend;
+		bounds.yMax += this.boundsExtend;
+	}
+	,draw: function(ctx,input) {
+		return input;
+	}
+	,__class__: h2d_filter_Filter
+};
+var h2d_filter_Shader = function(shader,textureParam) {
+	if(textureParam == null) {
+		textureParam = "texture";
+	}
+	h2d_filter_Filter.call(this);
+	var found = false;
+	var _g = 0;
+	var _g1 = shader.shader.data.vars;
+	while(_g < _g1.length) {
+		var v = _g1[_g];
+		++_g;
+		if(v.name == textureParam) {
+			found = true;
+			break;
+		}
+	}
+	if(!found) {
+		throw new js__$Boot_HaxeError("Shader does not have '" + textureParam + "' variable");
+	}
+	this.textureParam = textureParam;
+	this.pass = new h3d_pass_ScreenFx(shader);
+};
+$hxClasses["h2d.filter.Shader"] = h2d_filter_Shader;
+h2d_filter_Shader.__name__ = "h2d.filter.Shader";
+h2d_filter_Shader.__super__ = h2d_filter_Filter;
+h2d_filter_Shader.prototype = $extend(h2d_filter_Filter.prototype,{
+	get_shader: function() {
+		return this.pass.shader;
+	}
+	,draw: function(ctx,t) {
+		var out = ctx.textures.allocTileTarget("shaderTmp",t);
+		ctx.engine.pushTarget(out);
+		this.get_shader()[this.textureParam + "__"] = t.innerTex;
+		if(this.nearest) {
+			t.innerTex.set_filter(h3d_mat_Filter.Nearest);
+		}
+		this.pass.render();
+		ctx.engine.popTarget();
+		return h2d_Tile.fromTexture(out);
+	}
+	,__class__: h2d_filter_Shader
+});
+var dn_heaps_filter_OverlayTexture = function(type,size) {
+	if(size == null) {
+		size = 2;
+	}
+	this.invalidated = true;
+	h2d_filter_Shader.call(this,new dn_heaps_filter__$OverlayTexture_OverlayBlendShader());
+	this.get_shader().alpha__ = 1;
+	var v = type == null ? dn_heaps_filter_BevelType.Classic : type;
+	if(this.bevelType != v) {
+		this.invalidated = true;
+	}
+	this.bevelType = v;
+	if(this.bevelSize != size) {
+		this.invalidated = true;
+	}
+	this.bevelSize = size;
+};
+$hxClasses["dn.heaps.filter.OverlayTexture"] = dn_heaps_filter_OverlayTexture;
+dn_heaps_filter_OverlayTexture.__name__ = "dn.heaps.filter.OverlayTexture";
+dn_heaps_filter_OverlayTexture.__super__ = h2d_filter_Shader;
+dn_heaps_filter_OverlayTexture.prototype = $extend(h2d_filter_Shader.prototype,{
+	sync: function(ctx,s) {
+		h2d_filter_Shader.prototype.sync.call(this,ctx,s);
+		if(!((s) instanceof h2d_Scene)) {
+			throw new js__$Boot_HaxeError("OverlayTextureFilter should only be attached to a 2D Scene");
+		}
+		if(this.invalidated) {
+			this.invalidated = false;
+			this.render(ctx.scene.width,ctx.scene.height);
+		}
+	}
+	,render: function(screenWid,screenHei) {
+		if(this.overlayTex != null) {
+			this.overlayTex.dispose();
+		}
+		var bd = new hxd_BitmapData(this.bevelSize,this.bevelSize);
+		bd.clear(-8355712);
+		switch(this.bevelType._hx_index) {
+		case 0:
+			var _g = 0;
+			var _g1 = this.bevelSize - 1;
+			while(_g < _g1) {
+				var x = _g++;
+				bd.setPixel(x,0,-1);
+				bd.setPixel(x + 1,this.bevelSize - 1,-16777216);
+			}
+			var _g2 = 0;
+			var _g3 = this.bevelSize - 1;
+			while(_g2 < _g3) {
+				var y = _g2++;
+				bd.setPixel(0,y,-1);
+				bd.setPixel(this.bevelSize - 1,y + 1,-13421773);
+			}
+			break;
+		case 1:
+			var _g4 = 0;
+			var _g11 = this.bevelSize - 1;
+			while(_g4 < _g11) {
+				var x1 = _g4++;
+				bd.setPixel(x1,0,-1);
+				bd.setPixel(x1 + 1,this.bevelSize - 1,-10066330);
+			}
+			var _g21 = 0;
+			var _g31 = this.bevelSize - 1;
+			while(_g21 < _g31) {
+				var y1 = _g21++;
+				bd.setPixel(0,y1,-1);
+				bd.setPixel(this.bevelSize - 1,y1 + 1,-10066330);
+			}
+			break;
+		case 2:
+			var _g5 = 0;
+			var _g12 = this.bevelSize - 1;
+			while(_g5 < _g12) {
+				var x2 = _g5++;
+				bd.setPixel(x2,0,-1);
+				bd.setPixel(x2,this.bevelSize - 1,-16777216);
+			}
+			break;
+		case 3:
+			var _g6 = 0;
+			var _g13 = this.bevelSize - 1;
+			while(_g6 < _g13) {
+				var x3 = _g6++;
+				bd.setPixel(x3,0,-1);
+				bd.setPixel(x3 + 1,this.bevelSize - 1,-16777216);
+			}
+			var _g22 = 0;
+			var _g32 = this.bevelSize - 1;
+			while(_g22 < _g32) {
+				var y2 = _g22++;
+				bd.setPixel(0,y2,-1);
+				bd.setPixel(this.bevelSize - 1,y2 + 1,-13421773);
+			}
+			var _g7 = 1;
+			var _g14 = this.bevelSize - 1 - 1;
+			while(_g7 < _g14) {
+				var x4 = _g7++;
+				bd.setPixel(x4,1,-1);
+				bd.setPixel(x4 + 1,this.bevelSize - 1 - 1,-16777216);
+			}
+			var _g23 = 1;
+			var _g33 = this.bevelSize - 1 - 1;
+			while(_g23 < _g33) {
+				var y3 = _g23++;
+				bd.setPixel(1,y3,-1);
+				bd.setPixel(this.bevelSize - 1 - 1,y3 + 1,-13421773);
+			}
+			break;
+		}
+		this.overlayTex = h3d_mat_Texture.fromBitmap(bd);
+		this.overlayTex.set_filter(h3d_mat_Filter.Nearest);
+		this.overlayTex.set_wrap(h3d_mat_Wrap.Repeat);
+		this.get_shader().overlay__ = this.overlayTex;
+		this.get_shader().uvScale__ = new h3d_Vector(screenWid / this.overlayTex.width,screenHei / this.overlayTex.width);
+	}
+	,__class__: dn_heaps_filter_OverlayTexture
+});
+var hxsl_Shader = function() {
+	this.priority = 0;
+	this.initialize();
+};
+$hxClasses["hxsl.Shader"] = hxsl_Shader;
+hxsl_Shader.__name__ = "hxsl.Shader";
+hxsl_Shader.prototype = {
+	initialize: function() {
+		this.constModified = true;
+		if(this.shader != null) {
+			return;
+		}
+		var cl = js_Boot.getClass(this);
+		this.shader = cl._SHADER;
+		if(this.shader == null) {
+			var curClass = cl;
+			while(curClass != null && curClass.SRC == null) curClass = curClass.__super__;
+			if(curClass == null) {
+				throw new js__$Boot_HaxeError(cl.__name__ + " has no shader source");
+			}
+			this.shader = curClass._SHADER;
+			if(this.shader == null) {
+				this.shader = new hxsl_SharedShader(curClass.SRC);
+				curClass._SHADER = this.shader;
+			}
+		}
+	}
+	,setPriority: function(v) {
+		this.priority = v;
+	}
+	,getParamValue: function(index) {
+		throw new js__$Boot_HaxeError("assert");
+	}
+	,getParamFloatValue: function(index) {
+		throw new js__$Boot_HaxeError("assert");
+	}
+	,updateConstants: function(globals) {
+		throw new js__$Boot_HaxeError("assert");
+	}
+	,updateConstantsFinal: function(globals) {
+		var c = this.shader.consts;
+		while(c != null) {
+			if(c.globalId == 0) {
+				c = c.next;
+				continue;
+			}
+			var v = globals.map.h[c.globalId];
+			var _g = c.v.type;
+			switch(_g._hx_index) {
+			case 1:
+				var v1 = v;
+				if(v1 >>> c.bits != 0) {
+					throw new js__$Boot_HaxeError("Constant " + c.v.name + " is outside range (" + v1 + " > " + ((1 << c.bits) - 1) + ")");
+				}
+				this.constBits |= v1 << c.pos;
+				break;
+			case 2:
+				var v2 = v;
+				if(v2) {
+					this.constBits |= 1 << c.pos;
+				}
+				break;
+			case 17:
+				var count = _g.size;
+				if(v == null) {
+					c = c.next;
+					continue;
+				}
+				var v3 = v;
+				var sel = v3.channel;
+				if(v3.texture == null) {
+					sel = hxsl_Channel.Unknown;
+				} else if(sel == null || sel == hxsl_Channel.Unknown) {
+					switch(count) {
+					case 1:
+						if(v3.texture.format == h3d_mat_Texture.nativeFormat) {
+							sel = hxsl_Channel.PackedFloat;
+						} else {
+							throw new js__$Boot_HaxeError("Constant " + c.v.name + " does not define channel select value");
+						}
+						break;
+					case 3:
+						if(v3.texture.format == h3d_mat_Texture.nativeFormat) {
+							sel = hxsl_Channel.PackedNormal;
+						} else {
+							throw new js__$Boot_HaxeError("Constant " + c.v.name + " does not define channel select value");
+						}
+						break;
+					default:
+						throw new js__$Boot_HaxeError("Constant " + c.v.name + " does not define channel select value");
+					}
+				}
+				this.constBits |= (globals.allocChannelID(v3.texture) << 3 | sel._hx_index) << c.pos;
+				break;
+			default:
+				throw new js__$Boot_HaxeError("assert");
+			}
+			c = c.next;
+		}
+		var _this = this.shader;
+		var constBits = this.constBits;
+		var i = _this.instanceCache.h[constBits];
+		this.instance = i == null ? _this.makeInstance(constBits) : i;
+	}
+	,toString: function() {
+		var c = js_Boot.getClass(this);
+		return c.__name__;
+	}
+	,__class__: hxsl_Shader
+};
+var h3d_shader_ScreenShader = function() {
+	this.flipY__ = 0;
+	hxsl_Shader.call(this);
+};
+$hxClasses["h3d.shader.ScreenShader"] = h3d_shader_ScreenShader;
+h3d_shader_ScreenShader.__name__ = "h3d.shader.ScreenShader";
+h3d_shader_ScreenShader.__super__ = hxsl_Shader;
+h3d_shader_ScreenShader.prototype = $extend(hxsl_Shader.prototype,{
+	updateConstants: function(globals) {
+		this.constBits = 0;
+		this.updateConstantsFinal(globals);
+	}
+	,getParamValue: function(index) {
+		if(index == 0) {
+			return this.flipY__;
+		}
+		return null;
+	}
+	,getParamFloatValue: function(index) {
+		if(index == 0) {
+			return this.flipY__;
+		}
+		return 0.;
+	}
+	,__class__: h3d_shader_ScreenShader
+});
+var dn_heaps_filter__$OverlayTexture_OverlayBlendShader = function() {
+	this.uvScale__ = new h3d_Vector();
+	this.alpha__ = 0;
+	h3d_shader_ScreenShader.call(this);
+};
+$hxClasses["dn.heaps.filter._OverlayTexture.OverlayBlendShader"] = dn_heaps_filter__$OverlayTexture_OverlayBlendShader;
+dn_heaps_filter__$OverlayTexture_OverlayBlendShader.__name__ = "dn.heaps.filter._OverlayTexture.OverlayBlendShader";
+dn_heaps_filter__$OverlayTexture_OverlayBlendShader.__super__ = h3d_shader_ScreenShader;
+dn_heaps_filter__$OverlayTexture_OverlayBlendShader.prototype = $extend(h3d_shader_ScreenShader.prototype,{
+	updateConstants: function(globals) {
+		this.constBits = 0;
+		this.updateConstantsFinal(globals);
+	}
+	,getParamValue: function(index) {
+		switch(index) {
+		case 0:
+			return this.flipY__;
+		case 1:
+			return this.texture__;
+		case 2:
+			return this.overlay__;
+		case 3:
+			return this.alpha__;
+		case 4:
+			return this.uvScale__;
+		default:
+		}
+		return null;
+	}
+	,getParamFloatValue: function(index) {
+		switch(index) {
+		case 0:
+			return this.flipY__;
+		case 3:
+			return this.alpha__;
+		default:
+		}
+		return 0.;
+	}
+	,__class__: dn_heaps_filter__$OverlayTexture_OverlayBlendShader
+});
 var dn_heaps_slib_AnimManager = function() { };
 $hxClasses["dn.heaps.slib.AnimManager"] = dn_heaps_slib_AnimManager;
 dn_heaps_slib_AnimManager.__name__ = "dn.heaps.slib.AnimManager";
@@ -4573,7 +5117,7 @@ h2d_Object.prototype = {
 		if(s == null) {
 			s = new h2d_Scene();
 		}
-		s.drawImplTo(this,t);
+		s.drawImplTo(this,[t]);
 		if(needDispose) {
 			s.dispose();
 			this.onRemove();
@@ -7461,6 +8005,9 @@ h2d_Bitmap.prototype = $extend(h2d_Drawable.prototype,{
 			this.emitTile(ctx,this.tile);
 			return;
 		}
+		if(this.tile == null) {
+			this.set_tile(h2d_Tile.fromColor(16711935));
+		}
 		var ow = this.tile.width;
 		var oh = this.tile.height;
 		this.tile.width = this.width != null ? this.width : ow * this.height / oh;
@@ -7972,6 +8519,7 @@ var h2d_FlowLayout = $hxEnums["h2d.FlowLayout"] = { __ename__ : true, __construc
 h2d_FlowLayout.__empty_constructs__ = [h2d_FlowLayout.Horizontal,h2d_FlowLayout.Vertical,h2d_FlowLayout.Stack];
 var h2d_FlowProperties = function(elt) {
 	this.constraint = true;
+	this.lineBreak = false;
 	this.calculatedHeight = 0;
 	this.calculatedWidth = 0;
 	this.offsetY = 0;
@@ -8038,6 +8586,20 @@ h2d_Flow.prototype = $extend(h2d_Object.prototype,{
 		}
 		this.set_needReflow(true);
 		return this.layout = v == null ? h2d_FlowLayout.Horizontal : v;
+	}
+	,set_horizontalAlign: function(v) {
+		if(this.horizontalAlign == v) {
+			return v;
+		}
+		this.set_needReflow(true);
+		return this.horizontalAlign = v;
+	}
+	,set_verticalAlign: function(v) {
+		if(this.verticalAlign == v) {
+			return v;
+		}
+		this.set_needReflow(true);
+		return this.verticalAlign = v;
 	}
 	,set_needReflow: function(v) {
 		if(this.needReflow == v) {
@@ -8359,7 +8921,7 @@ h2d_Flow.prototype = $extend(h2d_Object.prototype,{
 				if(isAbs) {
 					continue;
 				}
-				if(this.multiline && x - startX + p.calculatedWidth > maxInWidth && x - startX > 0) {
+				if((this.multiline && x - startX + p.calculatedWidth > maxInWidth || p.lineBreak) && x - startX > 0) {
 					br = true;
 					if(maxLineHeight < minLineHeight) {
 						maxLineHeight = minLineHeight;
@@ -8607,7 +9169,7 @@ h2d_Flow.prototype = $extend(h2d_Object.prototype,{
 				if(isAbs1) {
 					continue;
 				}
-				if(this.multiline && y1 - startY + p8.calculatedHeight > maxInHeight && y1 - startY > 0) {
+				if((this.multiline && y1 - startY + p8.calculatedHeight > maxInHeight || p8.lineBreak) && y1 - startY > 0) {
 					br1 = true;
 					if(maxColWidth < minColWidth) {
 						maxColWidth = minColWidth;
@@ -10302,6 +10864,13 @@ h2d_Graphics.prototype = $extend(h2d_Drawable.prototype,{
 		var y2 = y + h;
 		this.addVertex(x,y2,this.curR,this.curG,this.curB,this.curA,x * this.ma + y2 * this.mc + this.mx,x * this.mb + y2 * this.md + this.my);
 		this.addVertex(x,y,this.curR,this.curG,this.curB,this.curA,x * this.ma + y * this.mc + this.mx,x * this.mb + y * this.md + this.my);
+		var e = 0.01;
+		this.tmpPoints[0].x += e;
+		this.tmpPoints[0].y += e;
+		this.tmpPoints[1].y += e;
+		this.tmpPoints[3].x += e;
+		this.tmpPoints[4].x += e;
+		this.tmpPoints[4].y += e;
 		this.flush();
 	}
 	,drawCircle: function(cx,cy,radius,nsegments) {
@@ -10531,6 +11100,7 @@ var h2d_Text = function(font,parent) {
 	this.set_letterSpacing(1);
 	this.set_lineSpacing(0);
 	this.set_text("");
+	this.currentText = "";
 	this.set_textColor(16777215);
 };
 $hxClasses["h2d.Text"] = h2d_Text;
@@ -10610,13 +11180,31 @@ h2d_Text.prototype = $extend(h2d_Drawable.prototype,{
 		h2d_Drawable.prototype.onAdd.call(this);
 		this.rebuild();
 	}
+	,sync: function(ctx) {
+		h2d_Drawable.prototype.sync.call(this,ctx);
+		if(this.textChanged && this.text != this.currentText) {
+			this.textChanged = false;
+			this.currentText = this.text;
+			this.calcDone = false;
+			this.needsRebuild = true;
+		}
+		if(this.needsRebuild) {
+			this.initGlyphs(this.currentText);
+		}
+	}
 	,draw: function(ctx) {
 		if(this.glyphs == null) {
 			this.emitTile(ctx,h2d_Tile.fromColor(16711935,16,16));
 			return;
 		}
-		if(!this.calcDone && this.text != null && this.font != null) {
-			this.initGlyphs(this.text);
+		if(this.textChanged && this.text != this.currentText) {
+			this.textChanged = false;
+			this.currentText = this.text;
+			this.calcDone = false;
+			this.needsRebuild = true;
+		}
+		if(this.needsRebuild) {
+			this.initGlyphs(this.currentText);
 		}
 		if(this.dropShadow != null) {
 			var oldX = this.absX;
@@ -10667,14 +11255,18 @@ h2d_Text.prototype = $extend(h2d_Drawable.prototype,{
 			return t1;
 		}
 		this.text = t1;
-		this.rebuild();
+		this.textChanged = true;
+		this.validateText();
+		if(this.parentContainer != null) {
+			this.parentContainer.contentChanged(this);
+		}
 		return t1;
+	}
+	,validateText: function() {
 	}
 	,rebuild: function() {
 		this.calcDone = false;
-		if(this.allocated && this.text != null && this.font != null) {
-			this.initGlyphs(this.text);
-		}
+		this.needsRebuild = true;
 		if(this.parentContainer != null) {
 			this.parentContainer.contentChanged(this);
 		}
@@ -10911,16 +11503,31 @@ h2d_Text.prototype = $extend(h2d_Drawable.prototype,{
 		this.calcHeight = y + this.font.lineHeight;
 		this.calcSizeHeight = y + (this.font.baseLine > 0 ? this.font.baseLine : this.font.lineHeight);
 		this.calcDone = true;
+		if(rebuild) {
+			this.needsRebuild = false;
+		}
 	}
 	,get_textHeight: function() {
+		if(this.textChanged && this.text != this.currentText) {
+			this.textChanged = false;
+			this.currentText = this.text;
+			this.calcDone = false;
+			this.needsRebuild = true;
+		}
 		if(!this.calcDone) {
-			this.initGlyphs(this.text,false);
+			this.initGlyphs(this.text,this.needsRebuild);
 		}
 		return this.calcHeight;
 	}
 	,get_textWidth: function() {
+		if(this.textChanged && this.text != this.currentText) {
+			this.textChanged = false;
+			this.currentText = this.text;
+			this.calcDone = false;
+			this.needsRebuild = true;
+		}
 		if(!this.calcDone) {
-			this.initGlyphs(this.text,false);
+			this.initGlyphs(this.text,this.needsRebuild);
 		}
 		return this.calcWidth;
 	}
@@ -10963,8 +11570,14 @@ h2d_Text.prototype = $extend(h2d_Drawable.prototype,{
 	}
 	,getBoundsRec: function(relativeTo,out,forSize) {
 		h2d_Drawable.prototype.getBoundsRec.call(this,relativeTo,out,forSize);
+		if(this.textChanged && this.text != this.currentText) {
+			this.textChanged = false;
+			this.currentText = this.text;
+			this.calcDone = false;
+			this.needsRebuild = true;
+		}
 		if(!this.calcDone) {
-			this.initGlyphs(this.text,false);
+			this.initGlyphs(this.text,this.needsRebuild);
 		}
 		var x;
 		var y;
@@ -11054,6 +11667,42 @@ h2d_HtmlText.prototype = $extend(h2d_Text.prototype,{
 			throw new js__$Boot_HaxeError("Could not parse " + text + " (" + Std.string(((e) instanceof js__$Boot_HaxeError) ? e.val : e) + ")");
 		}
 	}
+	,validateText: function() {
+		this.textXml = this.parseText(this.text);
+		this.validateNodes(this.textXml);
+	}
+	,validateNodes: function(xml) {
+		if(xml.nodeType == 0) {
+			if(xml.nodeType != Xml.Element) {
+				throw new js__$Boot_HaxeError("Bad node type, expected Element but found " + _$Xml_XmlType_$Impl_$.toString(xml.nodeType));
+			}
+			var nodeName = xml.nodeName.toLowerCase();
+			switch(nodeName) {
+			case "b":case "bold":
+				this.loadFont("bold");
+				break;
+			case "font":
+				if(xml.exists("face")) {
+					this.loadFont(xml.get("face"));
+				}
+				break;
+			case "img":
+				this.loadImage(xml.get("src"));
+				break;
+			case "i":case "italic":
+				this.loadFont("italic");
+				break;
+			}
+			if(xml.nodeType != Xml.Document && xml.nodeType != Xml.Element) {
+				throw new js__$Boot_HaxeError("Bad node type, expected Element or Document but found " + _$Xml_XmlType_$Impl_$.toString(xml.nodeType));
+			}
+			var child = HxOverrides.iter(xml.children);
+			while(child.hasNext()) {
+				var child1 = child.next();
+				this.validateNodes(xml);
+			}
+		}
+	}
 	,initGlyphs: function(text,rebuild) {
 		if(rebuild == null) {
 			rebuild = true;
@@ -11072,8 +11721,12 @@ h2d_HtmlText.prototype = $extend(h2d_Text.prototype,{
 			this.elements = [];
 		}
 		this.glyphs.setDefaultColor(this.textColor);
-		var doc = this.parseText(text);
-		this.imageCache = new haxe_ds_StringMap();
+		var doc;
+		if(this.textXml == null) {
+			doc = this.parseText(text);
+		} else {
+			doc = this.textXml;
+		}
 		this.yPos = 0;
 		this.xMax = 0;
 		this.xMin = Infinity;
@@ -11132,13 +11785,16 @@ h2d_HtmlText.prototype = $extend(h2d_Text.prototype,{
 		if(this.xPos > this.xMax) {
 			this.xMax = this.xPos;
 		}
-		this.imageCache = null;
+		this.textXml = null;
 		var y = this.yPos;
 		this.calcXMin = this.xMin;
 		this.calcWidth = this.xMax - this.xMin;
 		this.calcHeight = y + metrics[this.sizePos].height;
 		this.calcSizeHeight = y + metrics[this.sizePos].baseLine;
 		this.calcDone = true;
+		if(rebuild) {
+			this.needsRebuild = false;
+		}
 	}
 	,buildSizes: function(e,font,metrics,splitNode) {
 		var _gthis = this;
@@ -11210,20 +11866,9 @@ h2d_HtmlText.prototype = $extend(h2d_Text.prototype,{
 				}
 				break;
 			case "img":
-				var src = e.get("src");
-				var _this3 = this.imageCache;
-				var i = __map_reserved[src] != null ? _this3.getReserved(src) : _this3.h[src];
+				var i = this.loadImage(e.get("src"));
 				if(i == null) {
-					i = this.loadImage(src);
-					if(i == null) {
-						i = h2d_Tile.fromColor(16711935,8,8);
-					}
-					var _this4 = this.imageCache;
-					if(__map_reserved[src] != null) {
-						_this4.setReserved(src,i);
-					} else {
-						_this4.h[src] = i;
-					}
+					i = h2d_Tile.fromColor(16711935,8,8);
 				}
 				var size = metrics[metrics.length - 1].width + i.width + this.letterSpacing;
 				if(this.realMaxWidth >= 0 && size > this.realMaxWidth && metrics[metrics.length - 1].width > 0) {
@@ -11541,10 +12186,10 @@ h2d_HtmlText.prototype = $extend(h2d_Text.prototype,{
 				}
 				break;
 			case "img":
-				var this1 = this.imageCache;
-				var key = e.get("src");
-				var _this4 = this1;
-				var i = __map_reserved[key] != null ? _this4.getReserved(key) : _this4.h[key];
+				var i = this.loadImage(e.get("src"));
+				if(i == null) {
+					i = h2d_Tile.fromColor(16711935,8,8);
+				}
 				var py = this.yPos + metrics[this.sizePos].baseLine - i.height;
 				if(py + i.dy < this.calcYMin) {
 					this.calcYMin = py + i.dy;
@@ -11583,12 +12228,12 @@ h2d_HtmlText.prototype = $extend(h2d_Text.prototype,{
 						_gthis.glyphs.addShader(shader2);
 					}
 				}
-				var _this5 = _gthis.glyphs.curColor;
+				var _this4 = _gthis.glyphs.curColor;
 				var v3 = prev2.curColor;
-				_this5.x = v3.x;
-				_this5.y = v3.y;
-				_this5.z = v3.z;
-				_this5.w = v3.w;
+				_this4.x = v3.x;
+				_this4.y = v3.y;
+				_this4.z = v3.z;
+				_this4.w = v3.w;
 				_gthis.elements.push(_gthis.glyphs);
 				break;
 			case "p":
@@ -11722,11 +12367,11 @@ h2d_HtmlText.prototype = $extend(h2d_Text.prototype,{
 				this.glyphs = prevGlyphs;
 			}
 			if(prevColor != null) {
-				var _this6 = this.glyphs.curColor;
-				_this6.x = prevColor.x;
-				_this6.y = prevColor.y;
-				_this6.z = prevColor.z;
-				_this6.w = prevColor.w;
+				var _this5 = this.glyphs.curColor;
+				_this5.x = prevColor.x;
+				_this5.y = prevColor.y;
+				_this5.z = prevColor.z;
+				_this5.w = prevColor.w;
 			}
 		} else {
 			if(e.nodeType == Xml.Document || e.nodeType == Xml.Element) {
@@ -11781,8 +12426,8 @@ h2d_HtmlText.prototype = $extend(h2d_Text.prototype,{
 						if(fc != null) {
 							this.xPos += fc.getKerningOffset(this.prevChar);
 							if(rebuild) {
-								var _this7 = this.glyphs;
-								_this7.content.add(this.xPos,this.yPos + dy,_this7.curColor.x,_this7.curColor.y,_this7.curColor.z,_this7.curColor.w,fc.t);
+								var _this6 = this.glyphs;
+								_this6.content.add(this.xPos,this.yPos + dy,_this6.curColor.x,_this6.curColor.y,_this6.curColor.z,_this6.curColor.w,fc.t);
 							}
 							if(this.yPos == 0 && fc.t.dy + dy < this.calcYMin) {
 								this.calcYMin = fc.t.dy + dy;
@@ -12548,6 +13193,13 @@ h2d_RenderContext.prototype = $extend(h3d_impl_RenderContext.prototype,{
 		if(this.hasRenderZone) {
 			this.hasRenderZone = false;
 			this.engine.setRenderZone();
+		}
+	}
+	,pushTargets: function(texs) {
+		this.pushTarget(texs[0]);
+		if(texs.length > 1) {
+			this.engine.popTarget();
+			this.engine.pushTargets(texs);
 		}
 	}
 	,popTarget: function(restore) {
@@ -13912,7 +14564,7 @@ h2d_Scene.prototype = $extend(h2d_Layers.prototype,{
 		}
 	}
 	,dispatchListeners: function(event) {
-		this.screenToLocal(event);
+		this.screenToViewport(event);
 		var _g = 0;
 		var _g1 = this.eventListeners;
 		while(_g < _g1.length) {
@@ -13934,36 +14586,25 @@ h2d_Scene.prototype = $extend(h2d_Layers.prototype,{
 		}
 		return true;
 	}
-	,screenToLocal: function(e) {
-		var x = e.relX * this.width / (this.window.get_width() * this.ratioX * this.scaleX) - this.x - this.viewportX;
-		var y = e.relY * this.height / (this.window.get_height() * this.ratioY * this.scaleY) - this.y - this.viewportY;
-		var rx = x * this.matA + y * this.matB + this.absX;
-		var ry = x * this.matC + y * this.matD + this.absY;
-		e.relX = rx;
-		e.relY = ry;
+	,screenToViewport: function(e) {
+		e.relX = e.relX * this.width / (this.window.get_width() * this.ratioX) - this.viewportX;
+		e.relY = e.relY * this.height / (this.window.get_height() * this.ratioY) - this.viewportY;
 	}
 	,dispatchEvent: function(event,to) {
 		var i = to;
-		this.screenToLocal(event);
-		var rx = event.relX;
-		var ry = event.relY;
-		var dx = rx - i.absX;
-		var dy = ry - i.absY;
-		var w1 = i.width * i.matA;
-		var h1 = i.width * i.matC;
-		var ky = h1 * dx + w1 * dy;
-		var w2 = i.height * i.matB;
-		var h2 = i.height * i.matD;
-		var kx = w2 * dy + h2 * dx;
-		var max = w1 * h2 - h1 * w2;
-		event.relX = kx / max * i.width;
-		event.relY = ky / max * i.height;
+		this.screenToViewport(event);
+		var dx = event.relX - i.absX;
+		var dy = event.relY - i.absY;
+		var rx = (dx * i.matD - dy * i.matC) * i.invDet;
+		var ry = (dy * i.matA - dx * i.matB) * i.invDet;
+		event.relX = rx;
+		event.relY = ry;
 		i.handleEvent(event);
 	}
 	,handleEvent: function(event,last) {
-		this.screenToLocal(event);
-		var rx = event.relX;
-		var ry = event.relY;
+		this.screenToViewport(event);
+		var ex = event.relX;
+		var ey = event.relY;
 		var index = last == null ? 0 : this.interactive.indexOf(last) + 1;
 		var pt = this.shapePoint;
 		var _g = index;
@@ -13974,35 +14615,21 @@ h2d_Scene.prototype = $extend(h2d_Layers.prototype,{
 			if(i == null) {
 				break;
 			}
-			var dx = rx - i.absX;
-			var dy = ry - i.absY;
+			if(i.invDet == 0) {
+				continue;
+			}
+			var dx = ex - i.absX;
+			var dy = ey - i.absY;
+			var rx = (dx * i.matD - dy * i.matC) * i.invDet;
+			var ry = (dy * i.matA - dx * i.matB) * i.invDet;
 			if(i.shape != null) {
-				pt.x = (dx * i.matD - dy * i.matC) * i.invDet + i.shapeX;
-				pt.y = (-dx * i.matB + dy * i.matA) * i.invDet + i.shapeY;
+				pt.x = rx + i.shapeX;
+				pt.y = ry + i.shapeY;
 				if(!i.shape.contains(pt)) {
 					continue;
 				}
-				dx = pt.x - i.shapeX;
-				dy = pt.y - i.shapeY;
-			} else {
-				var w1 = i.width * i.matA;
-				var h1 = i.width * i.matC;
-				var ky = h1 * dx + w1 * dy;
-				if(ky < 0) {
-					continue;
-				}
-				var w2 = i.height * i.matB;
-				var h2 = i.height * i.matD;
-				var kx = w2 * dy + h2 * dx;
-				if(kx < 0) {
-					continue;
-				}
-				var max = w1 * h2 - h1 * w2;
-				if(ky >= max || kx >= max) {
-					continue;
-				}
-				dx = kx / max * i.width;
-				dy = ky / max * i.height;
+			} else if(ry < 0 || rx < 0 || rx >= i.width || ry >= i.height) {
+				continue;
 			}
 			var visible = true;
 			var p = i;
@@ -14016,8 +14643,8 @@ h2d_Scene.prototype = $extend(h2d_Layers.prototype,{
 			if(!visible) {
 				continue;
 			}
-			event.relX = dx;
-			event.relY = dy;
+			event.relX = rx;
+			event.relY = ry;
 			i.handleEvent(event);
 			if(event.cancel) {
 				event.cancel = false;
@@ -14034,7 +14661,7 @@ h2d_Scene.prototype = $extend(h2d_Layers.prototype,{
 	,startDrag: function(onEvent,onCancel,refEvent) {
 		var _gthis = this;
 		this.events.startDrag(function(e) {
-			_gthis.screenToLocal(e);
+			_gthis.screenToViewport(e);
 			onEvent(e);
 		},onCancel,refEvent);
 	}
@@ -14127,22 +14754,32 @@ h2d_Scene.prototype = $extend(h2d_Layers.prototype,{
 	,setElapsedTime: function(v) {
 		this.ctx.elapsedTime = v;
 	}
-	,drawImplTo: function(s,t) {
-		if((t.flags & 1 << h3d_mat_TextureFlags.Target._hx_index) == 0) {
-			throw new js__$Boot_HaxeError("Can only draw to texture created with Target flag");
+	,drawImplTo: function(s,texs,outputs) {
+		var _g = 0;
+		while(_g < texs.length) {
+			var t = texs[_g];
+			++_g;
+			if((t.flags & 1 << h3d_mat_TextureFlags.Target._hx_index) == 0) {
+				throw new js__$Boot_HaxeError("Can only draw to texture created with Target flag");
+			}
 		}
-		var needClear = (t.flags & 1 << h3d_mat_TextureFlags.WasCleared._hx_index) == 0;
 		this.ctx.engine = h3d_Engine.CURRENT;
 		var oldBG = this.ctx.engine.backgroundColor;
 		this.ctx.engine.backgroundColor = null;
 		this.ctx.engine.begin();
 		this.ctx.globalAlpha = this.alpha;
 		this.ctx.begin();
-		this.ctx.pushTarget(t);
-		if(needClear) {
+		this.ctx.pushTargets(texs);
+		if(outputs != null) {
+			this.ctx.manager.setOutput(outputs);
+		}
+		if(texs.length == 1 && (texs[0].flags & 1 << h3d_mat_TextureFlags.WasCleared._hx_index) == 0) {
 			this.ctx.engine.clear(0);
 		}
 		s.drawRec(this.ctx);
+		if(outputs != null) {
+			this.ctx.manager.setOutput();
+		}
 		this.ctx.popTarget();
 		this.ctx.engine.backgroundColor = oldBG;
 	}
@@ -15194,36 +15831,6 @@ h2d_col_Point.__name__ = "h2d.col.Point";
 h2d_col_Point.prototype = {
 	__class__: h2d_col_Point
 };
-var h2d_filter_Filter = function() {
-	this.enable = true;
-	this.smooth = false;
-	this.boundsExtend = 0.;
-	this.autoBounds = true;
-};
-$hxClasses["h2d.filter.Filter"] = h2d_filter_Filter;
-h2d_filter_Filter.__name__ = "h2d.filter.Filter";
-h2d_filter_Filter.prototype = {
-	get_enable: function() {
-		return this.enable;
-	}
-	,sync: function(ctx,s) {
-	}
-	,bind: function(s) {
-	}
-	,unbind: function(s) {
-	}
-	,getBounds: function(s,bounds) {
-		s.getBounds(s,bounds);
-		bounds.xMin -= this.boundsExtend;
-		bounds.yMin -= this.boundsExtend;
-		bounds.xMax += this.boundsExtend;
-		bounds.yMax += this.boundsExtend;
-	}
-	,draw: function(ctx,input) {
-		return input;
-	}
-	,__class__: h2d_filter_Filter
-};
 var h2d_filter_Blur = function(radius,gain,quality,linear) {
 	if(linear == null) {
 		linear = 0.;
@@ -15946,6 +16553,11 @@ h3d_Engine.prototype = {
 		} else {
 			this.needFlushTarget = this.currentTargetTex != t.t || this.currentTargetLayer != t.layer || this.currentTargetMip != t.mipLevel || t.textures != null;
 		}
+	}
+	,pushTargets: function(textures) {
+		this.pushTarget(this.nullTexture);
+		this.targetStack.textures = textures;
+		this.needFlushTarget = true;
 	}
 	,popTarget: function() {
 		var c = this.targetStack;
@@ -17032,7 +17644,7 @@ h3d_col_Sphere.prototype = {
 	}
 	,__class__: h3d_col_Sphere
 };
-var h3d_impl_Feature = $hxEnums["h3d.impl.Feature"] = { __ename__ : true, __constructs__ : ["StandardDerivatives","FloatTextures","AllocDepthBuffer","HardwareAccelerated","MultipleRenderTargets","Queries","SRGBTextures","ShaderModel3","BottomLeftCoords","Wireframe"]
+var h3d_impl_Feature = $hxEnums["h3d.impl.Feature"] = { __ename__ : true, __constructs__ : ["StandardDerivatives","FloatTextures","AllocDepthBuffer","HardwareAccelerated","MultipleRenderTargets","Queries","SRGBTextures","ShaderModel3","BottomLeftCoords","Wireframe","InstancedRendering"]
 	,StandardDerivatives: {_hx_index:0,__enum__:"h3d.impl.Feature",toString:$estr}
 	,FloatTextures: {_hx_index:1,__enum__:"h3d.impl.Feature",toString:$estr}
 	,AllocDepthBuffer: {_hx_index:2,__enum__:"h3d.impl.Feature",toString:$estr}
@@ -17043,8 +17655,9 @@ var h3d_impl_Feature = $hxEnums["h3d.impl.Feature"] = { __ename__ : true, __cons
 	,ShaderModel3: {_hx_index:7,__enum__:"h3d.impl.Feature",toString:$estr}
 	,BottomLeftCoords: {_hx_index:8,__enum__:"h3d.impl.Feature",toString:$estr}
 	,Wireframe: {_hx_index:9,__enum__:"h3d.impl.Feature",toString:$estr}
+	,InstancedRendering: {_hx_index:10,__enum__:"h3d.impl.Feature",toString:$estr}
 };
-h3d_impl_Feature.__empty_constructs__ = [h3d_impl_Feature.StandardDerivatives,h3d_impl_Feature.FloatTextures,h3d_impl_Feature.AllocDepthBuffer,h3d_impl_Feature.HardwareAccelerated,h3d_impl_Feature.MultipleRenderTargets,h3d_impl_Feature.Queries,h3d_impl_Feature.SRGBTextures,h3d_impl_Feature.ShaderModel3,h3d_impl_Feature.BottomLeftCoords,h3d_impl_Feature.Wireframe];
+h3d_impl_Feature.__empty_constructs__ = [h3d_impl_Feature.StandardDerivatives,h3d_impl_Feature.FloatTextures,h3d_impl_Feature.AllocDepthBuffer,h3d_impl_Feature.HardwareAccelerated,h3d_impl_Feature.MultipleRenderTargets,h3d_impl_Feature.Queries,h3d_impl_Feature.SRGBTextures,h3d_impl_Feature.ShaderModel3,h3d_impl_Feature.BottomLeftCoords,h3d_impl_Feature.Wireframe,h3d_impl_Feature.InstancedRendering];
 var h3d_impl_RenderFlag = $hxEnums["h3d.impl.RenderFlag"] = { __ename__ : true, __constructs__ : ["CameraHandness"]
 	,CameraHandness: {_hx_index:0,__enum__:"h3d.impl.RenderFlag",toString:$estr}
 };
@@ -17272,6 +17885,11 @@ var h3d_impl_GlDriver = function(antiAlias) {
 	}
 	this.drawMode = 4;
 	this.makeFeatures();
+	if(this.hasFeature(h3d_impl_Feature.InstancedRendering) && this.glES < 3) {
+		var extension = this.gl.getExtension("ANGLE_instanced_arrays");
+		this.gl["vertexAttribDivisor"] = $bind(extension,extension.vertexAttribDivisorANGLE);
+		this.gl["drawElementsInstanced"] = $bind(extension,extension.drawElementsInstancedANGLE);
+	}
 	hxsl_SharedShader.UNROLL_LOOPS = !this.hasFeature(h3d_impl_Feature.ShaderModel3);
 };
 $hxClasses["h3d.impl.GlDriver"] = h3d_impl_GlDriver;
@@ -18475,6 +19093,13 @@ h3d_impl_GlDriver.prototype = $extend(h3d_impl_Driver.prototype,{
 			break;
 		case 2:case 3:case 8:case 9:
 			return true;
+		case 10:
+			if(this.glES >= 3) {
+				return true;
+			} else {
+				return this.gl.getExtension("ANGLE_instanced_arrays") != null;
+			}
+			break;
 		default:
 			return false;
 		}
@@ -19806,6 +20431,11 @@ var h3d_mat_Texture = function(w,h,flags,format) {
 };
 $hxClasses["h3d.mat.Texture"] = h3d_mat_Texture;
 h3d_mat_Texture.__name__ = "h3d.mat.Texture";
+h3d_mat_Texture.fromBitmap = function(bmp) {
+	var t = new h3d_mat_Texture(bmp.ctx.canvas.width,bmp.ctx.canvas.height);
+	t.uploadBitmap(bmp);
+	return t;
+};
 h3d_mat_Texture.fromColor = function(color,alpha) {
 	if(alpha == null) {
 		alpha = 1.;
@@ -20021,6 +20651,26 @@ h3d_mat_Texture.prototype = {
 	}
 	,__class__: h3d_mat_Texture
 };
+var h3d_mat_TextureArray = function(w,h,layers,flags,format) {
+	this.layers = layers;
+	if(flags == null) {
+		flags = [];
+	}
+	flags.push(h3d_mat_TextureFlags.IsArray);
+	h3d_mat_Texture.call(this,w,h,flags,format);
+};
+$hxClasses["h3d.mat.TextureArray"] = h3d_mat_TextureArray;
+h3d_mat_TextureArray.__name__ = "h3d.mat.TextureArray";
+h3d_mat_TextureArray.__super__ = h3d_mat_Texture;
+h3d_mat_TextureArray.prototype = $extend(h3d_mat_Texture.prototype,{
+	get_layerCount: function() {
+		return this.layers;
+	}
+	,toString: function() {
+		return h3d_mat_Texture.prototype.toString.call(this) + "[" + this.layers + "]";
+	}
+	,__class__: h3d_mat_TextureArray
+});
 var h3d_pass_Base = function(name) {
 	this.name = name;
 };
@@ -20290,142 +20940,6 @@ h3d_pass_Blur.prototype = $extend(h3d_pass_ScreenFx.prototype,{
 		output.depthBuffer = outDepth;
 	}
 	,__class__: h3d_pass_Blur
-});
-var hxsl_Shader = function() {
-	this.priority = 0;
-	this.initialize();
-};
-$hxClasses["hxsl.Shader"] = hxsl_Shader;
-hxsl_Shader.__name__ = "hxsl.Shader";
-hxsl_Shader.prototype = {
-	initialize: function() {
-		this.constModified = true;
-		if(this.shader != null) {
-			return;
-		}
-		var cl = js_Boot.getClass(this);
-		this.shader = cl._SHADER;
-		if(this.shader == null) {
-			var curClass = cl;
-			while(curClass != null && curClass.SRC == null) curClass = curClass.__super__;
-			if(curClass == null) {
-				throw new js__$Boot_HaxeError(cl.__name__ + " has no shader source");
-			}
-			this.shader = curClass._SHADER;
-			if(this.shader == null) {
-				this.shader = new hxsl_SharedShader(curClass.SRC);
-				curClass._SHADER = this.shader;
-			}
-		}
-	}
-	,setPriority: function(v) {
-		this.priority = v;
-	}
-	,getParamValue: function(index) {
-		throw new js__$Boot_HaxeError("assert");
-	}
-	,getParamFloatValue: function(index) {
-		throw new js__$Boot_HaxeError("assert");
-	}
-	,updateConstants: function(globals) {
-		throw new js__$Boot_HaxeError("assert");
-	}
-	,updateConstantsFinal: function(globals) {
-		var c = this.shader.consts;
-		while(c != null) {
-			if(c.globalId == 0) {
-				c = c.next;
-				continue;
-			}
-			var v = globals.map.h[c.globalId];
-			var _g = c.v.type;
-			switch(_g._hx_index) {
-			case 1:
-				var v1 = v;
-				if(v1 >>> c.bits != 0) {
-					throw new js__$Boot_HaxeError("Constant " + c.v.name + " is outside range (" + v1 + " > " + ((1 << c.bits) - 1) + ")");
-				}
-				this.constBits |= v1 << c.pos;
-				break;
-			case 2:
-				var v2 = v;
-				if(v2) {
-					this.constBits |= 1 << c.pos;
-				}
-				break;
-			case 17:
-				var count = _g.size;
-				if(v == null) {
-					c = c.next;
-					continue;
-				}
-				var v3 = v;
-				var sel = v3.channel;
-				if(v3.texture == null) {
-					sel = hxsl_Channel.Unknown;
-				} else if(sel == null || sel == hxsl_Channel.Unknown) {
-					switch(count) {
-					case 1:
-						if(v3.texture.format == h3d_mat_Texture.nativeFormat) {
-							sel = hxsl_Channel.PackedFloat;
-						} else {
-							throw new js__$Boot_HaxeError("Constant " + c.v.name + " does not define channel select value");
-						}
-						break;
-					case 3:
-						if(v3.texture.format == h3d_mat_Texture.nativeFormat) {
-							sel = hxsl_Channel.PackedNormal;
-						} else {
-							throw new js__$Boot_HaxeError("Constant " + c.v.name + " does not define channel select value");
-						}
-						break;
-					default:
-						throw new js__$Boot_HaxeError("Constant " + c.v.name + " does not define channel select value");
-					}
-				}
-				this.constBits |= (globals.allocChannelID(v3.texture) << 3 | sel._hx_index) << c.pos;
-				break;
-			default:
-				throw new js__$Boot_HaxeError("assert");
-			}
-			c = c.next;
-		}
-		var _this = this.shader;
-		var constBits = this.constBits;
-		var i = _this.instanceCache.h[constBits];
-		this.instance = i == null ? _this.makeInstance(constBits) : i;
-	}
-	,toString: function() {
-		var c = js_Boot.getClass(this);
-		return c.__name__;
-	}
-	,__class__: hxsl_Shader
-};
-var h3d_shader_ScreenShader = function() {
-	this.flipY__ = 0;
-	hxsl_Shader.call(this);
-};
-$hxClasses["h3d.shader.ScreenShader"] = h3d_shader_ScreenShader;
-h3d_shader_ScreenShader.__name__ = "h3d.shader.ScreenShader";
-h3d_shader_ScreenShader.__super__ = hxsl_Shader;
-h3d_shader_ScreenShader.prototype = $extend(hxsl_Shader.prototype,{
-	updateConstants: function(globals) {
-		this.constBits = 0;
-		this.updateConstantsFinal(globals);
-	}
-	,getParamValue: function(index) {
-		if(index == 0) {
-			return this.flipY__;
-		}
-		return null;
-	}
-	,getParamFloatValue: function(index) {
-		if(index == 0) {
-			return this.flipY__;
-		}
-		return 0.;
-	}
-	,__class__: h3d_shader_ScreenShader
 });
 var h3d_pass__$Border_BorderShader = function() {
 	this.color__ = new h3d_Vector();
@@ -21009,6 +21523,38 @@ h3d_pass_ColorMatrix.prototype = $extend(h3d_pass_ScreenFx.prototype,{
 	}
 	,__class__: h3d_pass_ColorMatrix
 });
+var h3d_pass__$Copy_ArrayCopyShader = function() {
+	this.layer__ = 0;
+	h3d_shader_ScreenShader.call(this);
+};
+$hxClasses["h3d.pass._Copy.ArrayCopyShader"] = h3d_pass__$Copy_ArrayCopyShader;
+h3d_pass__$Copy_ArrayCopyShader.__name__ = "h3d.pass._Copy.ArrayCopyShader";
+h3d_pass__$Copy_ArrayCopyShader.__super__ = h3d_shader_ScreenShader;
+h3d_pass__$Copy_ArrayCopyShader.prototype = $extend(h3d_shader_ScreenShader.prototype,{
+	updateConstants: function(globals) {
+		this.constBits = 0;
+		this.updateConstantsFinal(globals);
+	}
+	,getParamValue: function(index) {
+		switch(index) {
+		case 0:
+			return this.flipY__;
+		case 1:
+			return this.texture__;
+		case 2:
+			return this.layer__;
+		default:
+		}
+		return null;
+	}
+	,getParamFloatValue: function(index) {
+		if(index == 0) {
+			return this.flipY__;
+		}
+		return 0.;
+	}
+	,__class__: h3d_pass__$Copy_ArrayCopyShader
+});
 var h3d_pass__$Copy_CopyShader = function() {
 	h3d_shader_ScreenShader.call(this);
 };
@@ -21043,7 +21589,7 @@ var h3d_pass_Copy = function() {
 };
 $hxClasses["h3d.pass.Copy"] = h3d_pass_Copy;
 h3d_pass_Copy.__name__ = "h3d.pass.Copy";
-h3d_pass_Copy.run = function(from,to,blend,pass) {
+h3d_pass_Copy.run = function(from,to,blend,pass,layer) {
 	var engine = h3d_Engine.CURRENT;
 	if(to != null && from != null && (blend == null || blend == h2d_BlendMode.None) && pass == null && engine.driver.copyTexture(from,to)) {
 		return;
@@ -21053,7 +21599,7 @@ h3d_pass_Copy.run = function(from,to,blend,pass) {
 		inst = new h3d_pass_Copy();
 		engine.resCache.set(h3d_pass_Copy,inst);
 	}
-	inst.apply(from,to,blend,pass);
+	inst.apply(from,to,blend,pass,layer);
 	return;
 };
 h3d_pass_Copy.__super__ = h3d_pass_ScreenFx;
@@ -21368,7 +21914,6 @@ h3d_pass_Shadows.prototype = $extend(h3d_pass_Default.prototype,{
 	,syncShader: function(texture) {
 	}
 	,filterPasses: function(passes) {
-		var _gthis = this;
 		if(!this.ctx.computingStatic) {
 			switch(this.mode._hx_index) {
 			case 0:
@@ -21387,7 +21932,7 @@ h3d_pass_Shadows.prototype = $extend(h3d_pass_Default.prototype,{
 				this.syncShader(this.staticTexture);
 				return false;
 			case 2:
-				break;
+				return true;
 			case 3:
 				var tmp1;
 				if(this.staticTexture != null) {
@@ -21399,15 +21944,13 @@ h3d_pass_Shadows.prototype = $extend(h3d_pass_Default.prototype,{
 				if(tmp1) {
 					this.staticTexture = this.createDefaultShadowMap();
 				}
-				break;
+				return true;
 			}
-		}
-		switch(this.mode._hx_index) {
-		case 0:
-			passes.clear();
-			break;
-		case 1:
-			if(this.ctx.computingStatic) {
+		} else {
+			switch(this.mode._hx_index) {
+			case 0:
+				return false;
+			case 1:
 				var head = null;
 				var prev = null;
 				var disc = passes.discarded;
@@ -21440,51 +21983,45 @@ h3d_pass_Shadows.prototype = $extend(h3d_pass_Default.prototype,{
 				passes.current = head;
 				passes.discarded = disc;
 				passes.lastDisc = discQueue;
-			} else {
-				passes.clear();
-			}
-			break;
-		case 2:
-			if(this.ctx.computingStatic) {
-				passes.clear();
-			}
-			break;
-		case 3:
-			var head1 = null;
-			var prev1 = null;
-			var disc1 = passes.discarded;
-			var discQueue1 = passes.lastDisc;
-			var cur1 = passes.current;
-			while(cur1 != null) {
-				if(cur1.pass.isStatic == _gthis.ctx.computingStatic) {
-					if(head1 == null) {
-						prev1 = cur1;
-						head1 = prev1;
+				return true;
+			case 2:
+				return false;
+			case 3:
+				var head1 = null;
+				var prev1 = null;
+				var disc1 = passes.discarded;
+				var discQueue1 = passes.lastDisc;
+				var cur1 = passes.current;
+				while(cur1 != null) {
+					if(cur1.pass.isStatic == true) {
+						if(head1 == null) {
+							prev1 = cur1;
+							head1 = prev1;
+						} else {
+							prev1.next = cur1;
+							prev1 = cur1;
+						}
+					} else if(disc1 == null) {
+						discQueue1 = cur1;
+						disc1 = discQueue1;
 					} else {
-						prev1.next = cur1;
-						prev1 = cur1;
+						discQueue1.next = cur1;
+						discQueue1 = cur1;
 					}
-				} else if(disc1 == null) {
-					discQueue1 = cur1;
-					disc1 = discQueue1;
-				} else {
-					discQueue1.next = cur1;
-					discQueue1 = cur1;
+					cur1 = cur1.next;
 				}
-				cur1 = cur1.next;
+				if(prev1 != null) {
+					prev1.next = null;
+				}
+				if(discQueue1 != null) {
+					discQueue1.next = null;
+				}
+				passes.current = head1;
+				passes.discarded = disc1;
+				passes.lastDisc = discQueue1;
+				return true;
 			}
-			if(prev1 != null) {
-				prev1.next = null;
-			}
-			if(discQueue1 != null) {
-				discQueue1.next = null;
-			}
-			passes.current = head1;
-			passes.discarded = disc1;
-			passes.lastDisc = discQueue1;
-			break;
 		}
-		return true;
 	}
 	,__class__: h3d_pass_Shadows
 });
@@ -22142,21 +22679,7 @@ var h3d_pass_PassList = function(current) {
 $hxClasses["h3d.pass.PassList"] = h3d_pass_PassList;
 h3d_pass_PassList.__name__ = "h3d.pass.PassList";
 h3d_pass_PassList.prototype = {
-	clear: function() {
-		if(this.current == null) {
-			return;
-		}
-		if(this.discarded == null) {
-			this.discarded = this.current;
-		} else {
-			this.lastDisc.next = this.current;
-		}
-		var p = this.current;
-		while(p.next != null) p = p.next;
-		this.lastDisc = p;
-		this.current = null;
-	}
-	,__class__: h3d_pass_PassList
+	__class__: h3d_pass_PassList
 };
 var h3d_pass_PassObject = function() {
 	this.texture = 0;
@@ -23181,7 +23704,13 @@ $hxClasses["h3d.scene.Object"] = h3d_scene_Object;
 h3d_scene_Object.__name__ = "h3d.scene.Object";
 h3d_scene_Object.__interfaces__ = [hxd_impl__$Serializable_NoSerializeSupport];
 h3d_scene_Object.prototype = {
-	localToGlobal: function(pt) {
+	set_cullingCollider: function(c) {
+		this.cullingCollider = c;
+		var f = 4096;
+		this.flags &= ~f;
+		return c;
+	}
+	,localToGlobal: function(pt) {
 		this.syncPos();
 		if(pt == null) {
 			pt = new h3d_Vector();
@@ -23508,17 +24037,28 @@ h3d_scene_Object.prototype = {
 		if((this.flags & 2) == 0 || (this.flags & 4) != 0 && (this.flags & 128) != 0) {
 			ctx.visibleFlag = false;
 		}
+		if(ctx.cullingCollider != null && (this.cullingCollider == null || (this.flags & 4096) != 0)) {
+			this.set_cullingCollider(ctx.cullingCollider);
+			var f = 4096;
+			this.flags |= f;
+		} else if((this.flags & 4096) != 0) {
+			this.set_cullingCollider(null);
+		}
+		var prevCollider = ctx.cullingCollider;
+		if((this.flags & 128) != 0) {
+			ctx.cullingCollider = this.cullingCollider;
+		}
 		var changed = (this.flags & 1) != 0;
 		if(changed) {
 			this.calcAbsPos();
 		}
 		this.sync(ctx);
-		var f = 1;
+		var f1 = 1;
 		var b = this.follow != null;
 		if(b) {
-			this.flags |= f;
+			this.flags |= f1;
 		} else {
-			this.flags &= ~f;
+			this.flags &= ~f1;
 		}
 		this.lastFrame = ctx.frame;
 		var p = 0;
@@ -23530,12 +24070,12 @@ h3d_scene_Object.prototype = {
 			}
 			if(c.lastFrame != ctx.frame) {
 				if(changed) {
-					var f1 = 1;
+					var f2 = 1;
 					var b1 = true;
 					if(b1) {
-						c.flags |= f1;
+						c.flags |= f2;
 					} else {
-						c.flags &= ~f1;
+						c.flags &= ~f2;
 					}
 				}
 				c.syncRec(ctx);
@@ -23548,6 +24088,7 @@ h3d_scene_Object.prototype = {
 			}
 		}
 		ctx.visibleFlag = old1;
+		ctx.cullingCollider = prevCollider;
 	}
 	,syncPos: function() {
 		if(this.parent != null) {
@@ -25567,6 +26108,44 @@ h3d_shader_DirShadow.prototype = $extend(hxsl_Shader.prototype,{
 		return 0.;
 	}
 	,__class__: h3d_shader_DirShadow
+});
+var h3d_shader_GenTexture = function() {
+	this.color__ = new h3d_Vector();
+	this.mode__ = 0;
+	h3d_shader_ScreenShader.call(this);
+};
+$hxClasses["h3d.shader.GenTexture"] = h3d_shader_GenTexture;
+h3d_shader_GenTexture.__name__ = "h3d.shader.GenTexture";
+h3d_shader_GenTexture.__super__ = h3d_shader_ScreenShader;
+h3d_shader_GenTexture.prototype = $extend(h3d_shader_ScreenShader.prototype,{
+	updateConstants: function(globals) {
+		this.constBits = 0;
+		var v = this.mode__;
+		if(v >>> 8 != 0) {
+			throw new js__$Boot_HaxeError("mode" + " is out of range " + v + ">" + 255);
+		}
+		this.constBits |= v;
+		this.updateConstantsFinal(globals);
+	}
+	,getParamValue: function(index) {
+		switch(index) {
+		case 0:
+			return this.flipY__;
+		case 1:
+			return this.mode__;
+		case 2:
+			return this.color__;
+		default:
+		}
+		return null;
+	}
+	,getParamFloatValue: function(index) {
+		if(index == 0) {
+			return this.flipY__;
+		}
+		return 0.;
+	}
+	,__class__: h3d_shader_GenTexture
 });
 var h3d_shader_LineShader = function(width,lengthScale) {
 	if(lengthScale == null) {
@@ -29211,7 +29790,35 @@ var hxd_BitmapData = function(width,height) {
 $hxClasses["hxd.BitmapData"] = hxd_BitmapData;
 hxd_BitmapData.__name__ = "hxd.BitmapData";
 hxd_BitmapData.prototype = {
-	getPixels: function() {
+	clear: function(color) {
+		this.fill(0,0,this.ctx.canvas.width,this.ctx.canvas.height,color);
+	}
+	,fill: function(x,y,width,height,color) {
+		this.ctx.fillStyle = "rgba(" + (color >> 16 & 255) + ", " + (color >> 8 & 255) + ", " + (color & 255) + ", " + (color >>> 24) / 255 + ")";
+		this.ctx.fillRect(x,y,width,height);
+	}
+	,setPixel: function(x,y,c) {
+		var i = this.lockImage;
+		if(i != null) {
+			var a = x + y * i.width << 2;
+			i.data[a] = c >> 16 & 255;
+			i.data[a | 1] = c >> 8 & 255;
+			i.data[a | 2] = c & 255;
+			i.data[a | 3] = c >>> 24 & 255;
+			return;
+		}
+		var i1 = this.pixel;
+		if(i1 == null) {
+			i1 = this.ctx.createImageData(1,1);
+			this.pixel = i1;
+		}
+		i1.data[0] = c >> 16 & 255;
+		i1.data[1] = c >> 8 & 255;
+		i1.data[2] = c & 255;
+		i1.data[3] = c >>> 24 & 255;
+		this.ctx.putImageData(i1,x,y);
+	}
+	,getPixels: function() {
 		var w = this.ctx.canvas.width;
 		var h = this.ctx.canvas.height;
 		var data = this.ctx.getImageData(0,0,w,h).data;
@@ -30102,7 +30709,9 @@ hxd_SceneEvents.prototype = {
 				var i2 = _g4[_g3];
 				++_g3;
 				if(i2 == null) {
+					event.kind = hxd_EventKind.EReleaseOutside;
 					this.dispatchListeners(event);
+					event.kind = hxd_EventKind.ERelease;
 				} else {
 					var s1 = i2.getInteractiveScene();
 					if(s1 == null) {
@@ -30590,6 +31199,9 @@ hxd_Window.prototype = {
 	,onFocus: function(b) {
 		this.event(new hxd_Event(b ? hxd_EventKind.EFocus : hxd_EventKind.EFocusLost));
 		this.focused = b;
+	}
+	,get_isFocused: function() {
+		return this.focused;
 	}
 	,set_displayMode: function(m) {
 		var doc = window.document;
@@ -34782,7 +35394,7 @@ var hxsl_FunctionKind = $hxEnums["hxsl.FunctionKind"] = { __ename__ : true, __co
 	,Helper: {_hx_index:3,__enum__:"hxsl.FunctionKind",toString:$estr}
 };
 hxsl_FunctionKind.__empty_constructs__ = [hxsl_FunctionKind.Vertex,hxsl_FunctionKind.Fragment,hxsl_FunctionKind.Init,hxsl_FunctionKind.Helper];
-var hxsl_TGlobal = $hxEnums["hxsl.TGlobal"] = { __ename__ : true, __constructs__ : ["Radians","Degrees","Sin","Cos","Tan","Asin","Acos","Atan","Pow","Exp","Log","Exp2","Log2","Sqrt","Inversesqrt","Abs","Sign","Floor","Ceil","Fract","Mod","Min","Max","Clamp","Mix","Step","Smoothstep","Length","Distance","Dot","Cross","Normalize","LReflect","Texture","TextureLod","Texel","TexelLod","ToInt","ToFloat","ToBool","Vec2","Vec3","Vec4","IVec2","IVec3","IVec4","BVec2","BVec3","BVec4","Mat2","Mat3","Mat4","Mat3x4","Saturate","Pack","Unpack","PackNormal","UnpackNormal","ScreenToUv","UvToScreen","DFdx","DFdy","Fwidth","ChannelRead","ChannelReadLod","ChannelFetch","ChannelFetchLod","Trace","VertexID","InstanceID"]
+var hxsl_TGlobal = $hxEnums["hxsl.TGlobal"] = { __ename__ : true, __constructs__ : ["Radians","Degrees","Sin","Cos","Tan","Asin","Acos","Atan","Pow","Exp","Log","Exp2","Log2","Sqrt","Inversesqrt","Abs","Sign","Floor","Ceil","Fract","Mod","Min","Max","Clamp","Mix","Step","Smoothstep","Length","Distance","Dot","Cross","Normalize","LReflect","Texture","TextureLod","Texel","TexelLod","ToInt","ToFloat","ToBool","Vec2","Vec3","Vec4","IVec2","IVec3","IVec4","BVec2","BVec3","BVec4","Mat2","Mat3","Mat4","Mat3x4","Saturate","Pack","Unpack","PackNormal","UnpackNormal","ScreenToUv","UvToScreen","DFdx","DFdy","Fwidth","ChannelRead","ChannelReadLod","ChannelFetch","ChannelFetchLod","Trace","VertexID","InstanceID","FragCoord"]
 	,Radians: {_hx_index:0,__enum__:"hxsl.TGlobal",toString:$estr}
 	,Degrees: {_hx_index:1,__enum__:"hxsl.TGlobal",toString:$estr}
 	,Sin: {_hx_index:2,__enum__:"hxsl.TGlobal",toString:$estr}
@@ -34853,8 +35465,9 @@ var hxsl_TGlobal = $hxEnums["hxsl.TGlobal"] = { __ename__ : true, __constructs__
 	,Trace: {_hx_index:67,__enum__:"hxsl.TGlobal",toString:$estr}
 	,VertexID: {_hx_index:68,__enum__:"hxsl.TGlobal",toString:$estr}
 	,InstanceID: {_hx_index:69,__enum__:"hxsl.TGlobal",toString:$estr}
+	,FragCoord: {_hx_index:70,__enum__:"hxsl.TGlobal",toString:$estr}
 };
-hxsl_TGlobal.__empty_constructs__ = [hxsl_TGlobal.Radians,hxsl_TGlobal.Degrees,hxsl_TGlobal.Sin,hxsl_TGlobal.Cos,hxsl_TGlobal.Tan,hxsl_TGlobal.Asin,hxsl_TGlobal.Acos,hxsl_TGlobal.Atan,hxsl_TGlobal.Pow,hxsl_TGlobal.Exp,hxsl_TGlobal.Log,hxsl_TGlobal.Exp2,hxsl_TGlobal.Log2,hxsl_TGlobal.Sqrt,hxsl_TGlobal.Inversesqrt,hxsl_TGlobal.Abs,hxsl_TGlobal.Sign,hxsl_TGlobal.Floor,hxsl_TGlobal.Ceil,hxsl_TGlobal.Fract,hxsl_TGlobal.Mod,hxsl_TGlobal.Min,hxsl_TGlobal.Max,hxsl_TGlobal.Clamp,hxsl_TGlobal.Mix,hxsl_TGlobal.Step,hxsl_TGlobal.Smoothstep,hxsl_TGlobal.Length,hxsl_TGlobal.Distance,hxsl_TGlobal.Dot,hxsl_TGlobal.Cross,hxsl_TGlobal.Normalize,hxsl_TGlobal.LReflect,hxsl_TGlobal.Texture,hxsl_TGlobal.TextureLod,hxsl_TGlobal.Texel,hxsl_TGlobal.TexelLod,hxsl_TGlobal.ToInt,hxsl_TGlobal.ToFloat,hxsl_TGlobal.ToBool,hxsl_TGlobal.Vec2,hxsl_TGlobal.Vec3,hxsl_TGlobal.Vec4,hxsl_TGlobal.IVec2,hxsl_TGlobal.IVec3,hxsl_TGlobal.IVec4,hxsl_TGlobal.BVec2,hxsl_TGlobal.BVec3,hxsl_TGlobal.BVec4,hxsl_TGlobal.Mat2,hxsl_TGlobal.Mat3,hxsl_TGlobal.Mat4,hxsl_TGlobal.Mat3x4,hxsl_TGlobal.Saturate,hxsl_TGlobal.Pack,hxsl_TGlobal.Unpack,hxsl_TGlobal.PackNormal,hxsl_TGlobal.UnpackNormal,hxsl_TGlobal.ScreenToUv,hxsl_TGlobal.UvToScreen,hxsl_TGlobal.DFdx,hxsl_TGlobal.DFdy,hxsl_TGlobal.Fwidth,hxsl_TGlobal.ChannelRead,hxsl_TGlobal.ChannelReadLod,hxsl_TGlobal.ChannelFetch,hxsl_TGlobal.ChannelFetchLod,hxsl_TGlobal.Trace,hxsl_TGlobal.VertexID,hxsl_TGlobal.InstanceID];
+hxsl_TGlobal.__empty_constructs__ = [hxsl_TGlobal.Radians,hxsl_TGlobal.Degrees,hxsl_TGlobal.Sin,hxsl_TGlobal.Cos,hxsl_TGlobal.Tan,hxsl_TGlobal.Asin,hxsl_TGlobal.Acos,hxsl_TGlobal.Atan,hxsl_TGlobal.Pow,hxsl_TGlobal.Exp,hxsl_TGlobal.Log,hxsl_TGlobal.Exp2,hxsl_TGlobal.Log2,hxsl_TGlobal.Sqrt,hxsl_TGlobal.Inversesqrt,hxsl_TGlobal.Abs,hxsl_TGlobal.Sign,hxsl_TGlobal.Floor,hxsl_TGlobal.Ceil,hxsl_TGlobal.Fract,hxsl_TGlobal.Mod,hxsl_TGlobal.Min,hxsl_TGlobal.Max,hxsl_TGlobal.Clamp,hxsl_TGlobal.Mix,hxsl_TGlobal.Step,hxsl_TGlobal.Smoothstep,hxsl_TGlobal.Length,hxsl_TGlobal.Distance,hxsl_TGlobal.Dot,hxsl_TGlobal.Cross,hxsl_TGlobal.Normalize,hxsl_TGlobal.LReflect,hxsl_TGlobal.Texture,hxsl_TGlobal.TextureLod,hxsl_TGlobal.Texel,hxsl_TGlobal.TexelLod,hxsl_TGlobal.ToInt,hxsl_TGlobal.ToFloat,hxsl_TGlobal.ToBool,hxsl_TGlobal.Vec2,hxsl_TGlobal.Vec3,hxsl_TGlobal.Vec4,hxsl_TGlobal.IVec2,hxsl_TGlobal.IVec3,hxsl_TGlobal.IVec4,hxsl_TGlobal.BVec2,hxsl_TGlobal.BVec3,hxsl_TGlobal.BVec4,hxsl_TGlobal.Mat2,hxsl_TGlobal.Mat3,hxsl_TGlobal.Mat4,hxsl_TGlobal.Mat3x4,hxsl_TGlobal.Saturate,hxsl_TGlobal.Pack,hxsl_TGlobal.Unpack,hxsl_TGlobal.PackNormal,hxsl_TGlobal.UnpackNormal,hxsl_TGlobal.ScreenToUv,hxsl_TGlobal.UvToScreen,hxsl_TGlobal.DFdx,hxsl_TGlobal.DFdy,hxsl_TGlobal.Fwidth,hxsl_TGlobal.ChannelRead,hxsl_TGlobal.ChannelReadLod,hxsl_TGlobal.ChannelFetch,hxsl_TGlobal.ChannelFetchLod,hxsl_TGlobal.Trace,hxsl_TGlobal.VertexID,hxsl_TGlobal.InstanceID,hxsl_TGlobal.FragCoord];
 var hxsl_Component = $hxEnums["hxsl.Component"] = { __ename__ : true, __constructs__ : ["X","Y","Z","W"]
 	,X: {_hx_index:0,__enum__:"hxsl.Component",toString:$estr}
 	,Y: {_hx_index:1,__enum__:"hxsl.Component",toString:$estr}
@@ -37475,6 +38088,28 @@ hxsl_Eval.prototype = {
 		}
 		return _g.toString();
 	}
+	,ifBlock: function(e) {
+		var tmp;
+		if(e != null) {
+			var _g = e.e;
+			var tmp1;
+			if(_g._hx_index == 10) {
+				var _g3 = _g.eelse;
+				var _g2 = _g.eif;
+				var _g1 = _g.econd;
+				tmp1 = true;
+			} else {
+				tmp1 = false;
+			}
+			tmp = !tmp1;
+		} else {
+			tmp = true;
+		}
+		if(tmp) {
+			return e;
+		}
+		return { e : hxsl_TExprDef.TBlock([e]), t : e.t, p : e.p};
+	}
 	,evalExpr: function(e,isVal) {
 		if(isVal == null) {
 			isVal = true;
@@ -38778,6 +39413,8 @@ hxsl_Eval.prototype = {
 							eelse = null;
 						}
 					}
+					eif = this.ifBlock(eif);
+					eelse = this.ifBlock(eelse);
 					d = hxsl_TExprDef.TIf(econd1,eif,eelse);
 				}
 			} else if(isVal && eelse != null && this.eliminateConditionals) {
@@ -38791,6 +39428,8 @@ hxsl_Eval.prototype = {
 						eelse = null;
 					}
 				}
+				eif = this.ifBlock(eif);
+				eelse = this.ifBlock(eelse);
 				d = hxsl_TExprDef.TIf(econd1,eif,eelse);
 			}
 			break;
@@ -38839,25 +39478,25 @@ hxsl_Eval.prototype = {
 										this.constants.remove(v12.id);
 										e13 = hxsl_TExprDef.TBlock(out1);
 									} else {
-										e13 = hxsl_TExprDef.TFor(v23,it1,this.evalExpr(loop,false));
+										e13 = hxsl_TExprDef.TFor(v23,it1,this.ifBlock(this.evalExpr(loop,false)));
 									}
 								} else {
-									e13 = hxsl_TExprDef.TFor(v23,it1,this.evalExpr(loop,false));
+									e13 = hxsl_TExprDef.TFor(v23,it1,this.ifBlock(this.evalExpr(loop,false)));
 								}
 							} else {
-								e13 = hxsl_TExprDef.TFor(v23,it1,this.evalExpr(loop,false));
+								e13 = hxsl_TExprDef.TFor(v23,it1,this.ifBlock(this.evalExpr(loop,false)));
 							}
 						} else {
-							e13 = hxsl_TExprDef.TFor(v23,it1,this.evalExpr(loop,false));
+							e13 = hxsl_TExprDef.TFor(v23,it1,this.ifBlock(this.evalExpr(loop,false)));
 						}
 					} else {
-						e13 = hxsl_TExprDef.TFor(v23,it1,this.evalExpr(loop,false));
+						e13 = hxsl_TExprDef.TFor(v23,it1,this.ifBlock(this.evalExpr(loop,false)));
 					}
 				} else {
-					e13 = hxsl_TExprDef.TFor(v23,it1,this.evalExpr(loop,false));
+					e13 = hxsl_TExprDef.TFor(v23,it1,this.ifBlock(this.evalExpr(loop,false)));
 				}
 			} else {
-				e13 = hxsl_TExprDef.TFor(v23,it1,this.evalExpr(loop,false));
+				e13 = hxsl_TExprDef.TFor(v23,it1,this.ifBlock(this.evalExpr(loop,false)));
 			}
 			this.varMap.remove(v12);
 			d = e13;
@@ -38977,7 +39616,7 @@ hxsl_Eval.prototype = {
 			var cond = _g.e;
 			var cond1 = this.evalExpr(cond);
 			var loop2 = this.evalExpr(loop1,false);
-			d = hxsl_TExprDef.TWhile(cond1,loop2,normalWhile);
+			d = hxsl_TExprDef.TWhile(cond1,this.ifBlock(loop2),normalWhile);
 			break;
 		case 20:
 			var e19 = _g.e;
@@ -44023,7 +44662,7 @@ var ui_Hud = function() {
 	this.invalidated = true;
 	dn_Process.call(this,Client.ME);
 	this.createRootInLayers(Client.ME.root,Const.DP_UI);
-	this.left = new h2d_Layers(this.root);
+	this.toolBar = new h2d_Flow(this.root);
 };
 $hxClasses["ui.Hud"] = ui_Hud;
 ui_Hud.__name__ = "ui.Hud";
@@ -44038,63 +44677,61 @@ ui_Hud.prototype = $extend(dn_Process.prototype,{
 	}
 	,render: function() {
 		var _gthis = this;
-		this.left.removeChildren();
+		this.toolBar.removeChildren();
+		this.toolBar.set_layout((dn_Process.CUSTOM_STAGE_HEIGHT > 0 ? dn_Process.CUSTOM_STAGE_HEIGHT : hxd_Window.getInstance().get_height()) <= (dn_Process.CUSTOM_STAGE_WIDTH > 0 ? dn_Process.CUSTOM_STAGE_WIDTH : hxd_Window.getInstance().get_width()) ? h2d_FlowLayout.Vertical : h2d_FlowLayout.Horizontal);
+		this.toolBar.set_horizontalAlign(h2d_FlowAlign.Left);
+		this.toolBar.set_verticalAlign(h2d_FlowAlign.Top);
 		var allColors = [Client.ME.theme.bg].concat(Client.ME.theme.palette);
-		var x = (dn_Process.CUSTOM_STAGE_HEIGHT > 0 ? dn_Process.CUSTOM_STAGE_HEIGHT : hxd_Window.getInstance().get_height()) / Const.SCALE / (allColors.length + 1);
-		var btHei;
+		var barSize = 0.07 * ((dn_Process.CUSTOM_STAGE_HEIGHT > 0 ? dn_Process.CUSTOM_STAGE_HEIGHT : hxd_Window.getInstance().get_height()) <= (dn_Process.CUSTOM_STAGE_WIDTH > 0 ? dn_Process.CUSTOM_STAGE_WIDTH : hxd_Window.getInstance().get_width()) ? dn_Process.CUSTOM_STAGE_WIDTH > 0 ? dn_Process.CUSTOM_STAGE_WIDTH : hxd_Window.getInstance().get_width() : dn_Process.CUSTOM_STAGE_HEIGHT > 0 ? dn_Process.CUSTOM_STAGE_HEIGHT : hxd_Window.getInstance().get_height()) / Const.SCALE;
+		var x = ((dn_Process.CUSTOM_STAGE_HEIGHT > 0 ? dn_Process.CUSTOM_STAGE_HEIGHT : hxd_Window.getInstance().get_height()) <= (dn_Process.CUSTOM_STAGE_WIDTH > 0 ? dn_Process.CUSTOM_STAGE_WIDTH : hxd_Window.getInstance().get_width()) ? dn_Process.CUSTOM_STAGE_HEIGHT > 0 ? dn_Process.CUSTOM_STAGE_HEIGHT : hxd_Window.getInstance().get_height() : dn_Process.CUSTOM_STAGE_WIDTH > 0 ? dn_Process.CUSTOM_STAGE_WIDTH : hxd_Window.getInstance().get_width()) / Const.SCALE / (allColors.length + 1);
+		var btSize;
 		if(x > .0) {
 			var t = x + .5 | 0;
-			btHei = t < x ? t + 1 : t;
+			btSize = t < x ? t + 1 : t;
 		} else if(x < .0) {
 			var t1 = x - .5 | 0;
-			btHei = t1 < x ? t1 + 1 : t1;
+			btSize = t1 < x ? t1 + 1 : t1;
 		} else {
-			btHei = 0;
+			btSize = 0;
 		}
-		var btWid = 0.07 * (dn_Process.CUSTOM_STAGE_WIDTH > 0 ? dn_Process.CUSTOM_STAGE_WIDTH : hxd_Window.getInstance().get_width()) / Const.SCALE;
-		var i = new h2d_Interactive(btWid,btHei,this.left);
-		i.propagateEvents = true;
-		i.backgroundColor = (255. | 0) << 24 | 16777215;
-		i.onClick = function(_) {
-			Client.ME.baseBrushSize = Client.ME.baseBrushSize == 10 ? 50 : 10;
+		var createButton = function(col,cb) {
+			var i = new h2d_Interactive((dn_Process.CUSTOM_STAGE_HEIGHT > 0 ? dn_Process.CUSTOM_STAGE_HEIGHT : hxd_Window.getInstance().get_height()) <= (dn_Process.CUSTOM_STAGE_WIDTH > 0 ? dn_Process.CUSTOM_STAGE_WIDTH : hxd_Window.getInstance().get_width()) ? barSize : btSize,(dn_Process.CUSTOM_STAGE_HEIGHT > 0 ? dn_Process.CUSTOM_STAGE_HEIGHT : hxd_Window.getInstance().get_height()) <= (dn_Process.CUSTOM_STAGE_WIDTH > 0 ? dn_Process.CUSTOM_STAGE_WIDTH : hxd_Window.getInstance().get_width()) ? btSize : barSize,_gthis.toolBar);
+			i.propagateEvents = true;
+			i.backgroundColor = (255. | 0) << 24 | col;
+			i.onPush = function(e) {
+				e.propagate = false;
+				cb(i);
+			};
+			i.onClick = function(e1) {
+				e1.propagate = false;
+			};
+			return i;
 		};
-		var idx = 1;
+		var i1 = createButton(16777215,function(i2) {
+			Client.ME.baseBrushSize = Client.ME.baseBrushSize == 10 ? 50 : 10;
+		});
 		var active = null;
 		var _g = 0;
 		while(_g < allColors.length) {
 			var c = [allColors[_g]];
 			++_g;
-			var i1 = [new h2d_Interactive(btWid,btHei,this.left)];
-			i1[0].propagateEvents = true;
-			i1[0].posChanged = true;
-			i1[0].y = btHei * idx;
-			if(c[0] == Client.ME.color) {
-				active = i1[0];
-				i1[0].width += 7;
-				i1[0].set_filter(new h2d_filter_Glow(c[0],1,64,null,null,true));
-				i1[0].backgroundColor = (255. | 0) << 24 | c[0];
-			} else {
-				var from_r = c[0] >> 16 & 255;
-				var from_g = c[0] >> 8 & 255;
-				var from_b = c[0] & 255;
-				var to = dn_Color.BLACK;
-				var ratio = 0.1;
-				ratio = ratio < 0 ? 0 : ratio > 1 ? 1 : ratio;
-				var c_r = from_r + (to.r - from_r) * ratio | 0;
-				var c_g = from_g + (to.g - from_g) * ratio | 0;
-				var c_b = from_b + (to.b - from_b) * ratio | 0;
-				i1[0].backgroundColor = (255. | 0) << 24 | (c_r << 16 | c_g << 8 | c_b);
-			}
-			i1[0].onPush = (function(i2,c1) {
-				return function(_1) {
+			var i3 = createButton(c[0],(function(c1) {
+				return function(i4) {
 					Client.ME.color = c1[0];
-					Client.ME.fx.pickColor(_gthis.left.x + i2[0].x,_gthis.left.y + i2[0].y,i2[0].width,i2[0].height,c1[0]);
+					Client.ME.fx.pickColor(_gthis.toolBar.x + i4.x,_gthis.toolBar.y + i4.y,i4.width,i4.height,c1[0]);
 					_gthis.invalidated = true;
 				};
-			})(i1,c);
-			++idx;
+			})(c));
+			if(c[0] == Client.ME.color) {
+				active = i3;
+				if((dn_Process.CUSTOM_STAGE_HEIGHT > 0 ? dn_Process.CUSTOM_STAGE_HEIGHT : hxd_Window.getInstance().get_height()) > (dn_Process.CUSTOM_STAGE_WIDTH > 0 ? dn_Process.CUSTOM_STAGE_WIDTH : hxd_Window.getInstance().get_width())) {
+					i3.height += 7;
+				} else {
+					i3.width += 7;
+				}
+				i3.set_filter(new h2d_filter_Glow(c[0],1,64,null,null,true));
+			}
 		}
-		this.left.over(active);
 	}
 	,postUpdate: function() {
 		dn_Process.prototype.postUpdate.call(this);
@@ -44309,7 +44946,7 @@ dn_Process.CUSTOM_STAGE_HEIGHT = -1;
 dn_Process.UNIQ_ID = 0;
 dn_Process.ROOTS = [];
 Const.FPS = 60;
-Const.AUTO_SCALE_TARGET_WID = 1000;
+Const.AUTO_SCALE_TARGET_WID = 200;
 Const.AUTO_SCALE_TARGET_HEI = -1;
 Const.SCALE = 1.0;
 Const.UI_SCALE = 1.0;
@@ -44332,8 +44969,8 @@ Xml.Comment = 3;
 Xml.DocType = 4;
 Xml.ProcessingInstruction = 5;
 Xml.Document = 6;
-dn_Color.BLACK = { r : 0, g : 0, b : 0};
-dn_Cooldown.__meta__ = { obj : { indexes : ["canvasFlushRequired","canvasFlushLocked","emitterLife","emitterTick"]}};
+dn_Cooldown.__meta__ = { obj : { indexes : ["canvasFlushRequired","canvasFlushLocked","emitterLife","emitterTick","check"]}};
+dn_data_GetText.CONTEXT = "||";
 dn_data_MoReader.MAGIC = -1794895138;
 dn_data_MoReader.MAGIC2 = -569244523;
 dn_heaps_Controller.UNIQ_ID = 0;
@@ -44349,6 +44986,8 @@ hxd_Pad.pads = new haxe_ds_IntMap();
 dn_heaps_GamePad.ALL = [];
 dn_heaps_GamePad.MAPPING = [hxd_Pad.DEFAULT_CONFIG.A,hxd_Pad.DEFAULT_CONFIG.B,hxd_Pad.DEFAULT_CONFIG.X,hxd_Pad.DEFAULT_CONFIG.Y,hxd_Pad.DEFAULT_CONFIG.back,hxd_Pad.DEFAULT_CONFIG.start,hxd_Pad.DEFAULT_CONFIG.LT,hxd_Pad.DEFAULT_CONFIG.RT,hxd_Pad.DEFAULT_CONFIG.LB,hxd_Pad.DEFAULT_CONFIG.RB,hxd_Pad.DEFAULT_CONFIG.analogClick,hxd_Pad.DEFAULT_CONFIG.ranalogClick,hxd_Pad.DEFAULT_CONFIG.dpadUp,hxd_Pad.DEFAULT_CONFIG.dpadDown,hxd_Pad.DEFAULT_CONFIG.dpadLeft,hxd_Pad.DEFAULT_CONFIG.dpadRight,hxd_Pad.DEFAULT_CONFIG.analogX,hxd_Pad.DEFAULT_CONFIG.analogX,hxd_Pad.DEFAULT_CONFIG.analogX,hxd_Pad.DEFAULT_CONFIG.analogY,hxd_Pad.DEFAULT_CONFIG.analogY,hxd_Pad.DEFAULT_CONFIG.analogY,hxd_Pad.DEFAULT_CONFIG.ranalogX,hxd_Pad.DEFAULT_CONFIG.ranalogX,hxd_Pad.DEFAULT_CONFIG.ranalogX,hxd_Pad.DEFAULT_CONFIG.ranalogY,hxd_Pad.DEFAULT_CONFIG.ranalogY,hxd_Pad.DEFAULT_CONFIG.ranalogY];
 dn_heaps_assets_Atlas.CACHE_ANIMS = [];
+h3d_shader_ScreenShader.SRC = "HXSLF2gzZC5zaGFkZXIuU2NyZWVuU2hhZGVyBwEFaW5wdXQNAQICCHBvc2l0aW9uBQoBAQADAnV2BQoBAQABAAAEBWZsaXBZAwIAAAUGb3V0cHV0DQICBghwb3NpdGlvbgUMBAUABwVjb2xvcgUMBAUABAAACApwaXhlbENvbG9yBQwEAAAJDGNhbGN1bGF0ZWRVVgUKBAAACghfX2luaXRfXw4GAAALBnZlcnRleA4GAAACAgoAAAUCBgQCBwUMAggFDAUMBgQCCQUKAgMFCgUKAAALAAAFAQYEAgYFDAkDKg4ECgICBQoAAAMGAQoCAgUKBAADAgQDAwEDAAAAAAAAAAADAQMAAAAAAADwPwMFDAUMAA";
+dn_heaps_filter__$OverlayTexture_OverlayBlendShader.SRC = "HXSLMmRuLmhlYXBzLmZpbHRlci5fT3ZlcmxheVRleHR1cmUuT3ZlcmxheUJsZW5kU2hhZGVyDQEFaW5wdXQNAQICCHBvc2l0aW9uBQoBAQADAnV2BQoBAQABAAAEBWZsaXBZAwIAAAUGb3V0cHV0DQICBghwb3NpdGlvbgUMBAUABwVjb2xvcgUMBAUABAAACApwaXhlbENvbG9yBQwEAAAJDGNhbGN1bGF0ZWRVVgUKBAAACgd0ZXh0dXJlCgIAAAsHb3ZlcmxheQoCAAAMBWFscGhhAwIAAA0HdXZTY2FsZQUKAgAADghfX2luaXRfXw4GAAAPBnZlcnRleA4GAAAQDGJsZW5kT3ZlcmxheQ4GAAARCGZyYWdtZW50DgYAAAQCDgAABQIGBAIHBQwCCAUMBQwGBAIJBQoCAwUKBQoAAA8AAAUBBgQCBgUMCQMqDgQKAgIFCgAAAwYBCgICBQoEAAMCBAMDAQMAAAAAAAAAAAMBAwAAAAAAAPA/AwUMBQwAAxACEgRiYXNlBQsEAAATBWJsZW5kBQsEAAAFCwUBDQkDGA4DBgMBAwAAAAAAAPA/AwYBBgEBAwAAAAAAAABAAwQGAwEDAAAAAAAA8D8DAhIFCwULBQsFCwQGAwEDAAAAAAAA8D8DAhMFCwULBQsFCwULBgEGAQEDAAAAAAAAAEADAhIFCwULAhMFCwULCQMZDgICEgULCQMpDgEBAwAAAAAAAOA/AwULBQsFCwAAAREAAAUDCBQLc291cmNlQ29sb3IFDAQAAAkDIQ4CAgoKAgMFCgUMAAgVDG92ZXJsYXlDb2xvcgUMBAAACQMYDgMJAyoOAQEDAAAAAAAA4D8DBQwJAyEOAgILCgYBAgMFCgINBQoFCgUMAgwDBQwABgQKAggFDJMDBQwJAyoOAgkCEA4CCgIUBQySAAULCgIVBQySAAULBQsKAhQFDAwAAwUMBQwA";
 dn_heaps_slib_SpriteLib.TMOD = NaN;
 h2d_Console.HIDE_LOG_TIMEOUT = 3.;
 h2d_HtmlText.REG_SPACES = new EReg("[\r\n\t ]+","g");
@@ -44395,9 +45034,9 @@ h3d_mat_Texture.UID = 0;
 h3d_mat_Texture.PREVENT_AUTO_DISPOSE = 2147483647;
 h3d_mat_Texture.nativeFormat = hxd_PixelFormat.RGBA;
 h3d_pass_Blur.__meta__ = { obj : { ignore : ["shader"]}};
-h3d_shader_ScreenShader.SRC = "HXSLF2gzZC5zaGFkZXIuU2NyZWVuU2hhZGVyBwEFaW5wdXQNAQICCHBvc2l0aW9uBQoBAQADAnV2BQoBAQABAAAEBWZsaXBZAwIAAAUGb3V0cHV0DQICBghwb3NpdGlvbgUMBAUABwVjb2xvcgUMBAUABAAACApwaXhlbENvbG9yBQwEAAAJDGNhbGN1bGF0ZWRVVgUKBAAACghfX2luaXRfXw4GAAALBnZlcnRleA4GAAACAgoAAAUCBgQCBwUMAggFDAUMBgQCCQUKAgMFCgUKAAALAAAFAQYEAgYFDAkDKg4ECgICBQoAAAMGAQoCAgUKBAADAgQDAwEDAAAAAAAAAAADAQMAAAAAAADwPwMFDAUMAA";
 h3d_pass__$Border_BorderShader.SRC = "HXSLHWgzZC5wYXNzLl9Cb3JkZXIuQm9yZGVyU2hhZGVyCQEFaW5wdXQNAQICCHBvc2l0aW9uBQoBAQADAnV2BQoBAQABAAAEBWZsaXBZAwIAAAUGb3V0cHV0DQICBghwb3NpdGlvbgUMBAUABwVjb2xvcgUMBAUABAAACApwaXhlbENvbG9yBQwEAAAJDGNhbGN1bGF0ZWRVVgUKBAAACgVjb2xvcgUMAgAACwhfX2luaXRfXw4GAAAMBnZlcnRleA4GAAANCGZyYWdtZW50DgYAAAMCCwAABQIGBAIHBQwCCAUMBQwGBAIJBQoCAwUKBQoAAAwAAAUBBgQCBgUMCQMqDgQKAgIFCgAAAwYBCgICBQoEAAMCBAMDAQMAAAAAAAAAAAMBAwAAAAAAAPA/AwUMBQwAAQ0AAAUBBgQCCAUMAgoFDAUMAA";
 h3d_pass_ColorMatrixShader.SRC = "HXSLGmgzZC5wYXNzLkNvbG9yTWF0cml4U2hhZGVyFQEFaW5wdXQNAQICCHBvc2l0aW9uBQoBAQADAnV2BQoBAQABAAAEBWZsaXBZAwIAAAUGb3V0cHV0DQICBghwb3NpdGlvbgUMBAUABwVjb2xvcgUMBAUABAAACApwaXhlbENvbG9yBQwEAAAJDGNhbGN1bGF0ZWRVVgUKBAAACgd0ZXh0dXJlCgIAAAsGbWF0cml4BwIAAAwIdXNlQWxwaGECAgABAAAAAAANB3VzZU1hc2sCAgABAAAAAAAOCm1hc2tJbnZlcnQCAgABAAAAAAAPD2hhc1NlY29uZE1hdHJpeAICAAEAAAAAABAHbWF0cml4MgcCAAARBG1hc2sKAgAAEghtYXNrTWF0QQULAgAAEwhtYXNrTWF0QgULAgAAFAltYXNrUG93ZXIDAgAAFQttYXNrQ2hhbm5lbAUMAgAAFghfX2luaXRfXw4GAAAXBnZlcnRleA4GAAAYBWFwcGx5DgYAABkIZnJhZ21lbnQOBgAABAIWAAAFAgYEAgcFDAIIBQwFDAYEAgkFCgIDBQoFCgAAFwAABQEGBAIGBQwJAyoOBAoCAgUKAAADBgEKAgIFCgQAAwIEAwMBAwAAAAAAAAAAAwEDAAAAAAAA8D8DBQwFDAADGAIaBWNvbG9yBQwEAAAbA21hdAcEAAAFDAUBDQsCDAIGAQIaBQwCGwcFDAYBCQMqDgIKAhoFDJIABQsBAwAAAAAAAPA/AwUMAhsHBQwFDAAAARkAAAUBCwINAgUFCBwFY29sb3IFDAQAAAkDIQ4CAgoKAgMFCgUMAAgdAnV2BQsEAAAJAykOAgIDBQoBAwAAAAAAAPA/AwULAAgeAWsDBAAACQMIDgIJAx0OAgkDIQ4CAhEKCQMoDgIJAx0OAgIdBQsCEgULAwkDHQ4CAh0FCwITBQsDBQoFDAIVBQwDAhQDAwAIHwZjb2xvcjIFDAQAAAsCDwIJAhgOAgIcBQwCEAcFDAIcBQwFDAAGBAIHBQwLAg4CCQMYDgMCHwUMCQIYDgICHAUMAgsHBQwCHgMFDAkDGA4DCQIYDgICHAUMAgsHBQwCHwUMAh4DBQwFDAUMAAYEAgcFDAkCGA4CCQMhDgICCgoCAwUKBQwCCwcFDAUMAAA";
+h3d_pass__$Copy_ArrayCopyShader.SRC = "HXSLHmgzZC5wYXNzLl9Db3B5LkFycmF5Q29weVNoYWRlcgoBBWlucHV0DQECAghwb3NpdGlvbgUKAQEAAwJ1dgUKAQEAAQAABAVmbGlwWQMCAAAFBm91dHB1dA0CAgYIcG9zaXRpb24FDAQFAAcFY29sb3IFDAQFAAQAAAgKcGl4ZWxDb2xvcgUMBAAACQxjYWxjdWxhdGVkVVYFCgQAAAoHdGV4dHVyZQsCAAALBWxheWVyAQIAAAwIX19pbml0X18OBgAADQZ2ZXJ0ZXgOBgAADghmcmFnbWVudA4GAAADAgwAAAUCBgQCBwUMAggFDAUMBgQCCQUKAgMFCgUKAAANAAAFAQYEAgYFDAkDKg4ECgICBQoAAAMGAQoCAgUKBAADAgQDAwEDAAAAAAAAAAADAQMAAAAAAADwPwMFDAUMAAEOAAAFAQYEAggFDAkDIQ4CAgoLCQMpDgICCQUKCQMmDgECCwEDBQsFDAUMAA";
 h3d_pass__$Copy_CopyShader.SRC = "HXSLGWgzZC5wYXNzLl9Db3B5LkNvcHlTaGFkZXIJAQVpbnB1dA0BAgIIcG9zaXRpb24FCgEBAAMCdXYFCgEBAAEAAAQFZmxpcFkDAgAABQZvdXRwdXQNAgIGCHBvc2l0aW9uBQwEBQAHBWNvbG9yBQwEBQAEAAAICnBpeGVsQ29sb3IFDAQAAAkMY2FsY3VsYXRlZFVWBQoEAAAKB3RleHR1cmUKAgAACwhfX2luaXRfXw4GAAAMBnZlcnRleA4GAAANCGZyYWdtZW50DgYAAAMCCwAABQIGBAIHBQwCCAUMBQwGBAIJBQoCAwUKBQoAAAwAAAUBBgQCBgUMCQMqDgQKAgIFCgAAAwYBCgICBQoEAAMCBAMDAQMAAAAAAAAAAAMBAwAAAAAAAPA/AwUMBQwAAQ0AAAUBBgQCCAUMCQMhDgICCgoCCQUKBQwFDAA";
 h3d_pass__$CubeCopy_CubeCopyShader.SRC = "HXSLIWgzZC5wYXNzLl9DdWJlQ29weS5DdWJlQ29weVNoYWRlcgoBBWlucHV0DQECAghwb3NpdGlvbgUKAQEAAwJ1dgUKAQEAAQAABAVmbGlwWQMCAAAFBm91dHB1dA0CAgYIcG9zaXRpb24FDAQFAAcFY29sb3IFDAQFAAQAAAgKcGl4ZWxDb2xvcgUMBAAACQxjYWxjdWxhdGVkVVYFCgQAAAoHdGV4dHVyZQwCAAALA21hdAYCAAAMCF9faW5pdF9fDgYAAA0GdmVydGV4DgYAAA4IZnJhZ21lbnQOBgAAAwIMAAAFAgYEAgcFDAIIBQwFDAYEAgkFCgIDBQoFCgAADQAABQEGBAIGBQwJAyoOBAoCAgUKAAADBgEKAgIFCgQAAwIEAwMBAwAAAAAAAAAAAwEDAAAAAAAA8D8DBQwFDAABDgAABQIIDwJ1dgUKBAAABgMGAQIJBQoBAwAAAAAAAABAAwUKAQMAAAAAAADwPwMFCgAGBAIIBQwJAyEOAgIKDAkDHw4BBgEJAykOAgIPBQoBAwAAAAAAAPA/AwULAgsGBQsFCwUMBQwA";
 h3d_pass_Default.__meta__ = { fields : { cameraView : { global : ["camera.view"]}, cameraNear : { global : ["camera.zNear"]}, cameraFar : { global : ["camera.zFar"]}, cameraProj : { global : ["camera.proj"]}, cameraPos : { global : ["camera.position"]}, cameraProjDiag : { global : ["camera.projDiag"]}, cameraProjFlip : { global : ["camera.projFlip"]}, cameraViewProj : { global : ["camera.viewProj"]}, cameraInverseViewProj : { global : ["camera.inverseViewProj"]}, globalTime : { global : ["global.time"]}, pixelSize : { global : ["global.pixelSize"]}, globalModelView : { global : ["global.modelView"]}, globalModelViewInverse : { global : ["global.modelViewInverse"]}}};
@@ -44411,6 +45050,7 @@ h3d_shader_ColorAdd.SRC = "HXSLE2gzZC5zaGFkZXIuQ29sb3JBZGQDAQpwaXhlbENvbG9yBQwEA
 h3d_shader_ColorKey.SRC = "HXSLE2gzZC5zaGFkZXIuQ29sb3JLZXkDAQhjb2xvcktleQUMAgAAAgx0ZXh0dXJlQ29sb3IFDAQAAAMIZnJhZ21lbnQOBgAAAQEDAAAFAggEBWNkaWZmBQwEAAAGAwICBQwCAQUMBQwACwYJCQMdDgICBAUMAgQFDAMBA/Fo44i1+OQ+AwIMAAAAAA";
 h3d_shader_ColorMatrix.SRC = "HXSLFmgzZC5zaGFkZXIuQ29sb3JNYXRyaXgDAQpwaXhlbENvbG9yBQwEAAACBm1hdHJpeAcCAAADCGZyYWdtZW50DgYAAAEBAwAABQEGBAIBBQwJAyoOAgoEBgEJAyoOAgoCAQUMkgAFCwEDAAAAAAAA8D8DBQwCAgcFDAUMkgAFCwoEBgECAQUMAgIHBQwFDAwAAwUMBQwA";
 h3d_shader_DirShadow.SRC = "HXSLFGgzZC5zaGFkZXIuRGlyU2hhZG93EgEGZW5hYmxlAgIAAQAAAAAAAgdVU0VfRVNNAgIAAQAAAAAAAwtzaGFkb3dQb3dlcgMCAAAEB1VTRV9QQ0YCAgABAAAAAAAFCnBjZlF1YWxpdHkBAgABAAAAAAAGCHBjZlNjYWxlAwIAAAcJc2hhZG93UmVzBQoCAAAICXNoYWRvd01hcBEBAgAACQpzaGFkb3dQcm9qCAIAAAoKc2hhZG93QmlhcwMCAAALE3RyYW5zZm9ybWVkUG9zaXRpb24FCwQAAAwGc2hhZG93AwQAAA0JZGlyU2hhZG93AwQAAA4OcG9pc3NvbkRpc2tMb3cPBQwABAIAAA8PcG9pc3NvbkRpc2tIaWdoDwUMAAwCAAAQE3BvaXNzb25EaXNrVmVyeUhpZ2gPBQwAQAIAABEEcmFuZA4GAAASCGZyYWdtZW50DgYAAAIDEQETAXYDBAAAAwUCCBQCZHADBAAACQMdDgIJAyoOAQITAwUMCQMqDgQBA18pyxDH+ilAAwED9P3UeOmOU0ADAQOiRbbz/ZRGQAMBA1CNl24Sq1dAAwUMAwANCQMTDgEGAQkDAg4BAhQDAwEDUPwYc9Fd5UADAwMAAAESAAAFAgsCAQIFAQsCBAIFBwYEAgwDAQMAAAAAAADwPwMDCBUJdGV4ZWxTaXplBQoEAAAGAgEDAAAAAAAA8D8DAgcFCgUKAAgWCXNoYWRvd1BvcwULBAAABgECCwULAgkIBQsACBcIc2hhZG93VXYFCgQAAAkDOg4BCgIWBQsRAAUKBQoACBgEek1heAMEAAAJAzUOAQoCFgULCAADAwAIGQNyb3QDBAAABgEGAQkCEQ4BBgAGAAoCCwULAAADCgILBQsEAAMDCgILBQsIAAMDAwEDH4XrUbgeCUADAwEDAAAAAAAAAEADAwATBAIFAQEDAQECAQAAAAEFAggaDnNhbXBsZVN0cmVuZ3RoAwQAAAYCAQMAAAAAAADwPwMBAwAAAAAAABBAAwMADhsBaQEEAAAGFQECAAAAAAEBAgQAAAABDwEAAAUECBwGb2Zmc2V0BQoEAAAGAQYBChECDg8FDAAEAhsBBQwRAAUKAhUFCgUKAgYDBQoABgQCHAUKCQMoDgIGAwYBCQMDDgECGQMDCgIcBQoAAAMDBgEJAwIOAQIZAwMKAhwFCgQAAwMDBgAGAQkDAw4BAhkDAwoCHAUKBAADAwYBCQMCDgECGQMDCgIcBQoAAAMDAwUKBQoIHQVkZXB0aAMEAAAJA0AOAwIIEQEGAAIXBQoCHAUKBQoBAwAAAAAAAAAAAwMACwYHBgMCGAMCCgMDAh0DAgaDAgwDAhoDAwAAAAAAAQECAgAAAAEFAggeDnNhbXBsZVN0cmVuZ3RoAwQAAAYCAQMAAAAAAADwPwMBAwAAAAAAAChAAwMADh8BaQEEAAAGFQECAAAAAAEBAgwAAAABDwEAAAUECCAGb2Zmc2V0BQoEAAAGAQYBChECDw8FDAAMAh8BBQwRAAUKAhUFCgUKAgYDBQoABgQCIAUKCQMoDgIGAwYBCQMDDgECGQMDCgIgBQoAAAMDBgEJAwIOAQIZAwMKAiAFCgQAAwMDBgAGAQkDAw4BAhkDAwoCIAUKBAADAwYBCQMCDgECGQMDCgIgBQoAAAMDAwUKBQoIIQVkZXB0aAMEAAAJA0AOAwIIEQEGAAIXBQoCIAUKBQoBAwAAAAAAAAAAAwMACwYHBgMCGAMCCgMDAiEDAgaDAgwDAh4DAwAAAAAAAQECAwAAAAEFAggiDnNhbXBsZVN0cmVuZ3RoAwQAAAYCAQMAAAAAAADwPwMBAwAAAAAAAFBAAwMADiMBaQEEAAAGFQECAAAAAAEBAkAAAAABDwEAAAUECCQGb2Zmc2V0BQoEAAAGAQYBChECEA8FDABAAiMBBQwRAAUKAhUFCgUKAgYDBQoABgQCJAUKCQMoDgIGAwYBCQMDDgECGQMDCgIkBQoAAAMDBgEJAwIOAQIZAwMKAiQFCgQAAwMDBgAGAQkDAw4BAhkDAwoCJAUKBAADAwYBCQMCDgECGQMDCgIkBQoAAAMDAwUKBQoIJQVkZXB0aAMEAAAJA0AOAwIIEQEGAAIXBQoCJAUKBQoBAwAAAAAAAAAAAwMACwYHBgMCGAMCCgMDAiUDAgaDAgwDAiIDAwAAAAAAAAAACwICAgUFCCYJc2hhZG93UG9zBQsEAAAGAQILBQsCCQgFCwAIJwVkZXB0aAMEAAAJAz8OAgIIEQEJAzoOAQoCJgULEQAFCgUKAwAIKAR6TWF4AwQAAAkDNQ4BCgImBQsIAAMDAAgpBWRlbHRhAwQAAAYDCQMVDgIEBgACJwMCCgMDAwIoAwMCKAMDAAYEAgwDCQM1DgEJAwkOAQYBAgMDAikDAwMDAwAFBAgqCXNoYWRvd1BvcwULBAAABgECCwULAgkIBQsACCsIc2hhZG93VXYFCgQAAAkDOg4BCgIqBQsRAAUKBQoACCwFZGVwdGgDBAAACQM/DgICCBEBCgIrBQoRAAUKAwAGBAIMAwsGBwYDCgIqBQsIAAMCCgMDAiwDAgEDAAAAAAAAAAADAQMAAAAAAADwPwMDAwAAAAAAAAYEAg0DAgwDAwA";
+h3d_shader_GenTexture.SRC = "HXSLFWgzZC5zaGFkZXIuR2VuVGV4dHVyZQoBBWlucHV0DQECAghwb3NpdGlvbgUKAQEAAwJ1dgUKAQEAAQAABAVmbGlwWQMCAAAFBm91dHB1dA0CAgYIcG9zaXRpb24FDAQFAAcFY29sb3IFDAQFAAQAAAgKcGl4ZWxDb2xvcgUMBAAACQxjYWxjdWxhdGVkVVYFCgQAAAoEbW9kZQECAAEAAAAAAAsFY29sb3IFDAIAAAwIX19pbml0X18OBgAADQZ2ZXJ0ZXgOBgAADghmcmFnbWVudA4GAAADAgwAAAUCBgQCBwUMAggFDAUMBgQCCQUKAgMFCgUKAAANAAAFAQYEAgYFDAkDKg4ECgICBQoAAAMGAQoCAgUKBAADAgQDAwEDAAAAAAAAAAADAQMAAAAAAADwPwMFDAUMAAEOAAAFARMEAgoBAQEBAQIAAAAAAQUBBgQCCAUMCwYHCQMbDgEKAgYFDBEABQoDAQMAAAAAAADwPwMCCQMqDgEBAwAAAAAAAAAAAwUMAgsFDAUMBQwAAAAA";
 h3d_shader_LineShader.SRC = "HXSLFWgzZC5zaGFkZXIuTGluZVNoYWRlcgwBBmNhbWVyYQ0BAwIEdmlldwcAAQADBHByb2oHAAEABAh2aWV3UHJvagcAAQAAAAAFBmdsb2JhbA0CAgYJcGl4ZWxTaXplBQoABQAHCW1vZGVsVmlldwcABQEDAAAACAVpbnB1dA0DAwkIcG9zaXRpb24FCwEIAAoGbm9ybWFsBQsBCAALAnV2BQoBCAABAAAMBm91dHB1dA0EAQ0IcG9zaXRpb24FDAQMAAQAAA4RdHJhbnNmb3JtZWROb3JtYWwFCwQAAA8TdHJhbnNmb3JtZWRQb3NpdGlvbgULBAAAEBFwcm9qZWN0ZWRQb3NpdGlvbgUMBAAAEQtsZW5ndGhTY2FsZQMCAAASBXdpZHRoAwIAABMEcGRpcgUMBAAAFAhfX2luaXRfXw4GAAAVBnZlcnRleA4GAAACAhQAAAUBBQUIFgNkaXIFCwQAAAYBAgoFCwkDMg4BAgcHBgULAAYEAhMFDAYBCQMqDgIGAQIWBQsJAzIOAQICBwYFCwEDAAAAAAAA8D8DBQwCAwcFDAUMBoEKAhMFDBEABQoGAgEDAAAAAAAA8D8DCQMNDgEGAAYBCgITBQwAAAMKAhMFDAAAAwMGAQoCEwUMBAADCgITBQwEAAMDAwMDBQoGgAIPBQsGAQYBAhYFCwoCCwUKAAADBQsCEQMFCwULBgQCDgULCQMfDgECFgULBQsFCwAAABUAAAUBBoAKAhAFDBEABQoGAQYBBgEGAQQGAQoCEwUMBQAFCgkDKA4CAQMAAAAAAADwPwMBAwAAAAAAAPC/AwUKBQoFCgQGAwoCCwUKBAADAQMAAAAAAADgPwMDAwUKCgIQBQwIAAMFCgIGBQoFCgISAwUKBQoA";
 h3d_shader_MinMaxShader.SRC = "HXSLF2gzZC5zaGFkZXIuTWluTWF4U2hhZGVyCwEFaW5wdXQNAQICCHBvc2l0aW9uBQoBAQADAnV2BQoBAQABAAAEBWZsaXBZAwIAAAUGb3V0cHV0DQICBghwb3NpdGlvbgUMBAUABwVjb2xvcgUMBAUABAAACApwaXhlbENvbG9yBQwEAAAJDGNhbGN1bGF0ZWRVVgUKBAAACgR0ZXhBCgIAAAsEdGV4QgoCAAAMBWlzTWF4AgIAAQAAAAAADQhfX2luaXRfXw4GAAAOBnZlcnRleA4GAAAPCGZyYWdtZW50DgYAAAMCDQAABQIGBAIHBQwCCAUMBQwGBAIJBQoCAwUKBQoAAA4AAAUBBgQCBgUMCQMqDgQKAgIFCgAAAwYBCgICBQoEAAMCBAMDAQMAAAAAAAAAAAMBAwAAAAAAAPA/AwUMBQwAAQ8AAAUDCBABYQUMBAAACQMhDgICCgoCCQUKBQwACBEBYgUMBAAACQMhDgICCwoCCQUKBQwABgQCCAUMCwIMAgkDFg4CAhAFDAIRBQwFDAkDFQ4CAhAFDAIRBQwFDAUMBQwA";
 h3d_shader_CubeMinMaxShader.SRC = "HXSLG2gzZC5zaGFkZXIuQ3ViZU1pbk1heFNoYWRlcgwBBWlucHV0DQECAghwb3NpdGlvbgUKAQEAAwJ1dgUKAQEAAQAABAVmbGlwWQMCAAAFBm91dHB1dA0CAgYIcG9zaXRpb24FDAQFAAcFY29sb3IFDAQFAAQAAAgKcGl4ZWxDb2xvcgUMBAAACQxjYWxjdWxhdGVkVVYFCgQAAAoEdGV4QQwCAAALBHRleEIMAgAADAVpc01heAICAAEAAAAAAA0DbWF0BgIAAA4IX19pbml0X18OBgAADwZ2ZXJ0ZXgOBgAAEAhmcmFnbWVudA4GAAADAg4AAAUCBgQCBwUMAggFDAUMBgQCCQUKAgMFCgUKAAAPAAAFAQYEAgYFDAkDKg4ECgICBQoAAAMGAQoCAgUKBAADAgQDAwEDAAAAAAAAAAADAQMAAAAAAADwPwMFDAUMAAEQAAAFBQgRAnV2BQoEAAAGAwYBAgkFCgEDAAAAAAAAAEADBQoBAwAAAAAAAPA/AwUKAAgSA2RpcgULBAAABgEJAykOAgIRBQoBAwAAAAAAAPA/AwULAg0GBQsACBMBYQUMBAAACQMhDgICCgwCEgULBQwACBQBYgUMBAAACQMhDgICCwwCEgULBQwABgQCCAUMCwIMAgkDFg4CAhMFDAIUBQwFDAkDFQ4CAhMFDAIUBQwFDAUMBQwA";
@@ -44538,6 +45178,7 @@ hxsl_GlslOut.GLOBALS = (function($this) {
 	m.set(hxsl_TGlobal.BVec2,"bvec2");
 	m.set(hxsl_TGlobal.BVec3,"bvec3");
 	m.set(hxsl_TGlobal.BVec4,"bvec4");
+	m.set(hxsl_TGlobal.FragCoord,"gl_FragCoord");
 	{
 		var g1 = m.iterator();
 		while(g1.hasNext()) {
