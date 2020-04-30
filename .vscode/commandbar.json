@@ -58,7 +58,7 @@
 		{
 			"text": "📦 Redist",
 			"color": "lightgreen",
-			"command": "haxelib run redistHelper hl.dx.hxml js.hxml -o redist.$ -P DaddyPaint",
+			"command": "haxelib run redistHelper hl.dx.hxml js.hxml -p DaddyPaint",
 			"alignment": "right",
 			"skipTerminateQuickPick": false,
 			"priority": -50

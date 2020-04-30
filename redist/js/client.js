@@ -161,6 +161,7 @@ dn_Process._doPreUpdate = function(p,utmod) {
 	p.utmod = utmod;
 	var x = p.timeMultiplier;
 	p.ftime += p.utmod * (x > 0 ? x : 0);
+	p.uftime += p.utmod;
 	var x1 = p.timeMultiplier;
 	p.delayer.update(p.utmod * (x1 > 0 ? x1 : 0));
 	if(!p.paused && !p.destroyed) {
@@ -317,6 +318,7 @@ dn_Process.updateAll = function(utmod) {
 			p.utmod = utmod;
 			var x = p.timeMultiplier;
 			p.ftime += p.utmod * (x > 0 ? x : 0);
+			p.uftime += p.utmod;
 			var x1 = p.timeMultiplier;
 			p.delayer.update(p.utmod * (x1 > 0 ? x1 : 0));
 			if(!p.paused && !p.destroyed) {
@@ -347,6 +349,7 @@ dn_Process.updateAll = function(utmod) {
 						c.utmod = p.utmod * (x4 > 0 ? x4 : 0);
 						var x5 = c.timeMultiplier;
 						c.ftime += c.utmod * (x5 > 0 ? x5 : 0);
+						c.uftime += c.utmod;
 						var x6 = c.timeMultiplier;
 						c.delayer.update(c.utmod * (x6 > 0 ? x6 : 0));
 						if(!c.paused && !c.destroyed) {
@@ -461,6 +464,7 @@ dn_Process.prototype = {
 		this.paused = false;
 		this.destroyed = false;
 		this.ftime = 0;
+		this.uftime = 0;
 		this.utmod = 1;
 		this.timeMultiplier = 1.0;
 		this.cd = new dn_Cooldown(this.getDefaultFrameRate());
@@ -548,6 +552,7 @@ dn_Process.prototype = {
 				p.utmod = 1;
 				var x = p.timeMultiplier;
 				p.ftime += p.utmod * (x > 0 ? x : 0);
+				p.uftime += p.utmod;
 				var x1 = p.timeMultiplier;
 				p.delayer.update(p.utmod * (x1 > 0 ? x1 : 0));
 				if(!p.paused && !p.destroyed) {
@@ -578,6 +583,7 @@ dn_Process.prototype = {
 							c.utmod = p.utmod * (x4 > 0 ? x4 : 0);
 							var x5 = c.timeMultiplier;
 							c.ftime += c.utmod * (x5 > 0 ? x5 : 0);
+							c.uftime += c.utmod;
 							var x6 = c.timeMultiplier;
 							c.delayer.update(c.utmod * (x6 > 0 ? x6 : 0));
 							if(!c.paused && !c.destroyed) {
@@ -3267,7 +3273,7 @@ dn_heaps_GameFocusHelper.prototype = $extend(dn_Process.prototype,{
 			var v3 = dn_Process.CUSTOM_STAGE_WIDTH > 0 ? dn_Process.CUSTOM_STAGE_WIDTH : hxd_Window.getInstance().get_width();
 			bg.posChanged = true;
 			bg.scaleX = v3 + 1;
-			var v4 = dn_Process.CUSTOM_STAGE_WIDTH > 0 ? dn_Process.CUSTOM_STAGE_WIDTH : hxd_Window.getInstance().get_width();
+			var v4 = dn_Process.CUSTOM_STAGE_HEIGHT > 0 ? dn_Process.CUSTOM_STAGE_HEIGHT : hxd_Window.getInstance().get_height();
 			bg.posChanged = true;
 			bg.scaleY = v4 + 1;
 			if(!_gthis.suspended) {
@@ -8517,6 +8523,12 @@ var h2d_FlowLayout = $hxEnums["h2d.FlowLayout"] = { __ename__ : true, __construc
 	,Stack: {_hx_index:2,__enum__:"h2d.FlowLayout",toString:$estr}
 };
 h2d_FlowLayout.__empty_constructs__ = [h2d_FlowLayout.Horizontal,h2d_FlowLayout.Vertical,h2d_FlowLayout.Stack];
+var h2d_FlowOverflow = $hxEnums["h2d.FlowOverflow"] = { __ename__ : true, __constructs__ : ["Expand","Limit","Hidden"]
+	,Expand: {_hx_index:0,__enum__:"h2d.FlowOverflow",toString:$estr}
+	,Limit: {_hx_index:1,__enum__:"h2d.FlowOverflow",toString:$estr}
+	,Hidden: {_hx_index:2,__enum__:"h2d.FlowOverflow",toString:$estr}
+};
+h2d_FlowOverflow.__empty_constructs__ = [h2d_FlowOverflow.Expand,h2d_FlowOverflow.Limit,h2d_FlowOverflow.Hidden];
 var h2d_FlowProperties = function(elt) {
 	this.constraint = true;
 	this.lineBreak = false;
@@ -8567,7 +8579,7 @@ var h2d_Flow = function(parent) {
 	this.paddingTop = 0;
 	this.paddingRight = 0;
 	this.paddingLeft = 0;
-	this.overflow = false;
+	this.overflow = h2d_FlowOverflow.Expand;
 	this.needReflow = true;
 	this.tmpBounds = new h2d_col_Bounds();
 	h2d_Object.call(this,parent);
@@ -8738,6 +8750,30 @@ h2d_Flow.prototype = $extend(h2d_Object.prototype,{
 			this.reflow();
 		}
 		h2d_Object.prototype.sync.call(this,ctx);
+	}
+	,drawRec: function(ctx) {
+		if(this.overflow == h2d_FlowOverflow.Hidden) {
+			if(this.posChanged) {
+				this.calcAbsPos();
+				var _g = 0;
+				var _g1 = this.children;
+				while(_g < _g1.length) {
+					var c = _g1[_g];
+					++_g;
+					c.posChanged = true;
+				}
+				this.posChanged = false;
+			}
+			var a = this.get_outerWidth();
+			var b = this.maxWidth;
+			var a1 = this.get_outerHeight();
+			var b1 = this.maxHeight;
+			h2d_Mask.maskWith(ctx,this,a < b ? b : a,a1 < b1 ? b1 : a1,0,0);
+			h2d_Object.prototype.drawRec.call(this,ctx);
+			h2d_Mask.unmask(ctx);
+		} else {
+			h2d_Object.prototype.drawRec.call(this,ctx);
+		}
 	}
 	,updateConstraint: function() {
 		var oldW = this.realMaxWidth;
@@ -8925,7 +8961,7 @@ h2d_Flow.prototype = $extend(h2d_Object.prototype,{
 					br = true;
 					if(maxLineHeight < minLineHeight) {
 						maxLineHeight = minLineHeight;
-					} else if(_gthis.overflow && minLineHeight != 0) {
+					} else if(_gthis.overflow != h2d_FlowOverflow.Expand && minLineHeight != 0) {
 						maxLineHeight = minLineHeight;
 					}
 					var _g2 = lastIndex;
@@ -8977,7 +9013,7 @@ h2d_Flow.prototype = $extend(h2d_Object.prototype,{
 			var maxIndex = this.children.length;
 			if(maxLineHeight < minLineHeight) {
 				maxLineHeight = minLineHeight;
-			} else if(_gthis.overflow && minLineHeight != 0) {
+			} else if(_gthis.overflow != h2d_FlowOverflow.Expand && minLineHeight != 0) {
 				maxLineHeight = minLineHeight;
 			}
 			var _g5 = lastIndex;
@@ -9045,7 +9081,7 @@ h2d_Flow.prototype = $extend(h2d_Object.prototype,{
 							break;
 						case 3:
 							c3.posChanged = true;
-							c3.x = startX + ((startX - endX - p3.calculatedWidth) * 0.5 | 0) + p3.offsetX;
+							c3.x = startX + ((endX - startX - p3.calculatedWidth) * 0.5 | 0) + p3.offsetX + startX;
 							break;
 						default:
 						}
@@ -9173,7 +9209,7 @@ h2d_Flow.prototype = $extend(h2d_Object.prototype,{
 					br1 = true;
 					if(maxColWidth < minColWidth) {
 						maxColWidth = minColWidth;
-					} else if(_gthis.overflow && minColWidth != 0) {
+					} else if(_gthis.overflow != h2d_FlowOverflow.Expand && minColWidth != 0) {
 						maxColWidth = minColWidth;
 					}
 					var _g16 = lastIndex1;
@@ -9227,7 +9263,7 @@ h2d_Flow.prototype = $extend(h2d_Object.prototype,{
 			var maxIndex1 = this.children.length;
 			if(maxColWidth < minColWidth) {
 				maxColWidth = minColWidth;
-			} else if(_gthis.overflow && minColWidth != 0) {
+			} else if(_gthis.overflow != h2d_FlowOverflow.Expand && minColWidth != 0) {
 				maxColWidth = minColWidth;
 			}
 			var _g20 = lastIndex1;
@@ -9291,7 +9327,7 @@ h2d_Flow.prototype = $extend(h2d_Object.prototype,{
 							break;
 						case 3:
 							c7.posChanged = true;
-							c7.y = startY + ((startY - endY - p11.calculatedHeight) * 0.5 | 0) + p11.offsetY;
+							c7.y = startY + ((endY - startY - p11.calculatedHeight) * 0.5 | 0) + p11.offsetY + startY;
 							break;
 						case 4:
 							c7.posChanged = true;
@@ -9418,7 +9454,7 @@ h2d_Flow.prototype = $extend(h2d_Object.prototype,{
 			var xmin1 = this.paddingLeft + this.borderWidth;
 			var ymin1 = this.paddingTop + this.borderHeight;
 			var xmax1;
-			if(this.realMaxWidth > 0 && this.overflow) {
+			if(this.realMaxWidth > 0 && this.overflow != h2d_FlowOverflow.Expand) {
 				xmax1 = Math.floor(this.realMaxWidth - (this.paddingRight + this.borderWidth));
 			} else {
 				var a4 = xmin1 + maxChildW;
@@ -9426,7 +9462,7 @@ h2d_Flow.prototype = $extend(h2d_Object.prototype,{
 				xmax1 = a4 < b3 ? b3 : a4;
 			}
 			var ymax1;
-			if(this.realMaxWidth > 0 && this.overflow) {
+			if(this.realMaxWidth > 0 && this.overflow != h2d_FlowOverflow.Expand) {
 				ymax1 = Math.floor(this.realMaxHeight - (this.paddingBottom + this.borderHeight));
 			} else {
 				var a5 = ymin1 + maxChildH;
@@ -9497,7 +9533,7 @@ h2d_Flow.prototype = $extend(h2d_Object.prototype,{
 		if(this.realMinHeight >= 0 && ch < this.realMinHeight) {
 			ch = this.realMinHeight;
 		}
-		if(this.overflow) {
+		if(this.overflow != h2d_FlowOverflow.Expand) {
 			if(isConstraintWidth && cw > maxTotWidth) {
 				cw = maxTotWidth;
 			}
@@ -12520,7 +12556,10 @@ h2d_Interactive.prototype = $extend(h2d_Drawable.prototype,{
 		h2d_Drawable.prototype.onHierarchyMoved.call(this,parentChanged);
 		if(this.scene != null) {
 			this.scene.removeEventTarget(this);
-			this.scene.addEventTarget(this);
+			this.scene = this.getScene();
+			if(this.scene != null) {
+				this.scene.addEventTarget(this);
+			}
 		}
 		if(parentChanged) {
 			this.updateMask();
@@ -12832,6 +12871,33 @@ var h2d_Mask = function(width,height,parent) {
 };
 $hxClasses["h2d.Mask"] = h2d_Mask;
 h2d_Mask.__name__ = "h2d.Mask";
+h2d_Mask.maskWith = function(ctx,object,width,height,scrollX,scrollY) {
+	if(scrollY == null) {
+		scrollY = 0;
+	}
+	if(scrollX == null) {
+		scrollX = 0;
+	}
+	var x1 = object.absX + scrollX;
+	var y1 = object.absY + scrollY;
+	var x2 = width * object.matA + height * object.matC + x1;
+	var y2 = width * object.matB + height * object.matD + y1;
+	var tmp;
+	if(x1 > x2) {
+		tmp = x1;
+		x1 = x2;
+		x2 = tmp;
+	}
+	if(y1 > y2) {
+		tmp = y1;
+		y1 = y2;
+		y2 = tmp;
+	}
+	ctx.pushRenderZone(x1,y1,x2 - x1,y2 - y1);
+};
+h2d_Mask.unmask = function(ctx) {
+	ctx.popRenderZone();
+};
 h2d_Mask.__super__ = h2d_Object;
 h2d_Mask.prototype = $extend(h2d_Object.prototype,{
 	onHierarchyMoved: function(parentChanged) {
@@ -12881,7 +12947,7 @@ h2d_Mask.prototype = $extend(h2d_Object.prototype,{
 			}
 			this.posChanged = false;
 		}
-		this.addBounds(relativeTo,out,0,0,this.width,this.height);
+		this.addBounds(relativeTo,out,this.scrollX,this.scrollY,this.width,this.height);
 		var bxMin = out.xMin;
 		var byMin = out.yMin;
 		var bxMax = out.xMax;
@@ -12905,35 +12971,9 @@ h2d_Mask.prototype = $extend(h2d_Object.prototype,{
 		}
 	}
 	,drawRec: function(ctx) {
-		var x1 = this.absX + this.scrollX;
-		var y1 = this.absY + this.scrollY;
-		var x2 = this.width * this.matA + this.height * this.matC + x1;
-		var y2 = this.width * this.matB + this.height * this.matD + y1;
-		var tmp;
-		if(x1 > x2) {
-			tmp = x1;
-			x1 = x2;
-			x2 = tmp;
-		}
-		if(y1 > y2) {
-			tmp = y1;
-			y1 = y2;
-			y2 = tmp;
-		}
-		if(ctx.hasRenderZone) {
-			var oldX = ctx.renderX;
-			var oldY = ctx.renderY;
-			var oldW = ctx.renderW;
-			var oldH = ctx.renderH;
-			ctx.setRenderZone(x1,y1,x2 - x1,y2 - y1);
-			h2d_Object.prototype.drawRec.call(this,ctx);
-			ctx.setRenderZone(oldX,oldY,oldW,oldH);
-		} else {
-			ctx.setRenderZone(x1,y1,x2 - x1,y2 - y1);
-			h2d_Object.prototype.drawRec.call(this,ctx);
-			ctx.hasRenderZone = false;
-			ctx.engine.setRenderZone();
-		}
+		h2d_Mask.maskWith(ctx,this,this.width,this.height,this.scrollX,this.scrollY);
+		h2d_Object.prototype.drawRec.call(this,ctx);
+		h2d_Mask.unmask(ctx);
 	}
 	,__class__: h2d_Mask
 });
@@ -12953,6 +12993,8 @@ h3d_impl_RenderContext.prototype = {
 	,__class__: h3d_impl_RenderContext
 };
 var h2d_RenderContext = function(scene) {
+	this.renderZoneIndex = 0;
+	this.renderZoneStack = [];
 	this.tmpBounds = new h2d_col_Bounds();
 	this.defaultSmooth = false;
 	this.globalAlpha = 1.;
@@ -12994,6 +13036,7 @@ h2d_RenderContext.prototype = $extend(h3d_impl_RenderContext.prototype,{
 		this.curWidth = this.scene.width;
 		this.curHeight = this.scene.height;
 		this.manager.globals.set("time",this.time);
+		this.manager.globals.set("global.time",this.time);
 		var _this = this.baseShader;
 		_this.constModified = true;
 		_this.pixelAlign__ = false;
@@ -13284,10 +13327,38 @@ h2d_RenderContext.prototype = $extend(h3d_impl_RenderContext.prototype,{
 			this.curHeight = height;
 		}
 		if(pinf.hasRZ) {
-			this.setRenderZone(pinf.rzX,pinf.rzY,pinf.rzW,pinf.rzH);
+			this.setRZ(pinf.rzX,pinf.rzY,pinf.rzW,pinf.rzH);
 		}
 	}
-	,setRenderZone: function(x,y,w,h) {
+	,pushRenderZone: function(x,y,w,h) {
+		var inf = this.renderZoneStack[this.renderZoneIndex++];
+		if(inf == null) {
+			inf = { hasRZ : this.hasRenderZone, x : this.renderX, y : this.renderY, w : this.renderW, h : this.renderH};
+			this.renderZoneStack[this.renderZoneIndex - 1] = inf;
+		} else if(this.hasRenderZone) {
+			inf.hasRZ = true;
+			inf.x = this.renderX;
+			inf.y = this.renderY;
+			inf.w = this.renderW;
+			inf.h = this.renderH;
+		} else {
+			inf.hasRZ = false;
+		}
+		this.setRZ(x,y,w,h);
+	}
+	,popRenderZone: function() {
+		if(this.renderZoneIndex == 0) {
+			throw new js__$Boot_HaxeError("Too many popRenderZone()");
+		}
+		var inf = this.renderZoneStack[--this.renderZoneIndex];
+		if(inf.hasRZ) {
+			this.setRZ(inf.x,inf.y,inf.w,inf.h);
+		} else {
+			this.hasRenderZone = false;
+			this.engine.setRenderZone();
+		}
+	}
+	,setRZ: function(x,y,w,h) {
 		this.hasRenderZone = true;
 		this.renderX = x;
 		this.renderY = y;
@@ -15158,7 +15229,7 @@ h2d_TextInput.prototype = $extend(h2d_Text.prototype,{
 	,draw: function(ctx) {
 		if(this.inputWidth != null) {
 			var h = this.localToGlobal(new h2d_col_Point(this.inputWidth,this.font.lineHeight));
-			ctx.setRenderZone(this.absX,this.absY,h.x - this.absX,h.y - this.absY);
+			ctx.pushRenderZone(this.absX,this.absY,h.x - this.absX,h.y - this.absY);
 		}
 		if(this.cursorIndex >= 0 && (this.text != this.cursorText || this.cursorIndex != this.cursorXIndex)) {
 			if(this.cursorIndex > this.text.length) {
@@ -15201,8 +15272,7 @@ h2d_TextInput.prototype = $extend(h2d_Text.prototype,{
 			}
 		}
 		if(this.inputWidth != null) {
-			ctx.hasRenderZone = false;
-			ctx.engine.setRenderZone();
+			ctx.popRenderZone();
 		}
 	}
 	,focus: function() {
