@@ -1,7 +1,5 @@
 # About
 
-Base structure for my games, using **Heaps** framework (https://heaps.io) and **Haxe** language (https://haxe.org).
+"Daddy Paint" is a very basic painting tool I created for young kids (2 and 4yrs old).
 
-# Installation & usage
-
-Please check this documentation for every details: https://deepnight.net/tutorial/using-my-gamebase-to-create-a-heaps-game/
+It only supports color picking, painting and erasing in a very user-friendly environment.
