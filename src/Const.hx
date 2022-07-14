@@ -26,23 +26,31 @@ class Const {
 			bg: Color.hexToInt("#1a1c2c"),
 			palette: [
 				Color.hexToInt("#FFcc00"),
+				Color.hexToInt("#FF3124"),
 				Color.hexToInt("#A95431"),
 				Color.hexToInt("#FF2674"),
+				Color.hexToInt("#9354FF"),
 				Color.hexToInt("#4998D4"),
-				Color.hexToInt("#62F5D3"),
-				Color.hexToInt("#B0EF44")
+				Color.hexToInt("#54D3B5"),
+				Color.hexToInt("#B0EF44"),
+				Color.hexToInt("#3C6B3F"),
 			],
 		},
 		{ // light
 			isLight: true,
 			bg: Color.hexToInt("#f3efd8"),
 			palette: [
-				Color.hexToInt("#FFcc00"),
 				Color.hexToInt("#A95431"),
-				Color.hexToInt("#FF2674"),
+				Color.hexToInt("#FFcc00"),
+				Color.hexToInt("#FF3124"),
+				Color.hexToInt("#CF1272"),
+				Color.hexToInt("#9354FF"),
 				Color.hexToInt("#4998D4"),
-				Color.hexToInt("#62F5D3"),
-				Color.hexToInt("#B0EF44")
+				Color.hexToInt("#54D3B5"),
+				Color.hexToInt("#B0EF44"),
+				Color.hexToInt("#3C6B3F"),
+				Color.hexToInt("#ffffff"),
+				Color.hexToInt("#1e2a2f"),
 			],
 		},
 	];
