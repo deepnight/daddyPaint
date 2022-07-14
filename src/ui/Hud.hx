@@ -34,43 +34,56 @@ class Hud extends dn.Process {
 
 		var allColors = [client.theme.bg].concat( client.theme.palette );
 		var barSize = 0.07 * (isVertical?w():h())/Const.SCALE;
-		var btSize = M.ceil( (isVertical?h():w())/Const.SCALE / (allColors.length+1) );
+		var btSize = M.ceil( (isVertical?h():w())/Const.SCALE / allColors.length );
 
-		function createButton(col:UInt, cb:Void->Void) {
+		function createButton(col:Col, cb:(i:h2d.Interactive)->Void, isActive:Bool) {
 			var i = new h2d.Interactive(isVertical?barSize:btSize, isVertical?btSize:barSize, toolBar);
 			i.propagateEvents = true;
 			i.backgroundColor = C.addAlphaF(col);
 			i.onPush = function(e:hxd.Event) {
-				e.propagate = false;
-				cb();
+				e.propagate = true;
+				cb(i);
 			}
 			i.onClick = function(e:hxd.Event) {
 				e.propagate = false;
 			}
+
+			var line = new h2d.Bitmap( h2d.Tile.fromColor(White, 1,Std.int(i.height), 1), i);
+
+			if( isActive ) {
+				i.width+=7;
+				i.filter = new h2d.filter.Glow(col, 1, 64, true);
+			}
+
+			line.x = i.width;
 			return i;
 		}
 
+
+		// var i : h2d.Interactive = null;
+
 		// Brush size button
-		var i = createButton(0xffffff, function() {
-			client.baseBrushSize = client.baseBrushSize==10 ? 50 : 10;
-		});
+		// i = createButton(0xffffff, function() {
+		// 	client.baseBrushSize = client.baseBrushSize==10 ? 50 : 10;
+		// });
 
 		// Palette
-		var active = null;
+		// var active = null;
 		for(c in allColors) {
-			var i = createButton(c, function() {
-				// Pick color
-				client.color = c;
-				fx.pickColor(toolBar.x+i.x, toolBar.y+i.y, i.width, i.height, c);
-				invalidate();
-			});
+			var i = createButton(
+				c,
+				function(i) {
+					// Pick color
+					client.color = c;
+					fx.pickColor(toolBar.x+i.x, toolBar.y+i.y, i.width, i.height, c);
+					invalidate();
+				},
+				c==client.color
+			);
 
 			// Active
-			if( c==client.color ) {
-				active = i;
-				i.width+=7;
-				i.filter = new h2d.filter.Glow(c, 1, 64, true);
-			}
+			// if( c==client.color )
+			// 	active = i;
 		}
 	}
 

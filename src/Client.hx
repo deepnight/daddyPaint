@@ -4,7 +4,6 @@ import hxd.Key;
 class Client extends Process {
 	public static var ME : Client;
 
-	public var ca : dn.heaps.Controller.ControllerAccess;
 	public var fx : Fx;
 	public var hud : ui.Hud;
 	var touchCatcher : h2d.Interactive;
@@ -29,9 +28,6 @@ class Client extends Process {
 	public function new() {
 		super(Main.ME);
 		ME = this;
-		ca = Main.ME.controller.createAccess("client");
-		ca.setLeftDeadZone(0.2);
-		ca.setRightDeadZone(0.2);
 		createRootInLayers(Main.ME.root, Const.DP_BG);
 		mouse = new h2d.col.Point();
 		theme = Const.THEMES[1];
@@ -313,7 +309,7 @@ class Client extends Process {
 		// 		fx.smokeTap(data.originX, data.originY, color);
 
 
-		if( !ui.Console.ME.isActive() && !ui.Modal.hasAny() ) {
+		if( !ui.Console.ME.isActive() ) {
 			// Clear canvas
 			if( hxd.Key.isPressed(Key.C) )
 				clear();
@@ -343,7 +339,7 @@ class Client extends Process {
 
 			#if hl
 			// Exit
-			if( ca.isKeyboardPressed(Key.ESCAPE) )
+			if( Key.isPressed(Key.ESCAPE) )
 				if( !cd.hasSetS("exitWarn",3) )
 					trace(Lang.t._("Press ESCAPE again to exit."));
 				else
@@ -351,7 +347,7 @@ class Client extends Process {
 			#end
 
 			// Restart
-			if( ca.selectPressed() )
+			if( Key.isPressed(Key.R) )
 				Main.ME.startClient();
 		}
 
@@ -366,7 +362,7 @@ class Client extends Process {
 		for(d in touchDrawingData)
 			t += "#"+d.touchId+"(avg="+Std.int(d.avgDist)+") ";
 		debugTf.text = M.round(hxd.Timer.fps()) + "fps"
-			+" fx="+fx.pool.count()
+			+" fx="+fx.pool.allocated
 			+" touches="+t
 			+" "+isDrawing();
 		#end
